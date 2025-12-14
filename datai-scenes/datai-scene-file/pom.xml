@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>datai-scenes</artifactId>
+        <groupId>com.datai</groupId>
+        <version>1.0.0</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>datai-scene-file</artifactId>
+
+    <properties>
+        <aliyunoss.version>3.18.1</aliyunoss.version>
+        <minio.version>8.2.1</minio.version>
+    </properties>
+
+    <description>
+        文件模块
+    </description>
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.datai</groupId>
+                <artifactId>datai-file-common</artifactId>
+                <version>${datai.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.minio</groupId>
+                <artifactId>minio</artifactId>
+                <version>${minio.version}</version>
+            </dependency>
+
+            <!-- oss-->
+            <dependency>
+                <groupId>com.aliyun.oss</groupId>
+                <artifactId>aliyun-sdk-oss</artifactId>
+                <version>${aliyunoss.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.datai</groupId>
+                <artifactId>datai-file-local</artifactId>
+                <version>${datai.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.datai</groupId>
+                <artifactId>datai-file-aliyun-oss</artifactId>
+                <version>${datai.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.datai</groupId>
+                <artifactId>datai-file-minio</artifactId>
+                <version>${datai.version}</version>
+            </dependency>
+
+        </dependencies>
+    </dependencyManagement>
+
+
+    <modules>
+        <module>datai-file-common</module>
+        <module>datai-file-local</module>
+        <module>datai-file-minio</module>
+        <module>datai-file-aliyun-oss</module>
+        <module>datai-file-starter</module>
+    </modules>
+    <packaging>pom</packaging>
+</project>

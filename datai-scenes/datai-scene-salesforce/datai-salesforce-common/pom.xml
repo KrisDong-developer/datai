@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.datai</groupId>
+        <artifactId>datai-scene-salesforce</artifactId>
+        <version>1.0.0</version>
+    </parent>
+
+    <artifactId>datai-salesforce-common</artifactId>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.datai</groupId>
+            <artifactId>datai-common</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>commons-beanutils</groupId>
+            <artifactId>commons-beanutils</artifactId>
+            <version>1.9.4</version>
+        </dependency>
+
+        <!-- Maven 示例（版本需替换为最新） -->
+        <dependency>
+            <groupId>com.force.api</groupId>
+            <artifactId>force-wsc</artifactId>
+            <version>61.0.0</version>
+        </dependency>
+    </dependencies>
+
+</project>

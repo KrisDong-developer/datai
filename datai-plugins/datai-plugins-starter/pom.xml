@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>datai-plugins</artifactId>
+        <groupId>com.datai</groupId>
+        <version>1.0.0</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>datai-plugins-starter</artifactId>
+
+    <description>
+        中间件
+    </description>
+
+    <dependencies>
+        <!-- ehcache-->
+        <dependency>
+            <groupId>com.datai</groupId>
+            <artifactId>datai-cache-ehcache</artifactId>
+        </dependency>
+
+        <!-- redis-->
+        <dependency>
+            <groupId>com.datai</groupId>
+            <artifactId>datai-cache-redis</artifactId>
+        </dependency>
+
+        <!-- websocket -->
+        <dependency>
+            <groupId>com.datai</groupId>
+            <artifactId>datai-websocket</artifactId>
+        </dependency>
+
+        <!-- mybatis-jpa -->
+        <dependency>
+            <groupId>com.datai</groupId>
+            <artifactId>datai-mybatis-jpa</artifactId>
+        </dependency>
+
+        <!-- mybatis-plus -->
+        <dependency>
+            <groupId>com.datai</groupId>
+            <artifactId>datai-mybatis-plus</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.datai</groupId>
+            <artifactId>datai-mybatis-interceptor</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.datai</groupId>
+            <artifactId>datai-netty</artifactId>
+        </dependency>
+
+<!--        <dependency>-->
+<!--            <groupId>com.datai</groupId>-->
+<!--            <artifactId>datai-rabbitmq</artifactId>-->
+<!--        </dependency>-->
+
+        <!-- atomikos-->
+        <!-- <dependency>
+            <groupId>com.datai</groupId>
+            <artifactId>datai-atomikos</artifactId>
+        </dependency> -->
+    </dependencies>
+
+</project>

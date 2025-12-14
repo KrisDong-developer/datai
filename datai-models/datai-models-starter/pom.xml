@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>datai-models</artifactId>
+        <groupId>com.datai</groupId>
+        <version>1.0.0</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>datai-models-starter</artifactId>
+
+    <description>
+        中间件
+    </description>
+
+    <dependencies>
+
+        <!-- 定时任务模块 -->
+        <dependency>
+            <groupId>com.datai</groupId>
+            <artifactId>datai-quartz</artifactId>
+        </dependency>
+
+        <!-- 代码生成模块 -->
+        <dependency>
+            <groupId>com.datai</groupId>
+            <artifactId>datai-generator</artifactId>
+        </dependency>
+
+        <!-- 在线开发模块 -->
+        <dependency>
+            <groupId>com.datai</groupId>
+            <artifactId>datai-online</artifactId>
+        </dependency>
+
+        <!-- 消息模块 -->
+        <dependency>
+            <groupId>com.datai</groupId>
+            <artifactId>datai-message</artifactId>
+        </dependency>
+
+        <!-- 消息模块-->
+        <dependency>
+            <groupId>com.datai</groupId>
+            <artifactId>datai-form</artifactId>
+        </dependency>
+
+        <!-- flowable模块-->
+<!--        <dependency>-->
+<!--            <groupId>com.datai</groupId>-->
+<!--            <artifactId>datai-flowable</artifactId>-->
+<!--        </dependency>-->
+
+    </dependencies>
+
+</project>

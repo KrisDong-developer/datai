@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>datai</artifactId>
+        <groupId>com.datai</groupId>
+        <version>1.0.0</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>datai-plugins</artifactId>
+
+    <properties>
+        <ehcache.version>3.10.8</ehcache.version>
+        <mybatis-plus.version>3.5.8</mybatis-plus.version>
+        <netty.version>4.1.112.Final</netty.version>
+        <transactions.version>6.0.0</transactions.version>
+    </properties>
+
+    <description>
+
+    </description>
+    <dependencyManagement>
+        <dependencies>
+            <!-- Ehcache缓存管理器 -->
+            <dependency>
+                <groupId>org.ehcache</groupId>
+                <artifactId>ehcache</artifactId>
+                <version>${ehcache.version}</version>
+            </dependency>
+
+            <!-- mybatis-plus -->
+            <dependency>
+                <groupId>com.baomidou</groupId>
+                <artifactId>mybatis-plus-spring-boot3-starter</artifactId>
+                <version>${mybatis-plus.version}</version>
+            </dependency>
+
+            <!-- netty -->
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-all</artifactId>
+                <version>${netty.version}</version>
+            </dependency>
+
+            <!-- atomikos分布式事务 -->
+            <dependency>
+                <groupId>com.atomikos</groupId>
+                <artifactId>transactions-spring-boot3-starter</artifactId>
+                <version>${transactions.version}</version>
+            </dependency>
+
+            <!-- datai-ehcache-->
+            <dependency>
+                <groupId>com.datai</groupId>
+                <artifactId>datai-cache-ehcache</artifactId>
+                <version>${datai.version}</version>
+            </dependency>
+
+            <!-- datai-redis-->
+            <dependency>
+                <groupId>com.datai</groupId>
+                <artifactId>datai-cache-redis</artifactId>
+                <version>${datai.version}</version>
+            </dependency>
+
+            <!-- mybatis-jpa-->
+            <dependency>
+                <groupId>com.datai</groupId>
+                <artifactId>datai-mybatis-jpa</artifactId>
+                <version>${datai.version}</version>
+            </dependency>
+
+            <!-- mybatis-plus-->
+            <dependency>
+                <groupId>com.datai</groupId>
+                <artifactId>datai-mybatis-plus</artifactId>
+                <version>${datai.version}</version>
+            </dependency>
+
+            <!-- websocket -->
+            <dependency>
+                <groupId>com.datai</groupId>
+                <artifactId>datai-websocket</artifactId>
+                <version>${datai.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.datai</groupId>
+                <artifactId>datai-mybatis-interceptor</artifactId>
+                <version>${datai.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.datai</groupId>
+                <artifactId>datai-netty</artifactId>
+                <version>${datai.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.datai</groupId>
+                <artifactId>datai-atomikos</artifactId>
+                <version>${datai.version}</version>
+            </dependency>
+
+<!--            <dependency>-->
+<!--                <groupId>com.datai</groupId>-->
+<!--                <artifactId>datai-rabbitmq</artifactId>-->
+<!--                <version>${datai.version}</version>-->
+<!--            </dependency>-->
+
+            <dependency>
+                <groupId>com.datai</groupId>
+                <artifactId>datai-plugins-starter</artifactId>
+                <version>${datai.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+
+    <modules>
+        <module>datai-cache-ehcache</module>
+        <module>datai-mybatis-jpa</module>
+        <module>datai-mybatis-plus</module>
+        <module>datai-websocket</module>
+        <module>datai-plugins-starter</module>
+        <module>datai-mybatis-interceptor</module>
+        <module>datai-netty</module>
+        <module>datai-atomikos</module>
+<!--        <module>datai-rabbitmq</module>-->
+        <module>datai-cache-redis</module>
+    </modules>
+    <packaging>pom</packaging>
+</project>
