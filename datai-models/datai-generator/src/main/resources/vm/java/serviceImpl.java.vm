@@ -19,7 +19,6 @@ import org.springframework.stereotype.Service;
 import ${packageName}.mapper.${ClassName}Mapper;
 import ${packageName}.domain.${ClassName};
 import ${packageName}.service.I${ClassName}Service;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 
 
 /**
@@ -29,8 +28,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
  * @date ${datetime}
  */
 @Service
-public class ${ClassName}ServiceImpl extends ServiceImpl<${ClassName}Mapper, ${ClassName}>
-        implements I${ClassName}Service {
+public class ${ClassName}ServiceImpl implements I${ClassName}Service {
     @Autowired
     private ${ClassName}Mapper ${className}Mapper;
 

@@ -32,5 +32,9 @@
             <groupId>com.datai</groupId>
             <artifactId>datai-file-starter</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.datai</groupId>
+            <artifactId>datai-salesforce-starter</artifactId>
+        </dependency>
     </dependencies>
 </project>
