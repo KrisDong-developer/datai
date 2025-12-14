@@ -1,6 +1,6 @@
 package com.datai.auth.domain;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -47,7 +47,7 @@ public class DataiSfLoginAudit extends BaseEntity
     /** 操作时间 */
     @Schema(title = "操作时间")
     @Excel(name = "操作时间")
-    private LocalDate operationTime;
+    private LocalDateTime operationTime;
 
     /** IP地址 */
     @Schema(title = "IP地址")
@@ -143,12 +143,12 @@ public class DataiSfLoginAudit extends BaseEntity
     }
 
 
-    public void setOperationTime(LocalDate operationTime) 
+    public void setOperationTime(LocalDateTime operationTime)
     {
         this.operationTime = operationTime;
     }
 
-    public LocalDate getOperationTime() 
+    public LocalDateTime getOperationTime()
     {
         return operationTime;
     }

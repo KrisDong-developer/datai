@@ -1,6 +1,6 @@
 package com.datai.auth.domain;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -57,12 +57,12 @@ public class DataiSfTokenBinding extends BaseEntity
     /** 绑定时间 */
     @Schema(title = "绑定时间")
     @Excel(name = "绑定时间")
-    private LocalDate bindingTime;
+    private LocalDateTime bindingTime;
 
     /** 过期时间 */
     @Schema(title = "过期时间")
     @Excel(name = "过期时间")
-    private LocalDate expireTime;
+    private LocalDateTime expireTime;
     public void setBindingId(Long bindingId) 
     {
         this.bindingId = bindingId;
@@ -140,23 +140,23 @@ public class DataiSfTokenBinding extends BaseEntity
     }
 
 
-    public void setBindingTime(LocalDate bindingTime) 
+    public void setBindingTime(LocalDateTime bindingTime)
     {
         this.bindingTime = bindingTime;
     }
 
-    public LocalDate getBindingTime() 
+    public LocalDateTime getBindingTime()
     {
         return bindingTime;
     }
 
 
-    public void setExpireTime(LocalDate expireTime) 
+    public void setExpireTime(LocalDateTime expireTime)
     {
         this.expireTime = expireTime;
     }
 
-    public LocalDate getExpireTime() 
+    public LocalDateTime getExpireTime()
     {
         return expireTime;
     }

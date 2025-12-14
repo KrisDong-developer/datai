@@ -53,10 +53,20 @@ public class GenUtils
             String htmlType = columnLength >= 500 || arraysContains(GenConstants.COLUMNTYPE_TEXT, dataType) ? GenConstants.HTML_TEXTAREA : GenConstants.HTML_INPUT;
             column.setHtmlType(htmlType);
         }
-        else if (arraysContains(GenConstants.COLUMNTYPE_TIME, dataType))
+        else if (arraysContains(GenConstants.COLUMNTYPE_DATETIME, dataType))
+        {
+            column.setJavaType(GenConstants.TYPE_DATETIME);
+            column.setHtmlType(GenConstants.HTML_DATETIME);
+        }
+        else if (arraysContains(GenConstants.COLUMNTYPE_DATE, dataType))
         {
             column.setJavaType(GenConstants.TYPE_DATE);
-            column.setHtmlType(GenConstants.HTML_DATETIME);
+            column.setHtmlType(GenConstants.HTML_DATE);
+        }
+        else if (arraysContains(GenConstants.COLUMNTYPE_TIME, dataType))
+        {
+            column.setJavaType(GenConstants.TYPE_TIME);
+            column.setHtmlType(GenConstants.TYPE_TIME);
         }
         else if (arraysContains(GenConstants.COLUMNTYPE_NUMBER, dataType))
         {

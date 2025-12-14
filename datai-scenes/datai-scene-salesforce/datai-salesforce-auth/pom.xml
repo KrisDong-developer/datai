@@ -22,6 +22,7 @@
             <groupId>com.datai</groupId>
             <artifactId>datai-salesforce-common</artifactId>
         </dependency>
+
         <dependency>
             <groupId>com.datai</groupId>
             <artifactId>datai-cache-redis</artifactId>

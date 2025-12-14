@@ -1,6 +1,6 @@
 package com.datai.auth.domain;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -47,12 +47,12 @@ public class DataiSfToken extends BaseEntity
     /** 访问令牌过期时间 */
     @Schema(title = "访问令牌过期时间")
     @Excel(name = "访问令牌过期时间")
-    private LocalDate accessTokenExpire;
+    private LocalDateTime accessTokenExpire;
 
     /** 刷新令牌过期时间 */
     @Schema(title = "刷新令牌过期时间")
     @Excel(name = "刷新令牌过期时间")
-    private LocalDate refreshTokenExpire;
+    private LocalDateTime refreshTokenExpire;
 
     /** 令牌状态 */
     @Schema(title = "令牌状态")
@@ -148,23 +148,23 @@ public class DataiSfToken extends BaseEntity
     }
 
 
-    public void setAccessTokenExpire(LocalDate accessTokenExpire) 
+    public void setAccessTokenExpire(LocalDateTime accessTokenExpire)
     {
         this.accessTokenExpire = accessTokenExpire;
     }
 
-    public LocalDate getAccessTokenExpire() 
+    public LocalDateTime getAccessTokenExpire()
     {
         return accessTokenExpire;
     }
 
 
-    public void setRefreshTokenExpire(LocalDate refreshTokenExpire) 
+    public void setRefreshTokenExpire(LocalDateTime refreshTokenExpire)
     {
         this.refreshTokenExpire = refreshTokenExpire;
     }
 
-    public LocalDate getRefreshTokenExpire() 
+    public LocalDateTime getRefreshTokenExpire()
     {
         return refreshTokenExpire;
     }

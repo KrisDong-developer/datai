@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 
 import jakarta.annotation.PostConstruct;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Salesforce配置缓存管理器
@@ -79,5 +80,16 @@ public class SalesforceConfigCacheManager {
     public void clearConfigCache() {
         logger.info("清空Salesforce配置缓存");
         CacheUtils.getCache(SalesforceConfigConstants.SALESFORCE_CONFIG_CACHE_KEY).clear();
+    }
+    
+    /**
+     * 获取配置值
+     * 
+     * @param configKey 配置键
+     * @return 配置值，如果不存在则返回null
+     */
+    public String getConfigValue(String configKey) {
+        Object value = CacheUtils.getCache(SalesforceConfigConstants.SALESFORCE_CONFIG_CACHE_KEY).get(configKey);
+        return value != null ? value.toString() : null;
     }
 }

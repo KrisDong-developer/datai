@@ -1,6 +1,6 @@
 package com.datai.auth.domain;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -42,7 +42,7 @@ public class DataiSfFailedLogin extends BaseEntity
     /** 失败时间 */
     @Schema(title = "失败时间")
     @Excel(name = "失败时间")
-    private LocalDate failedTime;
+    private LocalDateTime failedTime;
 
     /** 失败原因 */
     @Schema(title = "失败原因")
@@ -67,12 +67,12 @@ public class DataiSfFailedLogin extends BaseEntity
     /** 锁定时间 */
     @Schema(title = "锁定时间")
     @Excel(name = "锁定时间")
-    private LocalDate lockTime;
+    private LocalDateTime lockTime;
 
     /** 解锁时间 */
     @Schema(title = "解锁时间")
     @Excel(name = "解锁时间")
-    private LocalDate unlockTime;
+    private LocalDateTime unlockTime;
 
     /** 锁定原因 */
     @Schema(title = "锁定原因")
@@ -122,12 +122,12 @@ public class DataiSfFailedLogin extends BaseEntity
     }
 
 
-    public void setFailedTime(LocalDate failedTime) 
+    public void setFailedTime(LocalDateTime failedTime)
     {
         this.failedTime = failedTime;
     }
 
-    public LocalDate getFailedTime() 
+    public LocalDateTime getFailedTime()
     {
         return failedTime;
     }
@@ -177,23 +177,23 @@ public class DataiSfFailedLogin extends BaseEntity
     }
 
 
-    public void setLockTime(LocalDate lockTime) 
+    public void setLockTime(LocalDateTime lockTime)
     {
         this.lockTime = lockTime;
     }
 
-    public LocalDate getLockTime() 
+    public LocalDateTime getLockTime()
     {
         return lockTime;
     }
 
 
-    public void setUnlockTime(LocalDate unlockTime) 
+    public void setUnlockTime(LocalDateTime unlockTime)
     {
         this.unlockTime = unlockTime;
     }
 
-    public LocalDate getUnlockTime() 
+    public LocalDateTime getUnlockTime()
     {
         return unlockTime;
     }

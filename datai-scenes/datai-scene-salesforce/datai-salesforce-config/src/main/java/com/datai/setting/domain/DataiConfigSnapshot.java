@@ -1,6 +1,6 @@
 package com.datai.setting.domain;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -32,7 +32,7 @@ public class DataiConfigSnapshot extends BaseEntity
     /** 快照时间 */
     @Schema(title = "快照时间")
     @Excel(name = "快照时间")
-    private LocalDate snapshotTime;
+    private LocalDateTime snapshotTime;
 
     /** 快照内容 */
     @Schema(title = "快照内容")
@@ -70,12 +70,12 @@ public class DataiConfigSnapshot extends BaseEntity
     }
 
 
-    public void setSnapshotTime(LocalDate snapshotTime) 
+    public void setSnapshotTime(LocalDateTime snapshotTime) 
     {
         this.snapshotTime = snapshotTime;
     }
 
-    public LocalDate getSnapshotTime() 
+    public LocalDateTime getSnapshotTime() 
     {
         return snapshotTime;
     }

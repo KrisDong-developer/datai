@@ -1,6 +1,6 @@
 package com.datai.auth.domain;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -32,7 +32,7 @@ public class DataiSfLoginStatistics extends BaseEntity
     /** 统计日期 */
     @Schema(title = "统计日期")
     @Excel(name = "统计日期")
-    private LocalDate statDate;
+    private LocalDateTime statDate;
 
     /** 统计小时 */
     @Schema(title = "统计小时")
@@ -85,12 +85,12 @@ public class DataiSfLoginStatistics extends BaseEntity
     }
 
 
-    public void setStatDate(LocalDate statDate) 
+    public void setStatDate(LocalDateTime statDate)
     {
         this.statDate = statDate;
     }
 
-    public LocalDate getStatDate() 
+    public LocalDateTime getStatDate()
     {
         return statDate;
     }

@@ -1,6 +1,8 @@
 package com.datai.setting.domain;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalDateTime;
+
 import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -52,7 +54,7 @@ public class DataiConfigVersion extends BaseEntity
     /** 发布时间 */
     @Schema(title = "发布时间")
     @Excel(name = "发布时间")
-    private LocalDate publishTime;
+    private LocalDateTime publishTime;
 
     /** 租户编号 */
     @Schema(title = "租户编号")
@@ -124,12 +126,12 @@ public class DataiConfigVersion extends BaseEntity
     }
 
 
-    public void setPublishTime(LocalDate publishTime) 
+    public void setPublishTime(LocalDateTime publishTime) 
     {
         this.publishTime = publishTime;
     }
 
-    public LocalDate getPublishTime() 
+    public LocalDateTime getPublishTime() 
     {
         return publishTime;
     }

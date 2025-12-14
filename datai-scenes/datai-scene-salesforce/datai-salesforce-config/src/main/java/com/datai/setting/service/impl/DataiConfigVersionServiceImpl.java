@@ -16,7 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -190,7 +190,7 @@ public class DataiConfigVersionServiceImpl implements IDataiConfigVersionService
         
         // 更新版本状态为已发布
         version.setStatus("PUBLISHED");
-        version.setPublishTime(LocalDate.now());
+        version.setPublishTime(LocalDateTime.now());
         
         LoginUser loginUser = SecurityUtils.getLoginUser();
         String username = loginUser.getUsername();

@@ -1,6 +1,7 @@
 package com.datai.auth.domain;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
+
 import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -47,17 +48,17 @@ public class DataiSfLoginSession extends BaseEntity
     /** 登录时间 */
     @Schema(title = "登录时间")
     @Excel(name = "登录时间")
-    private LocalDate loginTime;
+    private LocalDateTime loginTime;
 
     /** 过期时间 */
     @Schema(title = "过期时间")
     @Excel(name = "过期时间")
-    private LocalDate expireTime;
+    private LocalDateTime expireTime;
 
     /** 最后活动时间 */
     @Schema(title = "最后活动时间")
     @Excel(name = "最后活动时间")
-    private LocalDate lastActivityTime;
+    private LocalDateTime lastActivityTime;
 
     /** 登录IP */
     @Schema(title = "登录IP")
@@ -138,34 +139,34 @@ public class DataiSfLoginSession extends BaseEntity
     }
 
 
-    public void setLoginTime(LocalDate loginTime) 
+    public void setLoginTime(LocalDateTime loginTime)
     {
         this.loginTime = loginTime;
     }
 
-    public LocalDate getLoginTime() 
+    public LocalDateTime getLoginTime()
     {
         return loginTime;
     }
 
 
-    public void setExpireTime(LocalDate expireTime) 
+    public void setExpireTime(LocalDateTime expireTime)
     {
         this.expireTime = expireTime;
     }
 
-    public LocalDate getExpireTime() 
+    public LocalDateTime getExpireTime()
     {
         return expireTime;
     }
 
 
-    public void setLastActivityTime(LocalDate lastActivityTime) 
+    public void setLastActivityTime(LocalDateTime lastActivityTime)
     {
         this.lastActivityTime = lastActivityTime;
     }
 
-    public LocalDate getLastActivityTime() 
+    public LocalDateTime getLastActivityTime()
     {
         return lastActivityTime;
     }
