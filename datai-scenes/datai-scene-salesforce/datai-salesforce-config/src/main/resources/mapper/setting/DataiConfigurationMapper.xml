@@ -123,4 +123,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             #{configId}
         </foreach>
     </delete>
+    
+    <delete id="deleteAllConfigurations">
+        delete from datai_configuration
+    </delete>
 </mapper>

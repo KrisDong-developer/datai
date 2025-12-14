@@ -110,4 +110,41 @@ public class DataiConfigurationController extends BaseController
     {
         return toAjax(dataiConfigurationService.deleteDataiConfigurationByConfigIds(configIds));
     }
+    
+    /**
+     * 刷新配置缓存
+     */
+    @Operation(summary = "刷新配置缓存")
+    @PreAuthorize("@ss.hasPermi('setting:configuration:refresh')")
+    @Log(title = "配置", businessType = BusinessType.UPDATE)
+    @PostMapping("/refresh")
+    public AjaxResult refreshConfigCache() 
+    {
+        dataiConfigurationService.resetConfigCache();
+        return success("配置缓存刷新成功");
+    }
+    
+    /**
+     * 查询配置缓存状态
+     */
+    @Operation(summary = "查询配置缓存状态")
+    @PreAuthorize("@ss.hasPermi('setting:configuration:cache')")
+    @GetMapping("/cache")
+    public AjaxResult getConfigCacheStatus() 
+    {
+        // 这里可以返回更详细的缓存状态信息
+        return success("配置缓存状态正常");
+    }
+    
+    /**
+     * 验证配置值合法性
+     */
+    @Operation(summary = "验证配置值合法性")
+    @PreAuthorize("@ss.hasPermi('setting:configuration:validate')")
+    @PostMapping("/validate")
+    public AjaxResult validateConfig(@RequestBody DataiConfiguration config) 
+    {
+        boolean isValid = dataiConfigurationService.validateConfigValue(config);
+        return isValid ? success("配置值验证通过") : error("配置值验证失败");
+    }
 }

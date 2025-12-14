@@ -58,4 +58,11 @@ public interface DataiConfigurationMapper
      * @return 结果
      */
     public int deleteDataiConfigurationByConfigIds(Long[] configIds);
+    
+    /**
+     * 删除所有配置
+     * 
+     * @return 结果
+     */
+    public int deleteAllConfigurations();
 }

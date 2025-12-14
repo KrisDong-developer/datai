@@ -58,4 +58,35 @@ public interface IDataiConfigVersionService
      * @return 结果
      */
     public int deleteDataiConfigVersionByVersionId(Long versionId);
+
+    /**
+     * 创建配置版本快照
+     * 
+     * @param versionDesc 版本描述
+     * @return 配置版本
+     */
+    public DataiConfigVersion createVersionSnapshot(String versionDesc);
+
+    /**
+     * 发布配置版本
+     * 
+     * @param versionId 版本ID
+     * @return 结果
+     */
+    public int publishConfigVersion(Long versionId);
+
+    /**
+     * 回滚到指定版本
+     * 
+     * @param versionId 版本ID
+     * @return 结果
+     */
+    public int rollbackToVersion(Long versionId);
+
+    /**
+     * 获取当前生效版本
+     * 
+     * @return 当前生效版本
+     */
+    public DataiConfigVersion getCurrentActiveVersion();
 }

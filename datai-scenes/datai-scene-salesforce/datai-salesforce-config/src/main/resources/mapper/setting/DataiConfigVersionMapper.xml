@@ -49,6 +49,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="publishTime != null "> and dcv.publish_time = #{publishTime}</if>
             <if test="tenantId != null  and tenantId != ''"> and dcv.tenant_id = #{tenantId}</if>
         </where>
+        order by dcv.create_time desc
     </select>
     
     <select id="selectDataiConfigVersionByVersionId" parameterType="Long" resultMap="DataiConfigVersionResult">
@@ -117,4 +118,9 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             #{versionId}
         </foreach>
     </delete>
+    
+    <select id="countVersionsByDate" parameterType="String" resultType="int">
+        select count(*) from datai_config_version 
+        where date(create_time) = #{date}
+    </select>
 </mapper>

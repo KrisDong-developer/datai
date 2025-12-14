@@ -4,14 +4,7 @@ import java.util.List;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import com.datai.common.annotation.Log;
 import com.datai.common.core.controller.BaseController;
 import com.datai.common.core.domain.AjaxResult;
@@ -109,5 +102,41 @@ public class DataiConfigVersionController extends BaseController
     public AjaxResult remove(@PathVariable( name = "versionIds" ) Long[] versionIds) 
     {
         return toAjax(dataiConfigVersionService.deleteDataiConfigVersionByVersionIds(versionIds));
+    }
+    
+    /**
+     * 发布配置版本
+     */
+    @Operation(summary = "发布配置版本")
+    @PreAuthorize("@ss.hasPermi('setting:version:publish')")
+    @Log(title = "配置版本", businessType = BusinessType.UPDATE)
+    @PostMapping("/{versionId}/publish")
+    public AjaxResult publishVersion(@PathVariable Long versionId) 
+    {
+        return toAjax(dataiConfigVersionService.publishConfigVersion(versionId));
+    }
+    
+    /**
+     * 创建配置快照
+     */
+    @Operation(summary = "创建配置快照")
+    @PreAuthorize("@ss.hasPermi('setting:version:snapshot')")
+    @Log(title = "配置版本", businessType = BusinessType.INSERT)
+    @PostMapping("/snapshot")
+    public AjaxResult createSnapshot(@RequestParam String versionDesc)
+    {
+        return success(dataiConfigVersionService.createVersionSnapshot(versionDesc));
+    }
+    
+    /**
+     * 回滚到指定版本
+     */
+    @Operation(summary = "回滚到指定版本")
+    @PreAuthorize("@ss.hasPermi('setting:version:rollback')")
+    @Log(title = "配置版本", businessType = BusinessType.UPDATE)
+    @PostMapping("/{versionId}/rollback")
+    public AjaxResult rollbackToVersion(@PathVariable Long versionId) 
+    {
+        return toAjax(dataiConfigVersionService.rollbackToVersion(versionId));
     }
 }

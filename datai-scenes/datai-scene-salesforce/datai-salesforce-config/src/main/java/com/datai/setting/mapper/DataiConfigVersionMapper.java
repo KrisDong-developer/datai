@@ -58,4 +58,12 @@ public interface DataiConfigVersionMapper
      * @return 结果
      */
     public int deleteDataiConfigVersionByVersionIds(Long[] versionIds);
+    
+    /**
+     * 根据日期查询版本数量
+     * 
+     * @param date 日期
+     * @return 版本数量
+     */
+    public int countVersionsByDate(String date);
 }
