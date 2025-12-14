@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.datai.auth.mapper.DataiSfTokenMapper">
+    
+    <resultMap type="DataiSfToken" id="DataiSfTokenResult">
+        <result property="tokenId" column="token_id" />
+        <result property="tenantId" column="tenant_id" />
+        <result property="username" column="username" />
+        <result property="accessToken" column="access_token" />
+        <result property="refreshToken" column="refresh_token" />
+        <result property="accessTokenExpire" column="access_token_expire" />
+        <result property="refreshTokenExpire" column="refresh_token_expire" />
+        <result property="status" column="status" />
+        <result property="instanceUrl" column="instance_url" />
+        <result property="loginType" column="login_type" />
+        <result property="clientId" column="client_id" />
+        <result property="scope" column="scope" />
+        <result property="tokenType" column="token_type" />
+        <result property="organizationId" column="organization_id" />
+        <result property="userId" column="user_id" />
+        <result property="createBy" column="create_by" />
+        <result property="createTime" column="create_time" />
+        <result property="updateBy" column="update_by" />
+        <result property="updateTime" column="update_time" />
+    </resultMap>
+
+    <sql id="selectDataiSfTokenVo">
+        select 
+            dst.token_id,
+            dst.tenant_id,
+            dst.username,
+            dst.access_token,
+            dst.refresh_token,
+            dst.access_token_expire,
+            dst.refresh_token_expire,
+            dst.status,
+            dst.instance_url,
+            dst.login_type,
+            dst.client_id,
+            dst.scope,
+            dst.token_type,
+            dst.organization_id,
+            dst.user_id,
+            dst.create_by,
+            dst.create_time,
+            dst.update_by,
+            dst.update_time
+        from datai_sf_token dst
+    </sql>
+
+    <select id="selectDataiSfTokenList" parameterType="DataiSfToken" resultMap="DataiSfTokenResult">
+        <include refid="selectDataiSfTokenVo"/>
+        <where>
+            <if test="tenantId != null  and tenantId != ''"> and dst.tenant_id = #{tenantId}</if>
+            <if test="username != null  and username != ''"> and dst.username like concat('%', #{username}, '%')</if>
+            <if test="accessToken != null  and accessToken != ''"> and dst.access_token = #{accessToken}</if>
+            <if test="refreshToken != null  and refreshToken != ''"> and dst.refresh_token = #{refreshToken}</if>
+            <if test="accessTokenExpire != null "> and dst.access_token_expire = #{accessTokenExpire}</if>
+            <if test="refreshTokenExpire != null "> and dst.refresh_token_expire = #{refreshTokenExpire}</if>
+            <if test="status != null  and status != ''"> and dst.status = #{status}</if>
+            <if test="instanceUrl != null  and instanceUrl != ''"> and dst.instance_url = #{instanceUrl}</if>
+            <if test="loginType != null  and loginType != ''"> and dst.login_type = #{loginType}</if>
+            <if test="clientId != null  and clientId != ''"> and dst.client_id = #{clientId}</if>
+            <if test="scope != null  and scope != ''"> and dst.scope = #{scope}</if>
+            <if test="tokenType != null  and tokenType != ''"> and dst.token_type = #{tokenType}</if>
+            <if test="organizationId != null  and organizationId != ''"> and dst.organization_id = #{organizationId}</if>
+            <if test="userId != null  and userId != ''"> and dst.user_id = #{userId}</if>
+        </where>
+    </select>
+    
+    <select id="selectDataiSfTokenByTokenId" parameterType="Long" resultMap="DataiSfTokenResult">
+        <include refid="selectDataiSfTokenVo"/>
+        where dst.token_id = #{tokenId}
+    </select>
+        
+    <insert id="insertDataiSfToken" parameterType="DataiSfToken" useGeneratedKeys="true" keyProperty="tokenId">
+        insert into datai_sf_token
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="tenantId != null">tenant_id,</if>
+            <if test="username != null and username != ''">username,</if>
+            <if test="accessToken != null and accessToken != ''">access_token,</if>
+            <if test="refreshToken != null">refresh_token,</if>
+            <if test="accessTokenExpire != null">access_token_expire,</if>
+            <if test="refreshTokenExpire != null">refresh_token_expire,</if>
+            <if test="status != null and status != ''">status,</if>
+            <if test="instanceUrl != null and instanceUrl != ''">instance_url,</if>
+            <if test="loginType != null and loginType != ''">login_type,</if>
+            <if test="clientId != null">client_id,</if>
+            <if test="scope != null">scope,</if>
+            <if test="tokenType != null">token_type,</if>
+            <if test="organizationId != null">organization_id,</if>
+            <if test="userId != null">user_id,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="tenantId != null">#{tenantId},</if>
+            <if test="username != null and username != ''">#{username},</if>
+            <if test="accessToken != null and accessToken != ''">#{accessToken},</if>
+            <if test="refreshToken != null">#{refreshToken},</if>
+            <if test="accessTokenExpire != null">#{accessTokenExpire},</if>
+            <if test="refreshTokenExpire != null">#{refreshTokenExpire},</if>
+            <if test="status != null and status != ''">#{status},</if>
+            <if test="instanceUrl != null and instanceUrl != ''">#{instanceUrl},</if>
+            <if test="loginType != null and loginType != ''">#{loginType},</if>
+            <if test="clientId != null">#{clientId},</if>
+            <if test="scope != null">#{scope},</if>
+            <if test="tokenType != null">#{tokenType},</if>
+            <if test="organizationId != null">#{organizationId},</if>
+            <if test="userId != null">#{userId},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateDataiSfToken" parameterType="DataiSfToken">
+        update datai_sf_token
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="tenantId != null">tenant_id = #{tenantId},</if>
+            <if test="username != null and username != ''">username = #{username},</if>
+            <if test="accessToken != null and accessToken != ''">access_token = #{accessToken},</if>
+            <if test="refreshToken != null">refresh_token = #{refreshToken},</if>
+            <if test="accessTokenExpire != null">access_token_expire = #{accessTokenExpire},</if>
+            <if test="refreshTokenExpire != null">refresh_token_expire = #{refreshTokenExpire},</if>
+            <if test="status != null and status != ''">status = #{status},</if>
+            <if test="instanceUrl != null and instanceUrl != ''">instance_url = #{instanceUrl},</if>
+            <if test="loginType != null and loginType != ''">login_type = #{loginType},</if>
+            <if test="clientId != null">client_id = #{clientId},</if>
+            <if test="scope != null">scope = #{scope},</if>
+            <if test="tokenType != null">token_type = #{tokenType},</if>
+            <if test="organizationId != null">organization_id = #{organizationId},</if>
+            <if test="userId != null">user_id = #{userId},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where datai_sf_token.token_id = #{tokenId}
+    </update>
+
+    <delete id="deleteDataiSfTokenByTokenId" parameterType="Long">
+        delete from datai_sf_token where token_id = #{tokenId}
+    </delete>
+
+    <delete id="deleteDataiSfTokenByTokenIds" parameterType="String">
+        delete from datai_sf_token where token_id in 
+        <foreach item="tokenId" collection="array" open="(" separator="," close=")">
+            #{tokenId}
+        </foreach>
+    </delete>
+</mapper>

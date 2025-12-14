@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.datai.auth.mapper.DataiSfTokenBindingMapper">
+    
+    <resultMap type="DataiSfTokenBinding" id="DataiSfTokenBindingResult">
+        <result property="bindingId" column="binding_id" />
+        <result property="tenantId" column="tenant_id" />
+        <result property="tokenId" column="token_id" />
+        <result property="bindingType" column="binding_type" />
+        <result property="deviceId" column="device_id" />
+        <result property="bindingIp" column="binding_ip" />
+        <result property="status" column="status" />
+        <result property="bindingTime" column="binding_time" />
+        <result property="expireTime" column="expire_time" />
+        <result property="createBy" column="create_by" />
+        <result property="createTime" column="create_time" />
+        <result property="updateBy" column="update_by" />
+        <result property="updateTime" column="update_time" />
+    </resultMap>
+
+    <sql id="selectDataiSfTokenBindingVo">
+        select 
+            dstb.binding_id,
+            dstb.tenant_id,
+            dstb.token_id,
+            dstb.binding_type,
+            dstb.device_id,
+            dstb.binding_ip,
+            dstb.status,
+            dstb.binding_time,
+            dstb.expire_time,
+            dstb.create_by,
+            dstb.create_time,
+            dstb.update_by,
+            dstb.update_time
+        from datai_sf_token_binding dstb
+    </sql>
+
+    <select id="selectDataiSfTokenBindingList" parameterType="DataiSfTokenBinding" resultMap="DataiSfTokenBindingResult">
+        <include refid="selectDataiSfTokenBindingVo"/>
+        <where>
+            <if test="tenantId != null  and tenantId != ''"> and dstb.tenant_id = #{tenantId}</if>
+            <if test="tokenId != null "> and dstb.token_id = #{tokenId}</if>
+            <if test="bindingType != null  and bindingType != ''"> and dstb.binding_type = #{bindingType}</if>
+            <if test="deviceId != null  and deviceId != ''"> and dstb.device_id = #{deviceId}</if>
+            <if test="bindingIp != null  and bindingIp != ''"> and dstb.binding_ip = #{bindingIp}</if>
+            <if test="status != null  and status != ''"> and dstb.status = #{status}</if>
+            <if test="bindingTime != null "> and dstb.binding_time = #{bindingTime}</if>
+            <if test="expireTime != null "> and dstb.expire_time = #{expireTime}</if>
+        </where>
+    </select>
+    
+    <select id="selectDataiSfTokenBindingByBindingId" parameterType="Long" resultMap="DataiSfTokenBindingResult">
+        <include refid="selectDataiSfTokenBindingVo"/>
+        where dstb.binding_id = #{bindingId}
+    </select>
+        
+    <insert id="insertDataiSfTokenBinding" parameterType="DataiSfTokenBinding" useGeneratedKeys="true" keyProperty="bindingId">
+        insert into datai_sf_token_binding
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="tenantId != null">tenant_id,</if>
+            <if test="tokenId != null">token_id,</if>
+            <if test="bindingType != null and bindingType != ''">binding_type,</if>
+            <if test="deviceId != null">device_id,</if>
+            <if test="bindingIp != null">binding_ip,</if>
+            <if test="status != null and status != ''">status,</if>
+            <if test="bindingTime != null">binding_time,</if>
+            <if test="expireTime != null">expire_time,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="tenantId != null">#{tenantId},</if>
+            <if test="tokenId != null">#{tokenId},</if>
+            <if test="bindingType != null and bindingType != ''">#{bindingType},</if>
+            <if test="deviceId != null">#{deviceId},</if>
+            <if test="bindingIp != null">#{bindingIp},</if>
+            <if test="status != null and status != ''">#{status},</if>
+            <if test="bindingTime != null">#{bindingTime},</if>
+            <if test="expireTime != null">#{expireTime},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateDataiSfTokenBinding" parameterType="DataiSfTokenBinding">
+        update datai_sf_token_binding
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="tenantId != null">tenant_id = #{tenantId},</if>
+            <if test="tokenId != null">token_id = #{tokenId},</if>
+            <if test="bindingType != null and bindingType != ''">binding_type = #{bindingType},</if>
+            <if test="deviceId != null">device_id = #{deviceId},</if>
+            <if test="bindingIp != null">binding_ip = #{bindingIp},</if>
+            <if test="status != null and status != ''">status = #{status},</if>
+            <if test="bindingTime != null">binding_time = #{bindingTime},</if>
+            <if test="expireTime != null">expire_time = #{expireTime},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where datai_sf_token_binding.binding_id = #{bindingId}
+    </update>
+
+    <delete id="deleteDataiSfTokenBindingByBindingId" parameterType="Long">
+        delete from datai_sf_token_binding where binding_id = #{bindingId}
+    </delete>
+
+    <delete id="deleteDataiSfTokenBindingByBindingIds" parameterType="String">
+        delete from datai_sf_token_binding where binding_id in 
+        <foreach item="bindingId" collection="array" open="(" separator="," close=")">
+            #{bindingId}
+        </foreach>
+    </delete>
+</mapper>

@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.datai.auth.mapper.DataiSfLoginAuditMapper">
+    
+    <resultMap type="DataiSfLoginAudit" id="DataiSfLoginAuditResult">
+        <result property="auditId" column="audit_id" />
+        <result property="tenantId" column="tenant_id" />
+        <result property="username" column="username" />
+        <result property="operationType" column="operation_type" />
+        <result property="result" column="result" />
+        <result property="operationTime" column="operation_time" />
+        <result property="ipAddress" column="ip_address" />
+        <result property="deviceInfo" column="device_info" />
+        <result property="browserInfo" column="browser_info" />
+        <result property="loginType" column="login_type" />
+        <result property="errorMessage" column="error_message" />
+        <result property="sessionId" column="session_id" />
+        <result property="tokenId" column="token_id" />
+        <result property="requestId" column="request_id" />
+        <result property="createBy" column="create_by" />
+        <result property="createTime" column="create_time" />
+    </resultMap>
+
+    <sql id="selectDataiSfLoginAuditVo">
+        select 
+            dsla.audit_id,
+            dsla.tenant_id,
+            dsla.username,
+            dsla.operation_type,
+            dsla.result,
+            dsla.operation_time,
+            dsla.ip_address,
+            dsla.device_info,
+            dsla.browser_info,
+            dsla.login_type,
+            dsla.error_message,
+            dsla.session_id,
+            dsla.token_id,
+            dsla.request_id,
+            dsla.create_by,
+            dsla.create_time
+        from datai_sf_login_audit dsla
+    </sql>
+
+    <select id="selectDataiSfLoginAuditList" parameterType="DataiSfLoginAudit" resultMap="DataiSfLoginAuditResult">
+        <include refid="selectDataiSfLoginAuditVo"/>
+        <where>
+            <if test="tenantId != null  and tenantId != ''"> and dsla.tenant_id = #{tenantId}</if>
+            <if test="username != null  and username != ''"> and dsla.username like concat('%', #{username}, '%')</if>
+            <if test="operationType != null  and operationType != ''"> and dsla.operation_type = #{operationType}</if>
+            <if test="result != null  and result != ''"> and dsla.result = #{result}</if>
+            <if test="operationTime != null "> and dsla.operation_time = #{operationTime}</if>
+            <if test="ipAddress != null  and ipAddress != ''"> and dsla.ip_address = #{ipAddress}</if>
+            <if test="deviceInfo != null  and deviceInfo != ''"> and dsla.device_info = #{deviceInfo}</if>
+            <if test="browserInfo != null  and browserInfo != ''"> and dsla.browser_info = #{browserInfo}</if>
+            <if test="loginType != null  and loginType != ''"> and dsla.login_type = #{loginType}</if>
+            <if test="errorMessage != null  and errorMessage != ''"> and dsla.error_message = #{errorMessage}</if>
+            <if test="sessionId != null "> and dsla.session_id = #{sessionId}</if>
+            <if test="tokenId != null "> and dsla.token_id = #{tokenId}</if>
+            <if test="requestId != null  and requestId != ''"> and dsla.request_id = #{requestId}</if>
+        </where>
+    </select>
+    
+    <select id="selectDataiSfLoginAuditByAuditId" parameterType="Long" resultMap="DataiSfLoginAuditResult">
+        <include refid="selectDataiSfLoginAuditVo"/>
+        where dsla.audit_id = #{auditId}
+    </select>
+        
+    <insert id="insertDataiSfLoginAudit" parameterType="DataiSfLoginAudit" useGeneratedKeys="true" keyProperty="auditId">
+        insert into datai_sf_login_audit
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="tenantId != null">tenant_id,</if>
+            <if test="username != null">username,</if>
+            <if test="operationType != null and operationType != ''">operation_type,</if>
+            <if test="result != null and result != ''">result,</if>
+            <if test="operationTime != null">operation_time,</if>
+            <if test="ipAddress != null">ip_address,</if>
+            <if test="deviceInfo != null">device_info,</if>
+            <if test="browserInfo != null">browser_info,</if>
+            <if test="loginType != null">login_type,</if>
+            <if test="errorMessage != null">error_message,</if>
+            <if test="sessionId != null">session_id,</if>
+            <if test="tokenId != null">token_id,</if>
+            <if test="requestId != null">request_id,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="tenantId != null">#{tenantId},</if>
+            <if test="username != null">#{username},</if>
+            <if test="operationType != null and operationType != ''">#{operationType},</if>
+            <if test="result != null and result != ''">#{result},</if>
+            <if test="operationTime != null">#{operationTime},</if>
+            <if test="ipAddress != null">#{ipAddress},</if>
+            <if test="deviceInfo != null">#{deviceInfo},</if>
+            <if test="browserInfo != null">#{browserInfo},</if>
+            <if test="loginType != null">#{loginType},</if>
+            <if test="errorMessage != null">#{errorMessage},</if>
+            <if test="sessionId != null">#{sessionId},</if>
+            <if test="tokenId != null">#{tokenId},</if>
+            <if test="requestId != null">#{requestId},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateDataiSfLoginAudit" parameterType="DataiSfLoginAudit">
+        update datai_sf_login_audit
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="tenantId != null">tenant_id = #{tenantId},</if>
+            <if test="username != null">username = #{username},</if>
+            <if test="operationType != null and operationType != ''">operation_type = #{operationType},</if>
+            <if test="result != null and result != ''">result = #{result},</if>
+            <if test="operationTime != null">operation_time = #{operationTime},</if>
+            <if test="ipAddress != null">ip_address = #{ipAddress},</if>
+            <if test="deviceInfo != null">device_info = #{deviceInfo},</if>
+            <if test="browserInfo != null">browser_info = #{browserInfo},</if>
+            <if test="loginType != null">login_type = #{loginType},</if>
+            <if test="errorMessage != null">error_message = #{errorMessage},</if>
+            <if test="sessionId != null">session_id = #{sessionId},</if>
+            <if test="tokenId != null">token_id = #{tokenId},</if>
+            <if test="requestId != null">request_id = #{requestId},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+        </trim>
+        where datai_sf_login_audit.audit_id = #{auditId}
+    </update>
+
+    <delete id="deleteDataiSfLoginAuditByAuditId" parameterType="Long">
+        delete from datai_sf_login_audit where audit_id = #{auditId}
+    </delete>
+
+    <delete id="deleteDataiSfLoginAuditByAuditIds" parameterType="String">
+        delete from datai_sf_login_audit where audit_id in 
+        <foreach item="auditId" collection="array" open="(" separator="," close=")">
+            #{auditId}
+        </foreach>
+    </delete>
+</mapper>

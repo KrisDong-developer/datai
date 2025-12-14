@@ -19,6 +19,7 @@
         <module>datai-salesforce-common</module>
         <module>datai-salesforce-config</module>
         <module>datai-salesforce-starter</module>
+        <module>datai-salesforce-auth</module>
     </modules>
 
     <dependencyManagement>
@@ -31,6 +32,11 @@
             <dependency>
                 <groupId>com.datai</groupId>
                 <artifactId>datai-salesforce-config</artifactId>
+                <version>${datai.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.datai</groupId>
+                <artifactId>datai-salesforce-auth</artifactId>
                 <version>${datai.version}</version>
             </dependency>
         </dependencies>
