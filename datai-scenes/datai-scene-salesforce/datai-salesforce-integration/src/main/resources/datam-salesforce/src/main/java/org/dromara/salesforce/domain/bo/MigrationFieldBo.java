@@ -1,0 +1,262 @@
+package org.dromara.salesforce.domain.bo;
+
+import org.dromara.salesforce.domain.MigrationField;
+import org.dromara.common.mybatis.core.domain.BaseEntity;
+import org.dromara.common.core.validate.AddGroup;
+import org.dromara.common.core.validate.EditGroup;
+import io.github.linpeilie.annotations.AutoMapper;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import jakarta.validation.constraints.*;
+
+/**
+ * 对象字段信息业务对象 migration_field
+ *
+ * @author Kris
+ * @date 2025-09-03
+ */
+@Data
+@EqualsAndHashCode(callSuper = true)
+@AutoMapper(target = MigrationField.class, reverseConvertGenerate = false)
+public class MigrationFieldBo extends BaseEntity {
+
+    /**
+     * 主键ID
+     */
+    @NotNull(message = "主键ID不能为空", groups = { EditGroup.class })
+    private Integer id;
+
+    /**
+     * 对象API
+     */
+    @NotBlank(message = "对象API不能为空", groups = { AddGroup.class, EditGroup.class })
+    private String api;
+
+    /**
+     * 字段API
+     */
+    @NotBlank(message = "字段API不能为空", groups = { AddGroup.class, EditGroup.class })
+    private String field;
+
+    /**
+     * 字段标签
+     */
+    private String label;
+
+    /**
+     * 是否可编辑（目标库字段）
+     */
+    private Boolean isCreateable;
+
+    /**
+     * 是否为空（目标库字段）
+     */
+    private Boolean isNillable;
+
+    /**
+     * 是否可更新
+     */
+    private Boolean isUpdateable;
+
+    /**
+     * 是否默认值
+     */
+    private Boolean isDefaultedOnCreate;
+
+    /**
+     * 是否唯一
+     */
+    private Boolean isUnique;
+
+    /**
+     * 是否可过滤
+     */
+    private Boolean isFilterable;
+
+    /**
+     * 是否可排序
+     */
+    private Boolean isSortable;
+
+    /**
+     * 是否可聚合
+     */
+    private Boolean isAggregatable;
+
+    /**
+     * 是否可分组
+     */
+    private Boolean isGroupable;
+
+    /**
+     * 是否多态外键
+     */
+    private Boolean isPolymorphicForeignKey;
+
+    /**
+     * 多态映射字段
+     */
+    private String polymorphicForeignField;
+
+    /**
+     * 是否外部ID
+     */
+    private Boolean isExternalId;
+
+    /**
+     * 是否自定义字段
+     */
+    private Boolean isCustom;
+
+    /**
+     * 是否计算字段
+     */
+    private Boolean isCalculated;
+
+    /**
+     * 是否自动编号字段
+     */
+    private Boolean isAutoNumber;
+
+    /**
+     * 是否区分大小写
+     */
+    private Boolean isCaseSensitive;
+
+    /**
+     * 是否加密字段
+     */
+    private Boolean isEncrypted;
+
+    /**
+     * 是否HTML格式字段
+     */
+    private Boolean isHtmlFormatted;
+
+    /**
+     * 是否可通过ID查找
+     */
+    private Boolean isIdLookup;
+
+    /**
+     * 是否可设置权限
+     */
+    private Boolean isPermissionable;
+
+    /**
+     * 是否限制选择列表
+     */
+    private Boolean isRestrictedPicklist;
+
+    /**
+     * 是否限制删除
+     */
+    private Boolean isRestrictedDelete;
+
+    /**
+     * 写入时是否需要主读
+     */
+    private Boolean isWriteRequiresMasterRead;
+
+    /**
+     * 字段数据类型
+     */
+    private String fieldDataType;
+
+    /**
+     * 字段长度
+     */
+    private Integer fieldLength;
+
+    /**
+     * 数字字段的精度
+     */
+    private Integer fieldPrecision;
+
+    /**
+     * 数字字段的小数位数
+     */
+    private Integer fieldScale;
+
+    /**
+     * 字段的字节长度
+     */
+    private Integer fieldByteLength;
+
+    /**
+     * 默认值
+     */
+    private String defaultValue;
+
+    /**
+     * 计算字段的公式
+     */
+    private String calculatedFormula;
+
+    /**
+     * 内联帮助文本
+     */
+    private String inlineHelpText;
+
+    /**
+     * 掩码
+     */
+    private String mask;
+
+    /**
+     * 掩码类型
+     */
+    private String maskType;
+
+    /**
+     * 选择列表值
+     */
+    private String picklistValues;
+
+    /**
+     * 关系名称
+     */
+    private String relationshipName;
+
+    /**
+     * 关系顺序
+     */
+    private Integer relationshipOrder;
+
+    /**
+     * 引用目标字段
+     */
+    private String referenceTargetField;
+
+    /**
+     * 是否可以通过距离查询
+     */
+    private Boolean queryByDistance;
+
+    /**
+     * 是否可以预过滤搜索
+     */
+    private Boolean searchPrefilterable;
+
+    /**
+     * SOAP类型
+     */
+    private String soapType;
+
+    /**
+     * 是否可更新
+     */
+    private Boolean updateable;
+
+    /**
+     * 写入时是否需要主读
+     */
+    private Boolean writeRequiresMasterRead;
+
+    /**
+     * 备注
+     */
+    private String remark;
+
+
+}

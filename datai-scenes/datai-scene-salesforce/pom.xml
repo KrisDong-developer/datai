@@ -20,6 +20,7 @@
         <module>datai-salesforce-config</module>
         <module>datai-salesforce-starter</module>
         <module>datai-salesforce-auth</module>
+        <module>datai-salesforce-integration</module>
     </modules>
 
     <dependencyManagement>
