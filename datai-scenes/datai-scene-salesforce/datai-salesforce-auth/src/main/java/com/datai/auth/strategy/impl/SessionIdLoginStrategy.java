@@ -4,6 +4,8 @@ import com.datai.auth.domain.SalesforceLoginResult;
 import com.datai.auth.domain.SalesforceLoginRequest;
 import com.datai.auth.strategy.LoginStrategy;
 import com.datai.common.utils.CacheUtils;
+import com.datai.salesforce.common.constant.SalesforceConfigConstants;
+import com.datai.salesforce.common.exception.SalesforceSessionIdLoginException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.Cache;
@@ -32,7 +34,7 @@ public class SessionIdLoginStrategy implements LoginStrategy {
     /**
      * 登录类型标识
      */
-    private static final String LOGIN_TYPE = "SESSION_ID";
+    private static final String LOGIN_TYPE = "session_id";
     
     /**
      * Salesforce Identity API路径
@@ -51,10 +53,7 @@ public class SessionIdLoginStrategy implements LoginStrategy {
             
             // 验证Session ID是否存在
             if (sessionId == null || sessionId.isEmpty()) {
-                result.setSuccess(false);
-                result.setErrorMessage("Session ID不能为空");
-                result.setErrorCode("SESSION_ID_EMPTY");
-                return result;
+                throw new SalesforceSessionIdLoginException("SESSION_ID_EMPTY", "Session ID不能为空");
             }
             
             // 获取Salesforce配置
@@ -81,8 +80,13 @@ public class SessionIdLoginStrategy implements LoginStrategy {
         } catch (Exception e) {
             logger.error("Session ID登录失败: {}", e.getMessage(), e);
             result.setSuccess(false);
-            result.setErrorMessage("Session ID登录失败: " + e.getMessage());
-            result.setErrorCode("SESSION_ID_LOGIN_FAILED");
+            if (e instanceof SalesforceSessionIdLoginException) {
+                result.setErrorMessage(e.getMessage());
+                result.setErrorCode(((SalesforceSessionIdLoginException) e).getErrorCode());
+            } else {
+                result.setErrorMessage("Session ID登录失败: " + e.getMessage());
+                result.setErrorCode("session_id_LOGIN_FAILED");
+            }
         }
         
         return result;
@@ -128,18 +132,18 @@ public class SessionIdLoginStrategy implements LoginStrategy {
      * 获取Salesforce配置信息
      * 
      * @return 配置信息Map
-     * @throws RuntimeException 配置获取失败时抛出
+     * @throws SalesforceSessionIdLoginException 配置获取失败时抛出
      */
-    private Map<String, String> getSalesforceConfig() {
-        Cache cache = CacheUtils.getCache("salesforce_config_cache");
+    private Map<String, String> getSalesforceConfig() throws SalesforceSessionIdLoginException {
+        Cache cache = CacheUtils.getCache(SalesforceConfigConstants.SALESFORCE_CONFIG_CACHE_KEY);
         if (cache == null) {
-            throw new RuntimeException("Salesforce config cache not found");
+            throw new SalesforceSessionIdLoginException("CONFIG_NOT_FOUND", "Salesforce config cache not found");
         }
         
-        String apiVersion = CacheUtils.get("salesforce_config_cache", "salesforce.api.version", String.class);
-        String environmentType = CacheUtils.get("salesforce_config_cache", "salesforce.environment.type", String.class);
+        String apiVersion = CacheUtils.get(SalesforceConfigConstants.SALESFORCE_CONFIG_CACHE_KEY, "salesforce.api.version", String.class);
+        String environmentType = CacheUtils.get(SalesforceConfigConstants.SALESFORCE_CONFIG_CACHE_KEY, "salesforce.environment.type", String.class);
         String endpointUrl = getEndpointUrl(environmentType);
-        String namespace = CacheUtils.get("salesforce_config_cache", "salesforce.api.namespace", String.class);
+        String namespace = CacheUtils.get(SalesforceConfigConstants.SALESFORCE_CONFIG_CACHE_KEY, "salesforce.api.namespace", String.class);
         
         // 验证必要配置
         if (apiVersion == null) {
@@ -162,20 +166,21 @@ public class SessionIdLoginStrategy implements LoginStrategy {
      * 
      * @param environmentType 环境类型
      * @return 端点URL
+     * @throws SalesforceSessionIdLoginException 配置获取失败时抛出
      */
-    private String getEndpointUrl(String environmentType) {
-        Cache cache = CacheUtils.getCache("salesforce_config_cache");
+    private String getEndpointUrl(String environmentType) throws SalesforceSessionIdLoginException {
+        Cache cache = CacheUtils.getCache(SalesforceConfigConstants.SALESFORCE_CONFIG_CACHE_KEY);
         if (cache == null) {
-            throw new RuntimeException("Salesforce config cache not found");
+            throw new SalesforceSessionIdLoginException("CONFIG_NOT_FOUND", "Salesforce config cache not found");
         }
         
         switch (environmentType) {
             case "sandbox":
-                return CacheUtils.get("salesforce_config_cache", "salesforce.api.endpoint.sandbox", String.class);
+                return CacheUtils.get(SalesforceConfigConstants.SALESFORCE_CONFIG_CACHE_KEY, "salesforce.api.endpoint.sandbox", String.class);
             case "custom":
-                return CacheUtils.get("salesforce_config_cache", "salesforce.api.endpoint.custom", String.class);
+                return CacheUtils.get(SalesforceConfigConstants.SALESFORCE_CONFIG_CACHE_KEY, "salesforce.api.endpoint.custom", String.class);
             default:
-                return CacheUtils.get("salesforce_config_cache", "salesforce.api.endpoint.production", String.class);
+                return CacheUtils.get(SalesforceConfigConstants.SALESFORCE_CONFIG_CACHE_KEY, "salesforce.api.endpoint.production", String.class);
         }
     }
     
@@ -240,7 +245,7 @@ public class SessionIdLoginStrategy implements LoginStrategy {
             logger.debug("Identity API响应内容: {}", response);
             
             if (responseCode != HttpURLConnection.HTTP_OK) {
-                throw new Exception("Invalid Session ID: " + response);
+                throw new SalesforceSessionIdLoginException("INVALID_SESSION_ID", "Invalid Session ID: " + response);
             }
             
             // 解析JSON响应
@@ -322,9 +327,9 @@ public class SessionIdLoginStrategy implements LoginStrategy {
      * @return 会话超时时间（秒）
      */
     private long getSessionTimeout(Map<String, String> config) {
-        Cache cache = CacheUtils.getCache("salesforce_config_cache");
+        Cache cache = CacheUtils.getCache(SalesforceConfigConstants.SALESFORCE_CONFIG_CACHE_KEY);
         if (cache != null) {
-            String sessionTimeout = CacheUtils.get("salesforce_config_cache", "salesforce.session.timeout", String.class);
+            String sessionTimeout = CacheUtils.get(SalesforceConfigConstants.SALESFORCE_CONFIG_CACHE_KEY, "salesforce.session.timeout", String.class);
             if (sessionTimeout != null) {
                 try {
                     return Long.parseLong(sessionTimeout);

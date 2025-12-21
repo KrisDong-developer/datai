@@ -3,6 +3,7 @@ package com.datai.auth.strategy.impl;
 import com.datai.auth.domain.SalesforceLoginResult;
 import com.datai.auth.domain.SalesforceLoginRequest;
 import com.datai.auth.strategy.LoginStrategy;
+import com.datai.salesforce.common.exception.SalesforceCliLoginException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -37,7 +38,7 @@ public class SalesforceCliLoginStrategy implements LoginStrategy {
         try {
             // 1. 检查Salesforce CLI是否安装
             if (!isSalesforceCliInstalled()) {
-                throw new RuntimeException("Salesforce CLI not installed");
+                throw new SalesforceCliLoginException("CLI_NOT_INSTALLED", "Salesforce CLI not installed");
             }
             
             // 2. 获取访问令牌
@@ -59,8 +60,13 @@ public class SalesforceCliLoginStrategy implements LoginStrategy {
         } catch (Exception e) {
             logger.error("Salesforce CLI登录失败: {}", e.getMessage(), e);
             result.setSuccess(false);
-            result.setErrorMessage(e.getMessage());
-            result.setErrorCode("CLI_LOGIN_FAILED");
+            if (e instanceof SalesforceCliLoginException) {
+                result.setErrorMessage(e.getMessage());
+                result.setErrorCode(((SalesforceCliLoginException) e).getErrorCode());
+            } else {
+                result.setErrorMessage(e.getMessage());
+                result.setErrorCode("CLI_LOGIN_FAILED");
+            }
         }
         
         return result;
@@ -84,8 +90,13 @@ public class SalesforceCliLoginStrategy implements LoginStrategy {
         } catch (Exception e) {
             logger.error("Salesforce CLI刷新令牌失败: {}", e.getMessage(), e);
             result.setSuccess(false);
-            result.setErrorMessage(e.getMessage());
-            result.setErrorCode("CLI_REFRESH_FAILED");
+            if (e instanceof SalesforceCliLoginException) {
+                result.setErrorMessage(e.getMessage());
+                result.setErrorCode(((SalesforceCliLoginException) e).getErrorCode());
+            } else {
+                result.setErrorMessage(e.getMessage());
+                result.setErrorCode("CLI_REFRESH_FAILED");
+            }
         }
         
         return result;
@@ -150,7 +161,7 @@ public class SalesforceCliLoginStrategy implements LoginStrategy {
             
             int exitCode = process.waitFor();
             if (exitCode != 0) {
-                throw new RuntimeException("Command failed with exit code " + exitCode + ": " + output.toString().trim());
+                throw new SalesforceCliLoginException("CLI_COMMAND_FAILED", "Command failed with exit code " + exitCode + ": " + output.toString().trim());
             }
             
             return output.toString().trim();
@@ -162,8 +173,9 @@ public class SalesforceCliLoginStrategy implements LoginStrategy {
      * 
      * @param output CLI输出
      * @return 登录结果
+     * @throws SalesforceCliLoginException 解析失败时抛出
      */
-    private SalesforceLoginResult parseCliOutput(String output) {
+    private SalesforceLoginResult parseCliOutput(String output) throws SalesforceCliLoginException {
         SalesforceLoginResult result = new SalesforceLoginResult();
         
         // 简化实现，使用正则表达式提取关键信息
@@ -187,6 +199,8 @@ public class SalesforceCliLoginStrategy implements LoginStrategy {
             Matcher tokenMatcher = tokenPattern.matcher(output);
             if (tokenMatcher.find()) {
                 result.setAccessToken(tokenMatcher.group(1));
+            } else {
+                throw new SalesforceCliLoginException("CLI_PARSE_ERROR", "Failed to extract access token from CLI output");
             }
         }
         
@@ -207,9 +221,6 @@ public class SalesforceCliLoginStrategy implements LoginStrategy {
         // 设置默认值
         if (result.getInstanceUrl() == null) {
             result.setInstanceUrl("https://instance.salesforce.com");
-        }
-        if (result.getAccessToken() == null) {
-            throw new RuntimeException("Failed to extract access token from CLI output");
         }
         if (result.getOrganizationId() == null) {
             result.setOrganizationId("00Dxxxxxxxxxxxx");

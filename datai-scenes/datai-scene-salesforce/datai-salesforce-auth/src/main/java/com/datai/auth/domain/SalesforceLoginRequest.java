@@ -9,6 +9,7 @@ import java.io.Serializable;
  * @date 2025-12-14
  */
 public class SalesforceLoginRequest implements Serializable {
+
     private static final long serialVersionUID = 1L;
     
     /**
@@ -65,11 +66,25 @@ public class SalesforceLoginRequest implements Serializable {
      * OAuth授权码
      */
     private String code;
-    
+
+    /**
+     * OAuth state参数，用于防止CSRF攻击
+     */
+    private String state;
+
     /**
      * Salesforce Session ID
      */
     private String sessionId;
+
+
+    public String getState() {
+        return state;
+    }
+
+    public void setState(String state) {
+        this.state = state;
+    }
     
     // getter和setter方法
     public String getLoginType() {
