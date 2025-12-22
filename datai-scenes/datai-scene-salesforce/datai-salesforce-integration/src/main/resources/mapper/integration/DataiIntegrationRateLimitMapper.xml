@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.datai.integration.mapper.DataiIntegrationRateLimitMapper">
+    
+    <resultMap type="DataiIntegrationRateLimit" id="DataiIntegrationRateLimitResult">
+        <result property="id" column="id" />
+        <result property="apiType" column="api_type" />
+        <result property="windowStart" column="window_start" />
+        <result property="windowEnd" column="window_end" />
+        <result property="requestCount" column="request_count" />
+        <result property="limitThreshold" column="limit_threshold" />
+        <result property="remainingRequests" column="remaining_requests" />
+        <result property="resetTime" column="reset_time" />
+        <result property="isThrottled" column="is_throttled" />
+        <result property="createTime" column="create_time" />
+        <result property="updateTime" column="update_time" />
+        <result property="tenantId" column="tenant_id" />
+    </resultMap>
+
+    <sql id="selectDataiIntegrationRateLimitVo">
+        select 
+            dirl.id,
+            dirl.api_type,
+            dirl.window_start,
+            dirl.window_end,
+            dirl.request_count,
+            dirl.limit_threshold,
+            dirl.remaining_requests,
+            dirl.reset_time,
+            dirl.is_throttled,
+            dirl.create_time,
+            dirl.update_time,
+            dirl.tenant_id
+        from datai_integration_rate_limit dirl
+    </sql>
+
+    <select id="selectDataiIntegrationRateLimitList" parameterType="DataiIntegrationRateLimit" resultMap="DataiIntegrationRateLimitResult">
+        <include refid="selectDataiIntegrationRateLimitVo"/>
+        <where>
+            <if test="apiType != null  and apiType != ''"> and dirl.api_type = #{apiType}</if>
+            <if test="windowStart != null "> and dirl.window_start = #{windowStart}</if>
+            <if test="windowEnd != null "> and dirl.window_end = #{windowEnd}</if>
+            <if test="requestCount != null "> and dirl.request_count = #{requestCount}</if>
+            <if test="limitThreshold != null "> and dirl.limit_threshold = #{limitThreshold}</if>
+            <if test="remainingRequests != null "> and dirl.remaining_requests = #{remainingRequests}</if>
+            <if test="resetTime != null "> and dirl.reset_time = #{resetTime}</if>
+            <if test="isThrottled != null "> and dirl.is_throttled = #{isThrottled}</if>
+            <if test="tenantId != null  and tenantId != ''"> and dirl.tenant_id = #{tenantId}</if>
+        </where>
+    </select>
+    
+    <select id="selectDataiIntegrationRateLimitById" parameterType="Long" resultMap="DataiIntegrationRateLimitResult">
+        <include refid="selectDataiIntegrationRateLimitVo"/>
+        where dirl.id = #{id}
+    </select>
+        
+    <insert id="insertDataiIntegrationRateLimit" parameterType="DataiIntegrationRateLimit" useGeneratedKeys="true" keyProperty="id">
+        insert into datai_integration_rate_limit
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="apiType != null and apiType != ''">api_type,</if>
+            <if test="windowStart != null">window_start,</if>
+            <if test="windowEnd != null">window_end,</if>
+            <if test="requestCount != null">request_count,</if>
+            <if test="limitThreshold != null">limit_threshold,</if>
+            <if test="remainingRequests != null">remaining_requests,</if>
+            <if test="resetTime != null">reset_time,</if>
+            <if test="isThrottled != null">is_throttled,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="tenantId != null and tenantId != ''">tenant_id,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="apiType != null and apiType != ''">#{apiType},</if>
+            <if test="windowStart != null">#{windowStart},</if>
+            <if test="windowEnd != null">#{windowEnd},</if>
+            <if test="requestCount != null">#{requestCount},</if>
+            <if test="limitThreshold != null">#{limitThreshold},</if>
+            <if test="remainingRequests != null">#{remainingRequests},</if>
+            <if test="resetTime != null">#{resetTime},</if>
+            <if test="isThrottled != null">#{isThrottled},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="tenantId != null and tenantId != ''">#{tenantId},</if>
+         </trim>
+    </insert>
+
+    <update id="updateDataiIntegrationRateLimit" parameterType="DataiIntegrationRateLimit">
+        update datai_integration_rate_limit
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="apiType != null and apiType != ''">api_type = #{apiType},</if>
+            <if test="windowStart != null">window_start = #{windowStart},</if>
+            <if test="windowEnd != null">window_end = #{windowEnd},</if>
+            <if test="requestCount != null">request_count = #{requestCount},</if>
+            <if test="limitThreshold != null">limit_threshold = #{limitThreshold},</if>
+            <if test="remainingRequests != null">remaining_requests = #{remainingRequests},</if>
+            <if test="resetTime != null">reset_time = #{resetTime},</if>
+            <if test="isThrottled != null">is_throttled = #{isThrottled},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="tenantId != null and tenantId != ''">tenant_id = #{tenantId},</if>
+        </trim>
+        where datai_integration_rate_limit.id = #{id}
+    </update>
+
+    <delete id="deleteDataiIntegrationRateLimitById" parameterType="Long">
+        delete from datai_integration_rate_limit where id = #{id}
+    </delete>
+
+    <delete id="deleteDataiIntegrationRateLimitByIds" parameterType="String">
+        delete from datai_integration_rate_limit where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

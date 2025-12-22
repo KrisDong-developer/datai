@@ -57,6 +57,9 @@ public class GenColumn extends BaseEntity {
     /** 是否列表字段（1是） */
     private String isList;
 
+    /** 是否详情字段（1是） */
+    private String isDetail;
+
     /** 是否查询字段（1是） */
     private String isQuery;
 
@@ -144,6 +147,14 @@ public class GenColumn extends BaseEntity {
 
     public boolean isList(String isList) {
         return isList != null && StringUtils.equals("1", isList);
+    }
+
+    public boolean isDetail() {
+        return isDetail(this.isDetail);
+    }
+
+    public boolean isDetail(String isDetail) {
+        return isDetail != null && StringUtils.equals("1", isDetail);
     }
 
     public boolean isQuery() {

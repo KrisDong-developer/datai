@@ -103,6 +103,11 @@ public class GenUtils
         {
             column.setIsList(GenConstants.REQUIRE);
         }
+        // 详情字段
+        if (!arraysContains(GenConstants.COLUMNNAME_NOT_DETAIL, columnName) && !column.isPk())
+        {
+            column.setIsDetail(GenConstants.REQUIRE);
+        }
         // 查询字段
         if (!arraysContains(GenConstants.COLUMNNAME_NOT_QUERY, columnName) && !column.isPk())
         {

@@ -18,6 +18,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="isInsert"       column="is_insert"      />
         <result property="isEdit"         column="is_edit"        />
         <result property="isList"         column="is_list"        />
+        <result property="isDetail"       column="is_detail"      />
         <result property="isQuery"        column="is_query"       />
         <result property="queryType"      column="query_type"     />
         <result property="htmlType"       column="html_type"      />
@@ -35,7 +36,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </resultMap>
 	
 	<sql id="selectGenTableColumnVo">
-        select column_id, table_id, column_name, column_comment, column_type, java_type, java_field, is_pk, is_increment, is_required, is_insert, is_edit, is_list, is_query, query_type, html_type, dict_type, sort,sub_column_table_name,sub_column_fk_name,sub_column_name,sub_column_java_type,sub_column_java_field, create_by, create_time, update_by, update_time from gen_table_column
+        select column_id, table_id, column_name, column_comment, column_type, java_type, java_field, is_pk, is_increment, is_required, is_insert, is_edit, is_list, is_detail, is_query, query_type, html_type, dict_type, sort,sub_column_table_name,sub_column_fk_name,sub_column_name,sub_column_java_type,sub_column_java_field, create_by, create_time, update_by, update_time from gen_table_column
     </sql>
 	
     <select id="selectGenTableColumnListByTableId" parameterType="Long" resultMap="GenTableColumnResult">
@@ -109,6 +110,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 			<if test="isInsert != null and isInsert != ''">is_insert,</if>
 			<if test="isEdit != null and isEdit != ''">is_edit,</if>
 			<if test="isList != null and isList != ''">is_list,</if>
+			<if test="isDetail != null and isDetail != ''">is_detail,</if>
 			<if test="isQuery != null and isQuery != ''">is_query,</if>
 			<if test="queryType != null and queryType != ''">query_type,</if>
 			<if test="htmlType != null and htmlType != ''">html_type,</if>
@@ -134,6 +136,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 			<if test="isInsert != null and isInsert != ''">#{isInsert},</if>
 			<if test="isEdit != null and isEdit != ''">#{isEdit},</if>
 			<if test="isList != null and isList != ''">#{isList},</if>
+			<if test="isDetail != null and isDetail != ''">#{isDetail},</if>
 			<if test="isQuery != null and isQuery != ''">#{isQuery},</if>
 			<if test="queryType != null and queryType != ''">#{queryType},</if>
 			<if test="htmlType != null and htmlType != ''">#{htmlType},</if>
@@ -165,7 +168,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="isInsert != null">is_insert = #{isInsert},</if>
             <if test="isEdit != null">is_edit = #{isEdit},</if>
             <if test="isList != null">is_list = #{isList},</if>
-            <if test="isQuery != null">is_query = #{isQuery},</if>
+			<if test="isDetail != null">is_detail = #{isDetail},</if>
+			<if test="isQuery != null">is_query = #{isQuery},</if>
             <if test="isRequired != null">is_required = #{isRequired},</if>
             <if test="queryType != null">query_type = #{queryType},</if>
             <if test="htmlType != null">html_type = #{htmlType},</if>

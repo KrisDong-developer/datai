@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.datai.integration.mapper.DataiIntegrationBatchHistoryMapper">
+    
+    <resultMap type="DataiIntegrationBatchHistory" id="DataiIntegrationBatchHistoryResult">
+        <result property="id" column="id" />
+        <result property="api" column="api" />
+        <result property="label" column="label" />
+        <result property="batchId" column="batch_id" />
+        <result property="batchField" column="batch_field" />
+        <result property="syncNum" column="sync_num" />
+        <result property="syncType" column="sync_type" />
+        <result property="syncStatus" column="sync_status" />
+        <result property="startTime" column="start_time" />
+        <result property="endTime" column="end_time" />
+        <result property="cost" column="cost" />
+        <result property="syncStartTime" column="sync_start_time" />
+        <result property="syncEndTime" column="sync_end_time" />
+        <result property="createTime" column="create_time" />
+        <result property="createBy" column="create_by" />
+        <result property="updateBy" column="update_by" />
+        <result property="updateTime" column="update_time" />
+        <result property="remark" column="remark" />
+        <result property="tenantId" column="tenant_id" />
+    </resultMap>
+
+    <sql id="selectDataiIntegrationBatchHistoryVo">
+        select 
+            dibh.id,
+            dibh.api,
+            dibh.label,
+            dibh.batch_id,
+            dibh.batch_field,
+            dibh.sync_num,
+            dibh.sync_type,
+            dibh.sync_status,
+            dibh.start_time,
+            dibh.end_time,
+            dibh.cost,
+            dibh.sync_start_time,
+            dibh.sync_end_time,
+            dibh.create_time,
+            dibh.create_by,
+            dibh.update_by,
+            dibh.update_time,
+            dibh.remark,
+            dibh.tenant_id
+        from datai_integration_batch_history dibh
+    </sql>
+
+    <select id="selectDataiIntegrationBatchHistoryList" parameterType="DataiIntegrationBatchHistory" resultMap="DataiIntegrationBatchHistoryResult">
+        <include refid="selectDataiIntegrationBatchHistoryVo"/>
+        <where>
+            <if test="api != null  and api != ''"> and dibh.api = #{api}</if>
+            <if test="label != null  and label != ''"> and dibh.label = #{label}</if>
+            <if test="batchId != null "> and dibh.batch_id = #{batchId}</if>
+            <if test="batchField != null  and batchField != ''"> and dibh.batch_field = #{batchField}</if>
+            <if test="syncNum != null "> and dibh.sync_num = #{syncNum}</if>
+            <if test="syncType != null  and syncType != ''"> and dibh.sync_type = #{syncType}</if>
+            <if test="syncStatus != null "> and dibh.sync_status = #{syncStatus}</if>
+            <if test="startTime != null "> and dibh.start_time = #{startTime}</if>
+            <if test="endTime != null "> and dibh.end_time = #{endTime}</if>
+            <if test="cost != null "> and dibh.cost = #{cost}</if>
+            <if test="syncStartTime != null "> and dibh.sync_start_time = #{syncStartTime}</if>
+            <if test="syncEndTime != null "> and dibh.sync_end_time = #{syncEndTime}</if>
+            <if test="tenantId != null  and tenantId != ''"> and dibh.tenant_id = #{tenantId}</if>
+        </where>
+    </select>
+    
+    <select id="selectDataiIntegrationBatchHistoryById" parameterType="Long" resultMap="DataiIntegrationBatchHistoryResult">
+        <include refid="selectDataiIntegrationBatchHistoryVo"/>
+        where dibh.id = #{id}
+    </select>
+        
+    <insert id="insertDataiIntegrationBatchHistory" parameterType="DataiIntegrationBatchHistory" useGeneratedKeys="true" keyProperty="id">
+        insert into datai_integration_batch_history
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="api != null and api != ''">api,</if>
+            <if test="label != null and label != ''">label,</if>
+            <if test="batchId != null">batch_id,</if>
+            <if test="batchField != null">batch_field,</if>
+            <if test="syncNum != null">sync_num,</if>
+            <if test="syncType != null">sync_type,</if>
+            <if test="syncStatus != null">sync_status,</if>
+            <if test="startTime != null">start_time,</if>
+            <if test="endTime != null">end_time,</if>
+            <if test="cost != null">cost,</if>
+            <if test="syncStartTime != null">sync_start_time,</if>
+            <if test="syncEndTime != null">sync_end_time,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="remark != null">remark,</if>
+            <if test="tenantId != null">tenant_id,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="api != null and api != ''">#{api},</if>
+            <if test="label != null and label != ''">#{label},</if>
+            <if test="batchId != null">#{batchId},</if>
+            <if test="batchField != null">#{batchField},</if>
+            <if test="syncNum != null">#{syncNum},</if>
+            <if test="syncType != null">#{syncType},</if>
+            <if test="syncStatus != null">#{syncStatus},</if>
+            <if test="startTime != null">#{startTime},</if>
+            <if test="endTime != null">#{endTime},</if>
+            <if test="cost != null">#{cost},</if>
+            <if test="syncStartTime != null">#{syncStartTime},</if>
+            <if test="syncEndTime != null">#{syncEndTime},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="remark != null">#{remark},</if>
+            <if test="tenantId != null">#{tenantId},</if>
+         </trim>
+    </insert>
+
+    <update id="updateDataiIntegrationBatchHistory" parameterType="DataiIntegrationBatchHistory">
+        update datai_integration_batch_history
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="api != null and api != ''">api = #{api},</if>
+            <if test="label != null and label != ''">label = #{label},</if>
+            <if test="batchId != null">batch_id = #{batchId},</if>
+            <if test="batchField != null">batch_field = #{batchField},</if>
+            <if test="syncNum != null">sync_num = #{syncNum},</if>
+            <if test="syncType != null">sync_type = #{syncType},</if>
+            <if test="syncStatus != null">sync_status = #{syncStatus},</if>
+            <if test="startTime != null">start_time = #{startTime},</if>
+            <if test="endTime != null">end_time = #{endTime},</if>
+            <if test="cost != null">cost = #{cost},</if>
+            <if test="syncStartTime != null">sync_start_time = #{syncStartTime},</if>
+            <if test="syncEndTime != null">sync_end_time = #{syncEndTime},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            <if test="tenantId != null">tenant_id = #{tenantId},</if>
+        </trim>
+        where datai_integration_batch_history.id = #{id}
+    </update>
+
+    <delete id="deleteDataiIntegrationBatchHistoryById" parameterType="Long">
+        delete from datai_integration_batch_history where id = #{id}
+    </delete>
+
+    <delete id="deleteDataiIntegrationBatchHistoryByIds" parameterType="String">
+        delete from datai_integration_batch_history where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

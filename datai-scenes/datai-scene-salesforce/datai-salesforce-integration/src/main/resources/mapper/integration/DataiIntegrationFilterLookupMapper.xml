@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.datai.integration.mapper.DataiIntegrationFilterLookupMapper">
+    
+    <resultMap type="DataiIntegrationFilterLookup" id="DataiIntegrationFilterLookupResult">
+        <result property="id" column="id" />
+        <result property="api" column="api" />
+        <result property="field" column="field" />
+        <result property="controllingField" column="controlling_field" />
+        <result property="dependent" column="dependent" />
+        <result property="lookupFilter" column="lookup_filter" />
+        <result property="createBy" column="create_by" />
+        <result property="createTime" column="create_time" />
+        <result property="updateBy" column="update_by" />
+        <result property="updateTime" column="update_time" />
+        <result property="remark" column="remark" />
+        <result property="tenantId" column="tenant_id" />
+    </resultMap>
+
+    <sql id="selectDataiIntegrationFilterLookupVo">
+        select 
+            difl.id,
+            difl.api,
+            difl.field,
+            difl.controlling_field,
+            difl.dependent,
+            difl.lookup_filter,
+            difl.create_by,
+            difl.create_time,
+            difl.update_by,
+            difl.update_time,
+            difl.remark,
+            difl.tenant_id
+        from datai_integration_filter_lookup difl
+    </sql>
+
+    <select id="selectDataiIntegrationFilterLookupList" parameterType="DataiIntegrationFilterLookup" resultMap="DataiIntegrationFilterLookupResult">
+        <include refid="selectDataiIntegrationFilterLookupVo"/>
+        <where>
+            <if test="api != null  and api != ''"> and difl.api = #{api}</if>
+            <if test="field != null  and field != ''"> and difl.field = #{field}</if>
+            <if test="controllingField != null  and controllingField != ''"> and difl.controlling_field = #{controllingField}</if>
+            <if test="dependent != null "> and difl.dependent = #{dependent}</if>
+            <if test="lookupFilter != null  and lookupFilter != ''"> and difl.lookup_filter = #{lookupFilter}</if>
+            <if test="tenantId != null  and tenantId != ''"> and difl.tenant_id = #{tenantId}</if>
+        </where>
+    </select>
+    
+    <select id="selectDataiIntegrationFilterLookupById" parameterType="Long" resultMap="DataiIntegrationFilterLookupResult">
+        <include refid="selectDataiIntegrationFilterLookupVo"/>
+        where difl.id = #{id}
+    </select>
+        
+    <insert id="insertDataiIntegrationFilterLookup" parameterType="DataiIntegrationFilterLookup" useGeneratedKeys="true" keyProperty="id">
+        insert into datai_integration_filter_lookup
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="api != null and api != ''">api,</if>
+            <if test="field != null and field != ''">field,</if>
+            <if test="controllingField != null">controlling_field,</if>
+            <if test="dependent != null">dependent,</if>
+            <if test="lookupFilter != null">lookup_filter,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="remark != null">remark,</if>
+            <if test="tenantId != null">tenant_id,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="api != null and api != ''">#{api},</if>
+            <if test="field != null and field != ''">#{field},</if>
+            <if test="controllingField != null">#{controllingField},</if>
+            <if test="dependent != null">#{dependent},</if>
+            <if test="lookupFilter != null">#{lookupFilter},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="remark != null">#{remark},</if>
+            <if test="tenantId != null">#{tenantId},</if>
+         </trim>
+    </insert>
+
+    <update id="updateDataiIntegrationFilterLookup" parameterType="DataiIntegrationFilterLookup">
+        update datai_integration_filter_lookup
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="api != null and api != ''">api = #{api},</if>
+            <if test="field != null and field != ''">field = #{field},</if>
+            <if test="controllingField != null">controlling_field = #{controllingField},</if>
+            <if test="dependent != null">dependent = #{dependent},</if>
+            <if test="lookupFilter != null">lookup_filter = #{lookupFilter},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            <if test="tenantId != null">tenant_id = #{tenantId},</if>
+        </trim>
+        where datai_integration_filter_lookup.id = #{id}
+    </update>
+
+    <delete id="deleteDataiIntegrationFilterLookupById" parameterType="Long">
+        delete from datai_integration_filter_lookup where id = #{id}
+    </delete>
+
+    <delete id="deleteDataiIntegrationFilterLookupByIds" parameterType="String">
+        delete from datai_integration_filter_lookup where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

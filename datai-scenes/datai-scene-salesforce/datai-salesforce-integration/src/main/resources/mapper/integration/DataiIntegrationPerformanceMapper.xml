@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.datai.integration.mapper.DataiIntegrationPerformanceMapper">
+    
+    <resultMap type="DataiIntegrationPerformance" id="DataiIntegrationPerformanceResult">
+        <result property="id" column="id" />
+        <result property="batchId" column="batch_id" />
+        <result property="objectApi" column="object_api" />
+        <result property="syncType" column="sync_type" />
+        <result property="apiType" column="api_type" />
+        <result property="recordCount" column="record_count" />
+        <result property="successCount" column="success_count" />
+        <result property="failedCount" column="failed_count" />
+        <result property="totalTime" column="total_time" />
+        <result property="avgTimePerRecord" column="avg_time_per_record" />
+        <result property="throughput" column="throughput" />
+        <result property="apiCalls" column="api_calls" />
+        <result property="dataVolume" column="data_volume" />
+        <result property="memoryUsage" column="memory_usage" />
+        <result property="cpuUsage" column="cpu_usage" />
+        <result property="syncDate" column="sync_date" />
+        <result property="syncTime" column="sync_time" />
+        <result property="tenantId" column="tenant_id" />
+    </resultMap>
+
+    <sql id="selectDataiIntegrationPerformanceVo">
+        select 
+            dip.id,
+            dip.batch_id,
+            dip.object_api,
+            dip.sync_type,
+            dip.api_type,
+            dip.record_count,
+            dip.success_count,
+            dip.failed_count,
+            dip.total_time,
+            dip.avg_time_per_record,
+            dip.throughput,
+            dip.api_calls,
+            dip.data_volume,
+            dip.memory_usage,
+            dip.cpu_usage,
+            dip.sync_date,
+            dip.sync_time,
+            dip.tenant_id
+        from datai_integration_performance dip
+    </sql>
+
+    <select id="selectDataiIntegrationPerformanceList" parameterType="DataiIntegrationPerformance" resultMap="DataiIntegrationPerformanceResult">
+        <include refid="selectDataiIntegrationPerformanceVo"/>
+        <where>
+            <if test="batchId != null "> and dip.batch_id = #{batchId}</if>
+            <if test="objectApi != null  and objectApi != ''"> and dip.object_api = #{objectApi}</if>
+            <if test="syncType != null  and syncType != ''"> and dip.sync_type = #{syncType}</if>
+            <if test="apiType != null  and apiType != ''"> and dip.api_type = #{apiType}</if>
+            <if test="recordCount != null "> and dip.record_count = #{recordCount}</if>
+            <if test="successCount != null "> and dip.success_count = #{successCount}</if>
+            <if test="failedCount != null "> and dip.failed_count = #{failedCount}</if>
+            <if test="totalTime != null "> and dip.total_time = #{totalTime}</if>
+            <if test="avgTimePerRecord != null "> and dip.avg_time_per_record = #{avgTimePerRecord}</if>
+            <if test="throughput != null "> and dip.throughput = #{throughput}</if>
+            <if test="apiCalls != null "> and dip.api_calls = #{apiCalls}</if>
+            <if test="dataVolume != null "> and dip.data_volume = #{dataVolume}</if>
+            <if test="memoryUsage != null "> and dip.memory_usage = #{memoryUsage}</if>
+            <if test="cpuUsage != null "> and dip.cpu_usage = #{cpuUsage}</if>
+            <if test="syncDate != null "> and dip.sync_date = #{syncDate}</if>
+            <if test="syncTime != null "> and dip.sync_time = #{syncTime}</if>
+            <if test="tenantId != null  and tenantId != ''"> and dip.tenant_id = #{tenantId}</if>
+        </where>
+    </select>
+    
+    <select id="selectDataiIntegrationPerformanceById" parameterType="Long" resultMap="DataiIntegrationPerformanceResult">
+        <include refid="selectDataiIntegrationPerformanceVo"/>
+        where dip.id = #{id}
+    </select>
+        
+    <insert id="insertDataiIntegrationPerformance" parameterType="DataiIntegrationPerformance" useGeneratedKeys="true" keyProperty="id">
+        insert into datai_integration_performance
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="batchId != null">batch_id,</if>
+            <if test="objectApi != null and objectApi != ''">object_api,</if>
+            <if test="syncType != null and syncType != ''">sync_type,</if>
+            <if test="apiType != null and apiType != ''">api_type,</if>
+            <if test="recordCount != null">record_count,</if>
+            <if test="successCount != null">success_count,</if>
+            <if test="failedCount != null">failed_count,</if>
+            <if test="totalTime != null">total_time,</if>
+            <if test="avgTimePerRecord != null">avg_time_per_record,</if>
+            <if test="throughput != null">throughput,</if>
+            <if test="apiCalls != null">api_calls,</if>
+            <if test="dataVolume != null">data_volume,</if>
+            <if test="memoryUsage != null">memory_usage,</if>
+            <if test="cpuUsage != null">cpu_usage,</if>
+            <if test="syncDate != null">sync_date,</if>
+            <if test="syncTime != null">sync_time,</if>
+            <if test="tenantId != null and tenantId != ''">tenant_id,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="batchId != null">#{batchId},</if>
+            <if test="objectApi != null and objectApi != ''">#{objectApi},</if>
+            <if test="syncType != null and syncType != ''">#{syncType},</if>
+            <if test="apiType != null and apiType != ''">#{apiType},</if>
+            <if test="recordCount != null">#{recordCount},</if>
+            <if test="successCount != null">#{successCount},</if>
+            <if test="failedCount != null">#{failedCount},</if>
+            <if test="totalTime != null">#{totalTime},</if>
+            <if test="avgTimePerRecord != null">#{avgTimePerRecord},</if>
+            <if test="throughput != null">#{throughput},</if>
+            <if test="apiCalls != null">#{apiCalls},</if>
+            <if test="dataVolume != null">#{dataVolume},</if>
+            <if test="memoryUsage != null">#{memoryUsage},</if>
+            <if test="cpuUsage != null">#{cpuUsage},</if>
+            <if test="syncDate != null">#{syncDate},</if>
+            <if test="syncTime != null">#{syncTime},</if>
+            <if test="tenantId != null and tenantId != ''">#{tenantId},</if>
+         </trim>
+    </insert>
+
+    <update id="updateDataiIntegrationPerformance" parameterType="DataiIntegrationPerformance">
+        update datai_integration_performance
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="batchId != null">batch_id = #{batchId},</if>
+            <if test="objectApi != null and objectApi != ''">object_api = #{objectApi},</if>
+            <if test="syncType != null and syncType != ''">sync_type = #{syncType},</if>
+            <if test="apiType != null and apiType != ''">api_type = #{apiType},</if>
+            <if test="recordCount != null">record_count = #{recordCount},</if>
+            <if test="successCount != null">success_count = #{successCount},</if>
+            <if test="failedCount != null">failed_count = #{failedCount},</if>
+            <if test="totalTime != null">total_time = #{totalTime},</if>
+            <if test="avgTimePerRecord != null">avg_time_per_record = #{avgTimePerRecord},</if>
+            <if test="throughput != null">throughput = #{throughput},</if>
+            <if test="apiCalls != null">api_calls = #{apiCalls},</if>
+            <if test="dataVolume != null">data_volume = #{dataVolume},</if>
+            <if test="memoryUsage != null">memory_usage = #{memoryUsage},</if>
+            <if test="cpuUsage != null">cpu_usage = #{cpuUsage},</if>
+            <if test="syncDate != null">sync_date = #{syncDate},</if>
+            <if test="syncTime != null">sync_time = #{syncTime},</if>
+            <if test="tenantId != null and tenantId != ''">tenant_id = #{tenantId},</if>
+        </trim>
+        where datai_integration_performance.id = #{id}
+    </update>
+
+    <delete id="deleteDataiIntegrationPerformanceById" parameterType="Long">
+        delete from datai_integration_performance where id = #{id}
+    </delete>
+
+    <delete id="deleteDataiIntegrationPerformanceByIds" parameterType="String">
+        delete from datai_integration_performance where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

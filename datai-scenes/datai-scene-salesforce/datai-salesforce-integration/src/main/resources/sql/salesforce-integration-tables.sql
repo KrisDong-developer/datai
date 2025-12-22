@@ -5,13 +5,13 @@
  Source Server Type    : MySQL
  Source Server Version : 90400 (9.4.0)
  Source Host           : localhost:3306
- Source Schema         : ry-back
+ Source Schema         : ry
 
  Target Server Type    : MySQL
  Target Server Version : 90400 (9.4.0)
  File Encoding         : 65001
 
- Date: 21/12/2025 19:55:22
+ Date: 22/12/2025 20:39:23
 */
 
 SET NAMES utf8mb4;
@@ -30,14 +30,14 @@ CREATE TABLE `datai_integration_batch`  (
   `sync_type` varchar(25) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '同步类型',
   `batch_field` varchar(25) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '批次字段',
   `sync_status` tinyint NULL DEFAULT NULL COMMENT '同步状态 1:正常 0:误差',
+  `sync_index` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '同步优先级',
   `sync_start_date` datetime NULL DEFAULT NULL COMMENT '开始同步时间',
   `sync_end_date` datetime NULL DEFAULT NULL COMMENT '结束同步时间',
   `first_sync_time` datetime NULL DEFAULT NULL COMMENT '首次同步时间',
   `last_sync_time` datetime NULL DEFAULT NULL COMMENT '最后同步时间',
   `create_time` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-  
-  `create_by` bigint NULL DEFAULT NULL COMMENT '创建者',
-  `update_by` bigint NULL DEFAULT NULL COMMENT '更新者',
+  `create_by` VARCHAR(64) NULL DEFAULT NULL COMMENT '创建者',
+  `update_by` VARCHAR(64) NULL DEFAULT NULL COMMENT '更新者',
   `update_time` datetime NULL DEFAULT NULL COMMENT '更新时间',
   `remark` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '备注',
   `tenant_id` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT '000000' COMMENT '租户编号',
@@ -65,9 +65,8 @@ CREATE TABLE `datai_integration_batch_history`  (
   `sync_start_time` datetime NULL DEFAULT NULL COMMENT '开始同步时间',
   `sync_end_time` datetime NULL DEFAULT NULL COMMENT '结束同步时间',
   `create_time` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-  
-  `create_by` bigint NULL DEFAULT NULL COMMENT '创建者',
-  `update_by` bigint NULL DEFAULT NULL COMMENT '更新者',
+  `create_by` VARCHAR(64) NULL DEFAULT NULL COMMENT '创建者',
+  `update_by` VARCHAR(64) NULL DEFAULT NULL COMMENT '更新者',
   `update_time` datetime NULL DEFAULT NULL COMMENT '更新时间',
   `remark` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '备注',
   `tenant_id` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT '000000' COMMENT '租户编号',
@@ -128,10 +127,9 @@ CREATE TABLE `datai_integration_field`  (
   `mask` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '掩码',
   `mask_type` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '掩码类型',
   `picklist_values` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL COMMENT '选择列表值 (JSON或其他格式)',
-  
-  `create_by` bigint NULL DEFAULT NULL COMMENT '创建者',
+  `create_by` VARCHAR(64) NULL DEFAULT NULL COMMENT '创建者',
   `create_time` datetime NULL DEFAULT NULL COMMENT '创建时间',
-  `update_by` bigint NULL DEFAULT NULL COMMENT '更新者',
+  `update_by` VARCHAR(64) NULL DEFAULT NULL COMMENT '更新者',
   `update_time` datetime NULL DEFAULT NULL COMMENT '更新时间',
   `remark` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '备注',
   `tenant_id` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT '000000' COMMENT '租户编号',
@@ -153,10 +151,9 @@ CREATE TABLE `datai_integration_filter_lookup`  (
   `controlling_field` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '控制字段API',
   `dependent` tinyint(1) NOT NULL DEFAULT 0 COMMENT '是否依赖字段',
   `lookup_filter` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL COMMENT '过滤条件',
-  
-  `create_by` bigint NULL DEFAULT NULL COMMENT '创建者',
+  `create_by` VARCHAR(64) NULL DEFAULT NULL COMMENT '创建者',
   `create_time` datetime NULL DEFAULT NULL COMMENT '创建时间',
-  `update_by` bigint NULL DEFAULT NULL COMMENT '更新者',
+  `update_by` VARCHAR(64) NULL DEFAULT NULL COMMENT '更新者',
   `update_time` datetime NULL DEFAULT NULL COMMENT '更新时间',
   `remark` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '备注',
   `tenant_id` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT '000000' COMMENT '租户编号',
@@ -164,6 +161,32 @@ CREATE TABLE `datai_integration_filter_lookup`  (
   INDEX `idx_datai_integration_filter_lookup_api_field`(`api` ASC, `field` ASC) USING BTREE,
   INDEX `idx_datai_integration_filter_lookup_controlling_field`(`controlling_field` ASC) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 53496 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '字段过滤查找信息表' ROW_FORMAT = DYNAMIC;
+
+-- ----------------------------
+-- Table structure for datai_integration_log
+-- ----------------------------
+DROP TABLE IF EXISTS `datai_integration_log`;
+CREATE TABLE `datai_integration_log`  (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '日志ID',
+  `batch_id` int NULL DEFAULT NULL COMMENT '关联批次ID',
+  `object_api` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '对象API',
+  `record_id` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '记录ID',
+  `operation_type` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '操作类型: INSERT/UPDATE/DELETE/UPSERT',
+  `operation_status` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '操作状态: SUCCESS/FAILED/PARTIAL',
+  `source_data` json NULL COMMENT '源数据(JSON格式)',
+  `target_data` json NULL COMMENT '目标数据(JSON格式)',
+  `error_message` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL COMMENT '错误信息',
+  `execution_time` decimal(10, 3) NULL DEFAULT NULL COMMENT '执行时间(秒)',
+  `sync_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '同步时间',
+  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `tenant_id` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '000000' COMMENT '租户编号',
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `idx_datai_integration_sync_log_batch_id`(`batch_id` ASC) USING BTREE,
+  INDEX `idx_datai_integration_sync_log_object_api`(`object_api` ASC) USING BTREE,
+  INDEX `idx_datai_integration_sync_log_record_id`(`record_id` ASC) USING BTREE,
+  INDEX `idx_datai_integration_sync_log_operation_status`(`operation_status` ASC) USING BTREE,
+  INDEX `idx_datai_integration_sync_log_sync_time`(`sync_time` ASC) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '数据同步日志表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for datai_integration_object
@@ -188,10 +211,9 @@ CREATE TABLE `datai_integration_object`  (
   `is_mru` tinyint(1) NULL DEFAULT 0 COMMENT '是否最近使用',
   `key_prefix` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '关键前缀',
   `record_type_infos` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL COMMENT '记录类型信息(JSON)',
-  
-  `create_by` bigint NULL DEFAULT NULL COMMENT '创建者',
+  `create_by` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '创建者',
   `create_time` datetime NULL DEFAULT NULL COMMENT '创建时间',
-  `update_by` bigint NULL DEFAULT NULL COMMENT '更新者',
+  `update_by` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '更新者',
   `update_time` datetime NULL DEFAULT NULL COMMENT '更新时间',
   `remark` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '备注',
   `tenant_id` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT '000000' COMMENT '租户编号',
@@ -200,7 +222,38 @@ CREATE TABLE `datai_integration_object`  (
   INDEX `idx_datai_integration_object_label`(`label` ASC) USING BTREE,
   INDEX `idx_datai_integration_object_is_custom`(`is_custom` ASC) USING BTREE,
   INDEX `idx_datai_integration_object_is_queryable`(`is_queryable` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 17 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '对象信息表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 18 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '对象信息表' ROW_FORMAT = DYNAMIC;
+
+-- ----------------------------
+-- Table structure for datai_integration_performance
+-- ----------------------------
+DROP TABLE IF EXISTS `datai_integration_performance`;
+CREATE TABLE `datai_integration_performance`  (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '性能记录ID',
+  `batch_id` int NULL DEFAULT NULL COMMENT '关联批次ID',
+  `object_api` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '对象API',
+  `sync_type` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '同步类型: FULL/INCREMENTAL/INITIAL',
+  `api_type` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT 'API类型: SOAP/BULK_V1/BULK_V2',
+  `record_count` int NOT NULL DEFAULT 0 COMMENT '处理记录数',
+  `success_count` int NOT NULL DEFAULT 0 COMMENT '成功记录数',
+  `failed_count` int NOT NULL DEFAULT 0 COMMENT '失败记录数',
+  `total_time` decimal(10, 3) NOT NULL COMMENT '总耗时(秒)',
+  `avg_time_per_record` decimal(10, 6) NOT NULL COMMENT '平均每条记录耗时(秒)',
+  `throughput` decimal(10, 2) NOT NULL COMMENT '吞吐量(记录/秒)',
+  `api_calls` int NOT NULL DEFAULT 0 COMMENT 'API调用次数',
+  `data_volume` bigint NOT NULL DEFAULT 0 COMMENT '数据量(字节)',
+  `memory_usage` bigint NULL DEFAULT NULL COMMENT '内存使用量(字节)',
+  `cpu_usage` decimal(5, 2) NULL DEFAULT NULL COMMENT 'CPU使用率(%)',
+  `sync_date` date NOT NULL COMMENT '同步日期',
+  `sync_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '同步时间',
+  `tenant_id` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '000000' COMMENT '租户编号',
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `idx_datai_integration_sync_performance_batch_id`(`batch_id` ASC) USING BTREE,
+  INDEX `idx_datai_integration_sync_performance_object_api`(`object_api` ASC) USING BTREE,
+  INDEX `idx_datai_integration_sync_performance_sync_date`(`sync_date` ASC) USING BTREE,
+  INDEX `idx_datai_integration_sync_performance_api_type`(`api_type` ASC) USING BTREE,
+  CONSTRAINT `fk_datai_integration_sync_performance_batch` FOREIGN KEY (`batch_id`) REFERENCES `datai_integration_batch` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '同步性能监控表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for datai_integration_picklist
@@ -216,10 +269,9 @@ CREATE TABLE `datai_integration_picklist`  (
   `is_active` tinyint(1) NULL DEFAULT 1 COMMENT '是否激活',
   `is_default` tinyint(1) NULL DEFAULT 0 COMMENT '是否默认值',
   `valid_for` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '有效性',
-  
-  `create_by` bigint NULL DEFAULT NULL COMMENT '创建者',
+  `create_by` VARCHAR(64) NULL DEFAULT NULL COMMENT '创建者',
   `create_time` datetime NULL DEFAULT NULL COMMENT '创建时间',
-  `update_by` bigint NULL DEFAULT NULL COMMENT '更新者',
+  `update_by` VARCHAR(64) NULL DEFAULT NULL COMMENT '更新者',
   `update_time` datetime NULL DEFAULT NULL COMMENT '更新时间',
   `remark` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '备注',
   `tenant_id` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT '000000' COMMENT '租户编号',
@@ -229,80 +281,11 @@ CREATE TABLE `datai_integration_picklist`  (
   INDEX `idx_datai_integration_picklist_is_default`(`is_default` ASC) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 53820 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '字段选择列表信息表' ROW_FORMAT = DYNAMIC;
 
-SET FOREIGN_KEY_CHECKS = 1;
-
-CREATE TABLE `datai_integration_sync_log` (
-  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '日志ID',
-  `batch_id` int NULL COMMENT '关联批次ID',
-  `object_api` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '对象API',
-  `record_id` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL COMMENT '记录ID',
-  `operation_type` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '操作类型: INSERT/UPDATE/DELETE/UPSERT',
-  `operation_status` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '操作状态: SUCCESS/FAILED/PARTIAL',
-  `source_data` json NULL COMMENT '源数据(JSON格式)',
-  `target_data` json NULL COMMENT '目标数据(JSON格式)',
-  `error_message` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL COMMENT '错误信息',
-  `execution_time` decimal(10,3) NULL COMMENT '执行时间(秒)',
-  `sync_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '同步时间',
-  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-  `tenant_id` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '000000' COMMENT '租户编号',
-  PRIMARY KEY (`id`) USING BTREE,
-  INDEX `idx_datai_integration_sync_log_batch_id` (`batch_id`) USING BTREE,
-  INDEX `idx_datai_integration_sync_log_object_api` (`object_api`) USING BTREE,
-  INDEX `idx_datai_integration_sync_log_record_id` (`record_id`) USING BTREE,
-  INDEX `idx_datai_integration_sync_log_operation_status` (`operation_status`) USING BTREE,
-  INDEX `idx_datai_integration_sync_log_sync_time` (`sync_time`) USING BTREE,
-  CONSTRAINT `fk_datai_integration_sync_log_batch` FOREIGN KEY (`batch_id`) REFERENCES `datai_batch` (`id`) ON DELETE CASCADE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '数据同步日志表' ROW_FORMAT = DYNAMIC;
-
-CREATE TABLE `datai_integration_sync_dependency` (
-  `id` int NOT NULL AUTO_INCREMENT COMMENT '依赖关系ID',
-  `source_object_api` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '源对象API',
-  `target_object_api` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '目标对象API',
-  `field_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '关联字段名',
-  `dependency_type` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '依赖类型: REFERENCE/LOOKUP/MASTER_DETAIL',
-  `sync_order` int NOT NULL DEFAULT 0 COMMENT '同步顺序权重',
-  `is_active` tinyint(1) NOT NULL DEFAULT 1 COMMENT '是否启用',
-  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-  `update_time` datetime NULL DEFAULT NULL COMMENT '更新时间',
-  `tenant_id` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '000000' COMMENT '租户编号',
-  PRIMARY KEY (`id`) USING BTREE,
-  UNIQUE KEY `uk_datai_integration_sync_dependency_source_target_field` (`source_object_api`, `target_object_api`, `field_name`),
-  INDEX `idx_datai_integration_sync_dependency_source_object` (`source_object_api`) USING BTREE,
-  INDEX `idx_datai_integration_sync_dependency_target_object` (`target_object_api`) USING BTREE,
-  INDEX `idx_datai_integration_sync_dependency_sync_order` (`sync_order`) USING BTREE,
-  CONSTRAINT `fk_datai_integration_sync_dependency_source` FOREIGN KEY (`source_object_api`) REFERENCES `datai_integration_object` (`api`) ON DELETE CASCADE,
-  CONSTRAINT `fk_datai_integration_sync_dependency_target` FOREIGN KEY (`target_object_api`) REFERENCES `datai_integration_object` (`api`) ON DELETE CASCADE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '数据同步依赖关系表' ROW_FORMAT = DYNAMIC;
-
-CREATE TABLE `datai_integration_sync_performance` (
-  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '性能记录ID',
-  `batch_id` int NULL COMMENT '关联批次ID',
-  `object_api` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '对象API',
-  `sync_type` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '同步类型: FULL/INCREMENTAL/INITIAL',
-  `api_type` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT 'API类型: SOAP/BULK_V1/BULK_V2',
-  `record_count` int NOT NULL DEFAULT 0 COMMENT '处理记录数',
-  `success_count` int NOT NULL DEFAULT 0 COMMENT '成功记录数',
-  `failed_count` int NOT NULL DEFAULT 0 COMMENT '失败记录数',
-  `total_time` decimal(10,3) NOT NULL COMMENT '总耗时(秒)',
-  `avg_time_per_record` decimal(10,6) NOT NULL COMMENT '平均每条记录耗时(秒)',
-  `throughput` decimal(10,2) NOT NULL COMMENT '吞吐量(记录/秒)',
-  `api_calls` int NOT NULL DEFAULT 0 COMMENT 'API调用次数',
-  `data_volume` bigint NOT NULL DEFAULT 0 COMMENT '数据量(字节)',
-  `memory_usage` bigint NULL COMMENT '内存使用量(字节)',
-  `cpu_usage` decimal(5,2) NULL COMMENT 'CPU使用率(%)',
-  `sync_date` date NOT NULL COMMENT '同步日期',
-  `sync_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '同步时间',
-  `tenant_id` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '000000' COMMENT '租户编号',
-  PRIMARY KEY (`id`) USING BTREE,
-  INDEX `idx_datai_integration_sync_performance_batch_id` (`batch_id`) USING BTREE,
-  INDEX `idx_datai_integration_sync_performance_object_api` (`object_api`) USING BTREE,
-  INDEX `idx_datai_integration_sync_performance_sync_date` (`sync_date`) USING BTREE,
-  INDEX `idx_datai_integration_sync_performance_api_type` (`api_type`) USING BTREE,
-  CONSTRAINT `fk_datai_integration_sync_performance_batch` FOREIGN KEY (`batch_id`) REFERENCES `datai_integration_batch` (`id`) ON DELETE CASCADE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '同步性能监控表' ROW_FORMAT = DYNAMIC;
-
-
-CREATE TABLE `datai_integration_rate_limit` (
+-- ----------------------------
+-- Table structure for datai_integration_rate_limit
+-- ----------------------------
+DROP TABLE IF EXISTS `datai_integration_rate_limit`;
+CREATE TABLE `datai_integration_rate_limit`  (
   `id` int NOT NULL AUTO_INCREMENT COMMENT '限流记录ID',
   `api_type` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT 'API类型: SOAP/BULK_V1/BULK_V2',
   `window_start` datetime NOT NULL COMMENT '时间窗口开始',
@@ -310,14 +293,16 @@ CREATE TABLE `datai_integration_rate_limit` (
   `request_count` int NOT NULL DEFAULT 0 COMMENT '请求计数',
   `limit_threshold` int NOT NULL DEFAULT 0 COMMENT '限制阈值',
   `remaining_requests` int NOT NULL DEFAULT 0 COMMENT '剩余请求次数',
-  `reset_time` datetime NULL COMMENT '重置时间',
+  `reset_time` datetime NULL DEFAULT NULL COMMENT '重置时间',
   `is_throttled` tinyint(1) NOT NULL DEFAULT 0 COMMENT '是否被限流',
   `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   `tenant_id` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '000000' COMMENT '租户编号',
   PRIMARY KEY (`id`) USING BTREE,
-  UNIQUE KEY `uk_datai_integration_rate_limit_api_window` (`api_type`, `window_start`, `window_end`),
-  INDEX `idx_datai_integration_rate_limit_api_type` (`api_type`) USING BTREE,
-  INDEX `idx_datai_integration_rate_limit_window_start` (`window_start`) USING BTREE,
-  INDEX `idx_datai_integration_rate_limit_is_throttled` (`is_throttled`) USING BTREE
+  UNIQUE INDEX `uk_datai_integration_rate_limit_api_window`(`api_type` ASC, `window_start` ASC, `window_end` ASC) USING BTREE,
+  INDEX `idx_datai_integration_rate_limit_api_type`(`api_type` ASC) USING BTREE,
+  INDEX `idx_datai_integration_rate_limit_window_start`(`window_start` ASC) USING BTREE,
+  INDEX `idx_datai_integration_rate_limit_is_throttled`(`is_throttled` ASC) USING BTREE
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = 'API限流管理表' ROW_FORMAT = DYNAMIC;
+
+SET FOREIGN_KEY_CHECKS = 1;

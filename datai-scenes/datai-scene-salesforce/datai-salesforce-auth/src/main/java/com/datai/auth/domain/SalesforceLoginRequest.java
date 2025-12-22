@@ -66,6 +66,16 @@ public class SalesforceLoginRequest implements Serializable {
      */
     private String code;
     
+    /**
+     * OAuth state参数，用于防止CSRF攻击
+     */
+    private String state;
+    
+    /**
+     * Session ID，用于Session ID登录方式
+     */
+    private String sessionId;
+    
     // getter和setter方法
     public String getLoginType() {
         return loginType;
@@ -153,5 +163,21 @@ public class SalesforceLoginRequest implements Serializable {
     
     public void setCode(String code) {
         this.code = code;
+    }
+    
+    public String getState() {
+        return state;
+    }
+    
+    public void setState(String state) {
+        this.state = state;
+    }
+    
+    public String getSessionId() {
+        return sessionId;
+    }
+    
+    public void setSessionId(String sessionId) {
+        this.sessionId = sessionId;
     }
 }

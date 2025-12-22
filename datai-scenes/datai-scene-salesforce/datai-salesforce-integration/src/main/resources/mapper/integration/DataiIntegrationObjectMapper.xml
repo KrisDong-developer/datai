@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.datai.integration.mapper.DataiIntegrationObjectMapper">
+    
+    <resultMap type="DataiIntegrationObject" id="DataiIntegrationObjectResult">
+        <result property="id" column="id" />
+        <result property="api" column="api" />
+        <result property="label" column="label" />
+        <result property="labelPlural" column="label_plural" />
+        <result property="isCustom" column="is_custom" />
+        <result property="isQueryable" column="is_queryable" />
+        <result property="isReplicateable" column="is_replicateable" />
+        <result property="isRetrieveable" column="is_retrieveable" />
+        <result property="isSearchable" column="is_searchable" />
+        <result property="isTriggerable" column="is_triggerable" />
+        <result property="isUndeletable" column="is_undeletable" />
+        <result property="isUpdateable" column="is_updateable" />
+        <result property="isCreateable" column="is_createable" />
+        <result property="isDeletable" column="is_deletable" />
+        <result property="isMergeable" column="is_mergeable" />
+        <result property="isMru" column="is_mru" />
+        <result property="keyPrefix" column="key_prefix" />
+        <result property="recordTypeInfos" column="record_type_infos" />
+        <result property="createBy" column="create_by" />
+        <result property="createTime" column="create_time" />
+        <result property="updateBy" column="update_by" />
+        <result property="updateTime" column="update_time" />
+        <result property="remark" column="remark" />
+        <result property="tenantId" column="tenant_id" />
+    </resultMap>
+
+    <sql id="selectDataiIntegrationObjectVo">
+        select 
+            dio.id,
+            dio.api,
+            dio.label,
+            dio.label_plural,
+            dio.is_custom,
+            dio.is_queryable,
+            dio.is_replicateable,
+            dio.is_retrieveable,
+            dio.is_searchable,
+            dio.is_triggerable,
+            dio.is_undeletable,
+            dio.is_updateable,
+            dio.is_createable,
+            dio.is_deletable,
+            dio.is_mergeable,
+            dio.is_mru,
+            dio.key_prefix,
+            dio.record_type_infos,
+            dio.create_by,
+            dio.create_time,
+            dio.update_by,
+            dio.update_time,
+            dio.remark,
+            dio.tenant_id
+        from datai_integration_object dio
+    </sql>
+
+    <select id="selectDataiIntegrationObjectList" parameterType="DataiIntegrationObject" resultMap="DataiIntegrationObjectResult">
+        <include refid="selectDataiIntegrationObjectVo"/>
+        <where>
+            <if test="api != null  and api != ''"> and dio.api = #{api}</if>
+            <if test="label != null  and label != ''"> and dio.label = #{label}</if>
+            <if test="labelPlural != null  and labelPlural != ''"> and dio.label_plural = #{labelPlural}</if>
+            <if test="isCustom != null "> and dio.is_custom = #{isCustom}</if>
+            <if test="isQueryable != null "> and dio.is_queryable = #{isQueryable}</if>
+            <if test="isReplicateable != null "> and dio.is_replicateable = #{isReplicateable}</if>
+            <if test="isRetrieveable != null "> and dio.is_retrieveable = #{isRetrieveable}</if>
+            <if test="isSearchable != null "> and dio.is_searchable = #{isSearchable}</if>
+            <if test="isTriggerable != null "> and dio.is_triggerable = #{isTriggerable}</if>
+            <if test="isUndeletable != null "> and dio.is_undeletable = #{isUndeletable}</if>
+            <if test="isUpdateable != null "> and dio.is_updateable = #{isUpdateable}</if>
+            <if test="isCreateable != null "> and dio.is_createable = #{isCreateable}</if>
+            <if test="isDeletable != null "> and dio.is_deletable = #{isDeletable}</if>
+            <if test="isMergeable != null "> and dio.is_mergeable = #{isMergeable}</if>
+            <if test="isMru != null "> and dio.is_mru = #{isMru}</if>
+            <if test="keyPrefix != null  and keyPrefix != ''"> and dio.key_prefix = #{keyPrefix}</if>
+            <if test="recordTypeInfos != null  and recordTypeInfos != ''"> and dio.record_type_infos = #{recordTypeInfos}</if>
+            <if test="tenantId != null  and tenantId != ''"> and dio.tenant_id = #{tenantId}</if>
+        </where>
+    </select>
+    
+    <select id="selectDataiIntegrationObjectById" parameterType="Long" resultMap="DataiIntegrationObjectResult">
+        <include refid="selectDataiIntegrationObjectVo"/>
+        where dio.id = #{id}
+    </select>
+        
+    <insert id="insertDataiIntegrationObject" parameterType="DataiIntegrationObject" useGeneratedKeys="true" keyProperty="id">
+        insert into datai_integration_object
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="api != null and api != ''">api,</if>
+            <if test="label != null and label != ''">label,</if>
+            <if test="labelPlural != null">label_plural,</if>
+            <if test="isCustom != null">is_custom,</if>
+            <if test="isQueryable != null">is_queryable,</if>
+            <if test="isReplicateable != null">is_replicateable,</if>
+            <if test="isRetrieveable != null">is_retrieveable,</if>
+            <if test="isSearchable != null">is_searchable,</if>
+            <if test="isTriggerable != null">is_triggerable,</if>
+            <if test="isUndeletable != null">is_undeletable,</if>
+            <if test="isUpdateable != null">is_updateable,</if>
+            <if test="isCreateable != null">is_createable,</if>
+            <if test="isDeletable != null">is_deletable,</if>
+            <if test="isMergeable != null">is_mergeable,</if>
+            <if test="isMru != null">is_mru,</if>
+            <if test="keyPrefix != null">key_prefix,</if>
+            <if test="recordTypeInfos != null">record_type_infos,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="remark != null">remark,</if>
+            <if test="tenantId != null">tenant_id,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="api != null and api != ''">#{api},</if>
+            <if test="label != null and label != ''">#{label},</if>
+            <if test="labelPlural != null">#{labelPlural},</if>
+            <if test="isCustom != null">#{isCustom},</if>
+            <if test="isQueryable != null">#{isQueryable},</if>
+            <if test="isReplicateable != null">#{isReplicateable},</if>
+            <if test="isRetrieveable != null">#{isRetrieveable},</if>
+            <if test="isSearchable != null">#{isSearchable},</if>
+            <if test="isTriggerable != null">#{isTriggerable},</if>
+            <if test="isUndeletable != null">#{isUndeletable},</if>
+            <if test="isUpdateable != null">#{isUpdateable},</if>
+            <if test="isCreateable != null">#{isCreateable},</if>
+            <if test="isDeletable != null">#{isDeletable},</if>
+            <if test="isMergeable != null">#{isMergeable},</if>
+            <if test="isMru != null">#{isMru},</if>
+            <if test="keyPrefix != null">#{keyPrefix},</if>
+            <if test="recordTypeInfos != null">#{recordTypeInfos},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="remark != null">#{remark},</if>
+            <if test="tenantId != null">#{tenantId},</if>
+         </trim>
+    </insert>
+
+    <update id="updateDataiIntegrationObject" parameterType="DataiIntegrationObject">
+        update datai_integration_object
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="api != null and api != ''">api = #{api},</if>
+            <if test="label != null and label != ''">label = #{label},</if>
+            <if test="labelPlural != null">label_plural = #{labelPlural},</if>
+            <if test="isCustom != null">is_custom = #{isCustom},</if>
+            <if test="isQueryable != null">is_queryable = #{isQueryable},</if>
+            <if test="isReplicateable != null">is_replicateable = #{isReplicateable},</if>
+            <if test="isRetrieveable != null">is_retrieveable = #{isRetrieveable},</if>
+            <if test="isSearchable != null">is_searchable = #{isSearchable},</if>
+            <if test="isTriggerable != null">is_triggerable = #{isTriggerable},</if>
+            <if test="isUndeletable != null">is_undeletable = #{isUndeletable},</if>
+            <if test="isUpdateable != null">is_updateable = #{isUpdateable},</if>
+            <if test="isCreateable != null">is_createable = #{isCreateable},</if>
+            <if test="isDeletable != null">is_deletable = #{isDeletable},</if>
+            <if test="isMergeable != null">is_mergeable = #{isMergeable},</if>
+            <if test="isMru != null">is_mru = #{isMru},</if>
+            <if test="keyPrefix != null">key_prefix = #{keyPrefix},</if>
+            <if test="recordTypeInfos != null">record_type_infos = #{recordTypeInfos},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            <if test="tenantId != null">tenant_id = #{tenantId},</if>
+        </trim>
+        where datai_integration_object.id = #{id}
+    </update>
+
+    <delete id="deleteDataiIntegrationObjectById" parameterType="Long">
+        delete from datai_integration_object where id = #{id}
+    </delete>
+
+    <delete id="deleteDataiIntegrationObjectByIds" parameterType="String">
+        delete from datai_integration_object where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

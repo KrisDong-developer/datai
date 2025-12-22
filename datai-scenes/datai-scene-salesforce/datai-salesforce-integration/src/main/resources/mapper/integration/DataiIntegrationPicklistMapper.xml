@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.datai.integration.mapper.DataiIntegrationPicklistMapper">
+    
+    <resultMap type="DataiIntegrationPicklist" id="DataiIntegrationPicklistResult">
+        <result property="id" column="id" />
+        <result property="api" column="api" />
+        <result property="field" column="field" />
+        <result property="picklistValue" column="picklist_value" />
+        <result property="picklistLabel" column="picklist_label" />
+        <result property="picklistIndex" column="picklist_index" />
+        <result property="isActive" column="is_active" />
+        <result property="isDefault" column="is_default" />
+        <result property="validFor" column="valid_for" />
+        <result property="createBy" column="create_by" />
+        <result property="createTime" column="create_time" />
+        <result property="updateBy" column="update_by" />
+        <result property="updateTime" column="update_time" />
+        <result property="remark" column="remark" />
+        <result property="tenantId" column="tenant_id" />
+    </resultMap>
+
+    <sql id="selectDataiIntegrationPicklistVo">
+        select 
+            dip.id,
+            dip.api,
+            dip.field,
+            dip.picklist_value,
+            dip.picklist_label,
+            dip.picklist_index,
+            dip.is_active,
+            dip.is_default,
+            dip.valid_for,
+            dip.create_by,
+            dip.create_time,
+            dip.update_by,
+            dip.update_time,
+            dip.remark,
+            dip.tenant_id
+        from datai_integration_picklist dip
+    </sql>
+
+    <select id="selectDataiIntegrationPicklistList" parameterType="DataiIntegrationPicklist" resultMap="DataiIntegrationPicklistResult">
+        <include refid="selectDataiIntegrationPicklistVo"/>
+        <where>
+            <if test="api != null  and api != ''"> and dip.api = #{api}</if>
+            <if test="field != null  and field != ''"> and dip.field = #{field}</if>
+            <if test="picklistValue != null  and picklistValue != ''"> and dip.picklist_value = #{picklistValue}</if>
+            <if test="picklistLabel != null  and picklistLabel != ''"> and dip.picklist_label = #{picklistLabel}</if>
+            <if test="picklistIndex != null "> and dip.picklist_index = #{picklistIndex}</if>
+            <if test="isActive != null "> and dip.is_active = #{isActive}</if>
+            <if test="isDefault != null "> and dip.is_default = #{isDefault}</if>
+            <if test="validFor != null  and validFor != ''"> and dip.valid_for = #{validFor}</if>
+            <if test="tenantId != null  and tenantId != ''"> and dip.tenant_id = #{tenantId}</if>
+        </where>
+    </select>
+    
+    <select id="selectDataiIntegrationPicklistById" parameterType="Long" resultMap="DataiIntegrationPicklistResult">
+        <include refid="selectDataiIntegrationPicklistVo"/>
+        where dip.id = #{id}
+    </select>
+        
+    <insert id="insertDataiIntegrationPicklist" parameterType="DataiIntegrationPicklist" useGeneratedKeys="true" keyProperty="id">
+        insert into datai_integration_picklist
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="api != null and api != ''">api,</if>
+            <if test="field != null and field != ''">field,</if>
+            <if test="picklistValue != null and picklistValue != ''">picklist_value,</if>
+            <if test="picklistLabel != null">picklist_label,</if>
+            <if test="picklistIndex != null">picklist_index,</if>
+            <if test="isActive != null">is_active,</if>
+            <if test="isDefault != null">is_default,</if>
+            <if test="validFor != null">valid_for,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="remark != null">remark,</if>
+            <if test="tenantId != null">tenant_id,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="api != null and api != ''">#{api},</if>
+            <if test="field != null and field != ''">#{field},</if>
+            <if test="picklistValue != null and picklistValue != ''">#{picklistValue},</if>
+            <if test="picklistLabel != null">#{picklistLabel},</if>
+            <if test="picklistIndex != null">#{picklistIndex},</if>
+            <if test="isActive != null">#{isActive},</if>
+            <if test="isDefault != null">#{isDefault},</if>
+            <if test="validFor != null">#{validFor},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="remark != null">#{remark},</if>
+            <if test="tenantId != null">#{tenantId},</if>
+         </trim>
+    </insert>
+
+    <update id="updateDataiIntegrationPicklist" parameterType="DataiIntegrationPicklist">
+        update datai_integration_picklist
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="api != null and api != ''">api = #{api},</if>
+            <if test="field != null and field != ''">field = #{field},</if>
+            <if test="picklistValue != null and picklistValue != ''">picklist_value = #{picklistValue},</if>
+            <if test="picklistLabel != null">picklist_label = #{picklistLabel},</if>
+            <if test="picklistIndex != null">picklist_index = #{picklistIndex},</if>
+            <if test="isActive != null">is_active = #{isActive},</if>
+            <if test="isDefault != null">is_default = #{isDefault},</if>
+            <if test="validFor != null">valid_for = #{validFor},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            <if test="tenantId != null">tenant_id = #{tenantId},</if>
+        </trim>
+        where datai_integration_picklist.id = #{id}
+    </update>
+
+    <delete id="deleteDataiIntegrationPicklistById" parameterType="Long">
+        delete from datai_integration_picklist where id = #{id}
+    </delete>
+
+    <delete id="deleteDataiIntegrationPicklistByIds" parameterType="String">
+        delete from datai_integration_picklist where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

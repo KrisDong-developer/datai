@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.datai.integration.mapper.DataiIntegrationLogMapper">
+    
+    <resultMap type="DataiIntegrationLog" id="DataiIntegrationLogResult">
+        <result property="id" column="id" />
+        <result property="batchId" column="batch_id" />
+        <result property="objectApi" column="object_api" />
+        <result property="recordId" column="record_id" />
+        <result property="operationType" column="operation_type" />
+        <result property="operationStatus" column="operation_status" />
+        <result property="sourceData" column="source_data" />
+        <result property="targetData" column="target_data" />
+        <result property="errorMessage" column="error_message" />
+        <result property="executionTime" column="execution_time" />
+        <result property="syncTime" column="sync_time" />
+        <result property="createTime" column="create_time" />
+        <result property="tenantId" column="tenant_id" />
+    </resultMap>
+
+    <sql id="selectDataiIntegrationLogVo">
+        select 
+            dil.id,
+            dil.batch_id,
+            dil.object_api,
+            dil.record_id,
+            dil.operation_type,
+            dil.operation_status,
+            dil.source_data,
+            dil.target_data,
+            dil.error_message,
+            dil.execution_time,
+            dil.sync_time,
+            dil.create_time,
+            dil.tenant_id
+        from datai_integration_log dil
+    </sql>
+
+    <select id="selectDataiIntegrationLogList" parameterType="DataiIntegrationLog" resultMap="DataiIntegrationLogResult">
+        <include refid="selectDataiIntegrationLogVo"/>
+        <where>
+            <if test="batchId != null "> and dil.batch_id = #{batchId}</if>
+            <if test="objectApi != null  and objectApi != ''"> and dil.object_api = #{objectApi}</if>
+            <if test="recordId != null  and recordId != ''"> and dil.record_id = #{recordId}</if>
+            <if test="operationType != null  and operationType != ''"> and dil.operation_type = #{operationType}</if>
+            <if test="operationStatus != null  and operationStatus != ''"> and dil.operation_status = #{operationStatus}</if>
+            <if test="sourceData != null  and sourceData != ''"> and dil.source_data = #{sourceData}</if>
+            <if test="targetData != null  and targetData != ''"> and dil.target_data = #{targetData}</if>
+            <if test="errorMessage != null  and errorMessage != ''"> and dil.error_message = #{errorMessage}</if>
+            <if test="executionTime != null "> and dil.execution_time = #{executionTime}</if>
+            <if test="syncTime != null "> and dil.sync_time = #{syncTime}</if>
+            <if test="tenantId != null  and tenantId != ''"> and dil.tenant_id = #{tenantId}</if>
+        </where>
+    </select>
+    
+    <select id="selectDataiIntegrationLogById" parameterType="Long" resultMap="DataiIntegrationLogResult">
+        <include refid="selectDataiIntegrationLogVo"/>
+        where dil.id = #{id}
+    </select>
+        
+    <insert id="insertDataiIntegrationLog" parameterType="DataiIntegrationLog" useGeneratedKeys="true" keyProperty="id">
+        insert into datai_integration_log
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="batchId != null">batch_id,</if>
+            <if test="objectApi != null and objectApi != ''">object_api,</if>
+            <if test="recordId != null">record_id,</if>
+            <if test="operationType != null and operationType != ''">operation_type,</if>
+            <if test="operationStatus != null and operationStatus != ''">operation_status,</if>
+            <if test="sourceData != null">source_data,</if>
+            <if test="targetData != null">target_data,</if>
+            <if test="errorMessage != null">error_message,</if>
+            <if test="executionTime != null">execution_time,</if>
+            <if test="syncTime != null">sync_time,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="tenantId != null and tenantId != ''">tenant_id,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="batchId != null">#{batchId},</if>
+            <if test="objectApi != null and objectApi != ''">#{objectApi},</if>
+            <if test="recordId != null">#{recordId},</if>
+            <if test="operationType != null and operationType != ''">#{operationType},</if>
+            <if test="operationStatus != null and operationStatus != ''">#{operationStatus},</if>
+            <if test="sourceData != null">#{sourceData},</if>
+            <if test="targetData != null">#{targetData},</if>
+            <if test="errorMessage != null">#{errorMessage},</if>
+            <if test="executionTime != null">#{executionTime},</if>
+            <if test="syncTime != null">#{syncTime},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="tenantId != null and tenantId != ''">#{tenantId},</if>
+         </trim>
+    </insert>
+
+    <update id="updateDataiIntegrationLog" parameterType="DataiIntegrationLog">
+        update datai_integration_log
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="batchId != null">batch_id = #{batchId},</if>
+            <if test="objectApi != null and objectApi != ''">object_api = #{objectApi},</if>
+            <if test="recordId != null">record_id = #{recordId},</if>
+            <if test="operationType != null and operationType != ''">operation_type = #{operationType},</if>
+            <if test="operationStatus != null and operationStatus != ''">operation_status = #{operationStatus},</if>
+            <if test="sourceData != null">source_data = #{sourceData},</if>
+            <if test="targetData != null">target_data = #{targetData},</if>
+            <if test="errorMessage != null">error_message = #{errorMessage},</if>
+            <if test="executionTime != null">execution_time = #{executionTime},</if>
+            <if test="syncTime != null">sync_time = #{syncTime},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="tenantId != null and tenantId != ''">tenant_id = #{tenantId},</if>
+        </trim>
+        where datai_integration_log.id = #{id}
+    </update>
+
+    <delete id="deleteDataiIntegrationLogById" parameterType="Long">
+        delete from datai_integration_log where id = #{id}
+    </delete>
+
+    <delete id="deleteDataiIntegrationLogByIds" parameterType="String">
+        delete from datai_integration_log where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

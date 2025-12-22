@@ -1,0 +1,348 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.datai.integration.mapper.DataiIntegrationFieldMapper">
+    
+    <resultMap type="DataiIntegrationField" id="DataiIntegrationFieldResult">
+        <result property="id" column="id" />
+        <result property="api" column="api" />
+        <result property="field" column="field" />
+        <result property="label" column="label" />
+        <result property="isCreateable" column="is_createable" />
+        <result property="isNillable" column="is_nillable" />
+        <result property="isUpdateable" column="is_updateable" />
+        <result property="isDefaultedOnCreate" column="is_defaulted_on_create" />
+        <result property="isUnique" column="is_unique" />
+        <result property="isFilterable" column="is_filterable" />
+        <result property="isSortable" column="is_sortable" />
+        <result property="isAggregatable" column="is_aggregatable" />
+        <result property="isGroupable" column="is_groupable" />
+        <result property="isPolymorphicForeignKey" column="is_polymorphic_foreign_key" />
+        <result property="isExternalId" column="is_external_id" />
+        <result property="isCustom" column="is_custom" />
+        <result property="isCalculated" column="is_calculated" />
+        <result property="isAutoNumber" column="is_auto_number" />
+        <result property="isCaseSensitive" column="is_case_sensitive" />
+        <result property="isEncrypted" column="is_encrypted" />
+        <result property="isHtmlFormatted" column="is_html_formatted" />
+        <result property="isIdLookup" column="is_id_lookup" />
+        <result property="isPermissionable" column="is_permissionable" />
+        <result property="isRestrictedPicklist" column="is_restricted_picklist" />
+        <result property="isRestrictedDelete" column="is_restricted_delete" />
+        <result property="isWriteRequiresMasterRead" column="is_write_requires_master_read" />
+        <result property="queryByDistance" column="query_by_distance" />
+        <result property="searchPrefilterable" column="search_prefilterable" />
+        <result property="fieldDataType" column="field_data_type" />
+        <result property="fieldLength" column="field_length" />
+        <result property="fieldPrecision" column="field_precision" />
+        <result property="fieldScale" column="field_scale" />
+        <result property="fieldByteLength" column="field_byte_length" />
+        <result property="soapType" column="soap_type" />
+        <result property="relationshipName" column="relationship_name" />
+        <result property="referenceTargetField" column="reference_target_field" />
+        <result property="referenceTo" column="reference_to" />
+        <result property="polymorphicForeignField" column="polymorphic_foreign_field" />
+        <result property="relationshipOrder" column="relationship_order" />
+        <result property="defaultValue" column="default_value" />
+        <result property="calculatedFormula" column="calculated_formula" />
+        <result property="inlineHelpText" column="inline_help_text" />
+        <result property="mask" column="mask" />
+        <result property="maskType" column="mask_type" />
+        <result property="picklistValues" column="picklist_values" />
+        <result property="createBy" column="create_by" />
+        <result property="createTime" column="create_time" />
+        <result property="updateBy" column="update_by" />
+        <result property="updateTime" column="update_time" />
+        <result property="remark" column="remark" />
+        <result property="tenantId" column="tenant_id" />
+    </resultMap>
+
+    <sql id="selectDataiIntegrationFieldVo">
+        select 
+            dif.id,
+            dif.api,
+            dif.field,
+            dif.label,
+            dif.is_createable,
+            dif.is_nillable,
+            dif.is_updateable,
+            dif.is_defaulted_on_create,
+            dif.is_unique,
+            dif.is_filterable,
+            dif.is_sortable,
+            dif.is_aggregatable,
+            dif.is_groupable,
+            dif.is_polymorphic_foreign_key,
+            dif.is_external_id,
+            dif.is_custom,
+            dif.is_calculated,
+            dif.is_auto_number,
+            dif.is_case_sensitive,
+            dif.is_encrypted,
+            dif.is_html_formatted,
+            dif.is_id_lookup,
+            dif.is_permissionable,
+            dif.is_restricted_picklist,
+            dif.is_restricted_delete,
+            dif.is_write_requires_master_read,
+            dif.query_by_distance,
+            dif.search_prefilterable,
+            dif.field_data_type,
+            dif.field_length,
+            dif.field_precision,
+            dif.field_scale,
+            dif.field_byte_length,
+            dif.soap_type,
+            dif.relationship_name,
+            dif.reference_target_field,
+            dif.reference_to,
+            dif.polymorphic_foreign_field,
+            dif.relationship_order,
+            dif.default_value,
+            dif.calculated_formula,
+            dif.inline_help_text,
+            dif.mask,
+            dif.mask_type,
+            dif.picklist_values,
+            dif.create_by,
+            dif.create_time,
+            dif.update_by,
+            dif.update_time,
+            dif.remark,
+            dif.tenant_id
+        from datai_integration_field dif
+    </sql>
+
+    <select id="selectDataiIntegrationFieldList" parameterType="DataiIntegrationField" resultMap="DataiIntegrationFieldResult">
+        <include refid="selectDataiIntegrationFieldVo"/>
+        <where>
+            <if test="api != null  and api != ''"> and dif.api = #{api}</if>
+            <if test="field != null  and field != ''"> and dif.field = #{field}</if>
+            <if test="label != null  and label != ''"> and dif.label = #{label}</if>
+            <if test="isCreateable != null "> and dif.is_createable = #{isCreateable}</if>
+            <if test="isNillable != null "> and dif.is_nillable = #{isNillable}</if>
+            <if test="isUpdateable != null "> and dif.is_updateable = #{isUpdateable}</if>
+            <if test="isDefaultedOnCreate != null "> and dif.is_defaulted_on_create = #{isDefaultedOnCreate}</if>
+            <if test="isUnique != null "> and dif.is_unique = #{isUnique}</if>
+            <if test="isFilterable != null "> and dif.is_filterable = #{isFilterable}</if>
+            <if test="isSortable != null "> and dif.is_sortable = #{isSortable}</if>
+            <if test="isAggregatable != null "> and dif.is_aggregatable = #{isAggregatable}</if>
+            <if test="isGroupable != null "> and dif.is_groupable = #{isGroupable}</if>
+            <if test="isPolymorphicForeignKey != null "> and dif.is_polymorphic_foreign_key = #{isPolymorphicForeignKey}</if>
+            <if test="isExternalId != null "> and dif.is_external_id = #{isExternalId}</if>
+            <if test="isCustom != null "> and dif.is_custom = #{isCustom}</if>
+            <if test="isCalculated != null "> and dif.is_calculated = #{isCalculated}</if>
+            <if test="isAutoNumber != null "> and dif.is_auto_number = #{isAutoNumber}</if>
+            <if test="isCaseSensitive != null "> and dif.is_case_sensitive = #{isCaseSensitive}</if>
+            <if test="isEncrypted != null "> and dif.is_encrypted = #{isEncrypted}</if>
+            <if test="isHtmlFormatted != null "> and dif.is_html_formatted = #{isHtmlFormatted}</if>
+            <if test="isIdLookup != null "> and dif.is_id_lookup = #{isIdLookup}</if>
+            <if test="isPermissionable != null "> and dif.is_permissionable = #{isPermissionable}</if>
+            <if test="isRestrictedPicklist != null "> and dif.is_restricted_picklist = #{isRestrictedPicklist}</if>
+            <if test="isRestrictedDelete != null "> and dif.is_restricted_delete = #{isRestrictedDelete}</if>
+            <if test="isWriteRequiresMasterRead != null "> and dif.is_write_requires_master_read = #{isWriteRequiresMasterRead}</if>
+            <if test="queryByDistance != null "> and dif.query_by_distance = #{queryByDistance}</if>
+            <if test="searchPrefilterable != null "> and dif.search_prefilterable = #{searchPrefilterable}</if>
+            <if test="fieldDataType != null  and fieldDataType != ''"> and dif.field_data_type = #{fieldDataType}</if>
+            <if test="fieldLength != null "> and dif.field_length = #{fieldLength}</if>
+            <if test="fieldPrecision != null "> and dif.field_precision = #{fieldPrecision}</if>
+            <if test="fieldScale != null "> and dif.field_scale = #{fieldScale}</if>
+            <if test="fieldByteLength != null "> and dif.field_byte_length = #{fieldByteLength}</if>
+            <if test="soapType != null  and soapType != ''"> and dif.soap_type = #{soapType}</if>
+            <if test="relationshipName != null  and relationshipName != ''"> and dif.relationship_name like concat('%', #{relationshipName}, '%')</if>
+            <if test="referenceTargetField != null  and referenceTargetField != ''"> and dif.reference_target_field = #{referenceTargetField}</if>
+            <if test="referenceTo != null  and referenceTo != ''"> and dif.reference_to = #{referenceTo}</if>
+            <if test="polymorphicForeignField != null  and polymorphicForeignField != ''"> and dif.polymorphic_foreign_field = #{polymorphicForeignField}</if>
+            <if test="relationshipOrder != null "> and dif.relationship_order = #{relationshipOrder}</if>
+            <if test="defaultValue != null  and defaultValue != ''"> and dif.default_value = #{defaultValue}</if>
+            <if test="calculatedFormula != null  and calculatedFormula != ''"> and dif.calculated_formula = #{calculatedFormula}</if>
+            <if test="inlineHelpText != null  and inlineHelpText != ''"> and dif.inline_help_text = #{inlineHelpText}</if>
+            <if test="mask != null  and mask != ''"> and dif.mask = #{mask}</if>
+            <if test="maskType != null  and maskType != ''"> and dif.mask_type = #{maskType}</if>
+            <if test="picklistValues != null  and picklistValues != ''"> and dif.picklist_values = #{picklistValues}</if>
+            <if test="tenantId != null  and tenantId != ''"> and dif.tenant_id = #{tenantId}</if>
+        </where>
+    </select>
+    
+    <select id="selectDataiIntegrationFieldById" parameterType="Long" resultMap="DataiIntegrationFieldResult">
+        <include refid="selectDataiIntegrationFieldVo"/>
+        where dif.id = #{id}
+    </select>
+        
+    <insert id="insertDataiIntegrationField" parameterType="DataiIntegrationField" useGeneratedKeys="true" keyProperty="id">
+        insert into datai_integration_field
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="api != null and api != ''">api,</if>
+            <if test="field != null and field != ''">field,</if>
+            <if test="label != null">label,</if>
+            <if test="isCreateable != null">is_createable,</if>
+            <if test="isNillable != null">is_nillable,</if>
+            <if test="isUpdateable != null">is_updateable,</if>
+            <if test="isDefaultedOnCreate != null">is_defaulted_on_create,</if>
+            <if test="isUnique != null">is_unique,</if>
+            <if test="isFilterable != null">is_filterable,</if>
+            <if test="isSortable != null">is_sortable,</if>
+            <if test="isAggregatable != null">is_aggregatable,</if>
+            <if test="isGroupable != null">is_groupable,</if>
+            <if test="isPolymorphicForeignKey != null">is_polymorphic_foreign_key,</if>
+            <if test="isExternalId != null">is_external_id,</if>
+            <if test="isCustom != null">is_custom,</if>
+            <if test="isCalculated != null">is_calculated,</if>
+            <if test="isAutoNumber != null">is_auto_number,</if>
+            <if test="isCaseSensitive != null">is_case_sensitive,</if>
+            <if test="isEncrypted != null">is_encrypted,</if>
+            <if test="isHtmlFormatted != null">is_html_formatted,</if>
+            <if test="isIdLookup != null">is_id_lookup,</if>
+            <if test="isPermissionable != null">is_permissionable,</if>
+            <if test="isRestrictedPicklist != null">is_restricted_picklist,</if>
+            <if test="isRestrictedDelete != null">is_restricted_delete,</if>
+            <if test="isWriteRequiresMasterRead != null">is_write_requires_master_read,</if>
+            <if test="queryByDistance != null">query_by_distance,</if>
+            <if test="searchPrefilterable != null">search_prefilterable,</if>
+            <if test="fieldDataType != null">field_data_type,</if>
+            <if test="fieldLength != null">field_length,</if>
+            <if test="fieldPrecision != null">field_precision,</if>
+            <if test="fieldScale != null">field_scale,</if>
+            <if test="fieldByteLength != null">field_byte_length,</if>
+            <if test="soapType != null">soap_type,</if>
+            <if test="relationshipName != null">relationship_name,</if>
+            <if test="referenceTargetField != null">reference_target_field,</if>
+            <if test="referenceTo != null">reference_to,</if>
+            <if test="polymorphicForeignField != null">polymorphic_foreign_field,</if>
+            <if test="relationshipOrder != null">relationship_order,</if>
+            <if test="defaultValue != null">default_value,</if>
+            <if test="calculatedFormula != null">calculated_formula,</if>
+            <if test="inlineHelpText != null">inline_help_text,</if>
+            <if test="mask != null">mask,</if>
+            <if test="maskType != null">mask_type,</if>
+            <if test="picklistValues != null">picklist_values,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="remark != null">remark,</if>
+            <if test="tenantId != null">tenant_id,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="api != null and api != ''">#{api},</if>
+            <if test="field != null and field != ''">#{field},</if>
+            <if test="label != null">#{label},</if>
+            <if test="isCreateable != null">#{isCreateable},</if>
+            <if test="isNillable != null">#{isNillable},</if>
+            <if test="isUpdateable != null">#{isUpdateable},</if>
+            <if test="isDefaultedOnCreate != null">#{isDefaultedOnCreate},</if>
+            <if test="isUnique != null">#{isUnique},</if>
+            <if test="isFilterable != null">#{isFilterable},</if>
+            <if test="isSortable != null">#{isSortable},</if>
+            <if test="isAggregatable != null">#{isAggregatable},</if>
+            <if test="isGroupable != null">#{isGroupable},</if>
+            <if test="isPolymorphicForeignKey != null">#{isPolymorphicForeignKey},</if>
+            <if test="isExternalId != null">#{isExternalId},</if>
+            <if test="isCustom != null">#{isCustom},</if>
+            <if test="isCalculated != null">#{isCalculated},</if>
+            <if test="isAutoNumber != null">#{isAutoNumber},</if>
+            <if test="isCaseSensitive != null">#{isCaseSensitive},</if>
+            <if test="isEncrypted != null">#{isEncrypted},</if>
+            <if test="isHtmlFormatted != null">#{isHtmlFormatted},</if>
+            <if test="isIdLookup != null">#{isIdLookup},</if>
+            <if test="isPermissionable != null">#{isPermissionable},</if>
+            <if test="isRestrictedPicklist != null">#{isRestrictedPicklist},</if>
+            <if test="isRestrictedDelete != null">#{isRestrictedDelete},</if>
+            <if test="isWriteRequiresMasterRead != null">#{isWriteRequiresMasterRead},</if>
+            <if test="queryByDistance != null">#{queryByDistance},</if>
+            <if test="searchPrefilterable != null">#{searchPrefilterable},</if>
+            <if test="fieldDataType != null">#{fieldDataType},</if>
+            <if test="fieldLength != null">#{fieldLength},</if>
+            <if test="fieldPrecision != null">#{fieldPrecision},</if>
+            <if test="fieldScale != null">#{fieldScale},</if>
+            <if test="fieldByteLength != null">#{fieldByteLength},</if>
+            <if test="soapType != null">#{soapType},</if>
+            <if test="relationshipName != null">#{relationshipName},</if>
+            <if test="referenceTargetField != null">#{referenceTargetField},</if>
+            <if test="referenceTo != null">#{referenceTo},</if>
+            <if test="polymorphicForeignField != null">#{polymorphicForeignField},</if>
+            <if test="relationshipOrder != null">#{relationshipOrder},</if>
+            <if test="defaultValue != null">#{defaultValue},</if>
+            <if test="calculatedFormula != null">#{calculatedFormula},</if>
+            <if test="inlineHelpText != null">#{inlineHelpText},</if>
+            <if test="mask != null">#{mask},</if>
+            <if test="maskType != null">#{maskType},</if>
+            <if test="picklistValues != null">#{picklistValues},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="remark != null">#{remark},</if>
+            <if test="tenantId != null">#{tenantId},</if>
+         </trim>
+    </insert>
+
+    <update id="updateDataiIntegrationField" parameterType="DataiIntegrationField">
+        update datai_integration_field
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="api != null and api != ''">api = #{api},</if>
+            <if test="field != null and field != ''">field = #{field},</if>
+            <if test="label != null">label = #{label},</if>
+            <if test="isCreateable != null">is_createable = #{isCreateable},</if>
+            <if test="isNillable != null">is_nillable = #{isNillable},</if>
+            <if test="isUpdateable != null">is_updateable = #{isUpdateable},</if>
+            <if test="isDefaultedOnCreate != null">is_defaulted_on_create = #{isDefaultedOnCreate},</if>
+            <if test="isUnique != null">is_unique = #{isUnique},</if>
+            <if test="isFilterable != null">is_filterable = #{isFilterable},</if>
+            <if test="isSortable != null">is_sortable = #{isSortable},</if>
+            <if test="isAggregatable != null">is_aggregatable = #{isAggregatable},</if>
+            <if test="isGroupable != null">is_groupable = #{isGroupable},</if>
+            <if test="isPolymorphicForeignKey != null">is_polymorphic_foreign_key = #{isPolymorphicForeignKey},</if>
+            <if test="isExternalId != null">is_external_id = #{isExternalId},</if>
+            <if test="isCustom != null">is_custom = #{isCustom},</if>
+            <if test="isCalculated != null">is_calculated = #{isCalculated},</if>
+            <if test="isAutoNumber != null">is_auto_number = #{isAutoNumber},</if>
+            <if test="isCaseSensitive != null">is_case_sensitive = #{isCaseSensitive},</if>
+            <if test="isEncrypted != null">is_encrypted = #{isEncrypted},</if>
+            <if test="isHtmlFormatted != null">is_html_formatted = #{isHtmlFormatted},</if>
+            <if test="isIdLookup != null">is_id_lookup = #{isIdLookup},</if>
+            <if test="isPermissionable != null">is_permissionable = #{isPermissionable},</if>
+            <if test="isRestrictedPicklist != null">is_restricted_picklist = #{isRestrictedPicklist},</if>
+            <if test="isRestrictedDelete != null">is_restricted_delete = #{isRestrictedDelete},</if>
+            <if test="isWriteRequiresMasterRead != null">is_write_requires_master_read = #{isWriteRequiresMasterRead},</if>
+            <if test="queryByDistance != null">query_by_distance = #{queryByDistance},</if>
+            <if test="searchPrefilterable != null">search_prefilterable = #{searchPrefilterable},</if>
+            <if test="fieldDataType != null">field_data_type = #{fieldDataType},</if>
+            <if test="fieldLength != null">field_length = #{fieldLength},</if>
+            <if test="fieldPrecision != null">field_precision = #{fieldPrecision},</if>
+            <if test="fieldScale != null">field_scale = #{fieldScale},</if>
+            <if test="fieldByteLength != null">field_byte_length = #{fieldByteLength},</if>
+            <if test="soapType != null">soap_type = #{soapType},</if>
+            <if test="relationshipName != null">relationship_name = #{relationshipName},</if>
+            <if test="referenceTargetField != null">reference_target_field = #{referenceTargetField},</if>
+            <if test="referenceTo != null">reference_to = #{referenceTo},</if>
+            <if test="polymorphicForeignField != null">polymorphic_foreign_field = #{polymorphicForeignField},</if>
+            <if test="relationshipOrder != null">relationship_order = #{relationshipOrder},</if>
+            <if test="defaultValue != null">default_value = #{defaultValue},</if>
+            <if test="calculatedFormula != null">calculated_formula = #{calculatedFormula},</if>
+            <if test="inlineHelpText != null">inline_help_text = #{inlineHelpText},</if>
+            <if test="mask != null">mask = #{mask},</if>
+            <if test="maskType != null">mask_type = #{maskType},</if>
+            <if test="picklistValues != null">picklist_values = #{picklistValues},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            <if test="tenantId != null">tenant_id = #{tenantId},</if>
+        </trim>
+        where datai_integration_field.id = #{id}
+    </update>
+
+    <delete id="deleteDataiIntegrationFieldById" parameterType="Long">
+        delete from datai_integration_field where id = #{id}
+    </delete>
+
+    <delete id="deleteDataiIntegrationFieldByIds" parameterType="String">
+        delete from datai_integration_field where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

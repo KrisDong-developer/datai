@@ -55,21 +55,21 @@ public class OAuth2LoginStrategy implements LoginStrategy {
     private final ObjectMapper objectMapper = new ObjectMapper();
     
     // 定期清理过期的state参数
-    static {
-        Thread cleanupThread = new Thread(() -> {
-            while (!Thread.currentThread().isInterrupted()) {
-                try {
-                    Thread.sleep(STATE_EXPIRATION_TIME);
-                    cleanupExpiredStates();
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    break;
-                }
-            }
-        });
-        cleanupThread.setDaemon(true);
-        cleanupThread.start();
-    }
+//    static {
+//        Thread cleanupThread = new Thread(() -> {
+//            while (!Thread.currentThread().isInterrupted()) {
+//                try {
+//                    Thread.sleep(STATE_EXPIRATION_TIME);
+//                    cleanupExpiredStates();
+//                } catch (InterruptedException e) {
+//                    Thread.currentThread().interrupt();
+//                    break;
+//                }
+//            }
+//        });
+//        cleanupThread.setDaemon(true);
+//        cleanupThread.start();
+//    }
     
     @Override
     public SalesforceLoginResult login(SalesforceLoginRequest request) {

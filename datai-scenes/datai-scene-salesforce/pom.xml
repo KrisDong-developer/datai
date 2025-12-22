@@ -40,6 +40,11 @@
                 <artifactId>datai-salesforce-auth</artifactId>
                 <version>${datai.version}</version>
             </dependency>
+            <dependency>
+                <groupId>com.datai</groupId>
+                <artifactId>datai-salesforce-integration</artifactId>
+                <version>${datai.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
