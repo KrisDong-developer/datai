@@ -4,7 +4,7 @@ import com.datai.auth.domain.SalesforceLoginResult;
 import com.datai.auth.domain.SalesforceLoginRequest;
 import com.datai.auth.strategy.LoginStrategy;
 import com.datai.common.utils.CacheUtils;
-import com.datai.salesforce.common.constant.SalesforceConfigConstants;
+import com.datai.auth.constant.SalesforceConfigConstants;
 import com.datai.salesforce.common.exception.SalesforceLegacyCredentialLoginException;
 import jakarta.xml.soap.*;
 import org.apache.commons.lang3.StringEscapeUtils;
@@ -77,19 +77,19 @@ public class LegacyCredentialLoginStrategy implements LoginStrategy {
     
     @Override
     public SalesforceLoginResult refreshToken(String refreshToken, String loginType) {
-        logger.info("执行传统账密凭证刷新令牌操作");
+        logger.info("执行传统账密凭证刷新Session操作");
         
-        // 传统账密登录方式不支持刷新令牌，需要重新登录
+        // 传统账密登录方式不支持刷新Session，需要重新登录
         SalesforceLoginResult result = new SalesforceLoginResult();
         result.setSuccess(false);
-        result.setErrorMessage("Legacy credential login does not support token refresh");
+        result.setErrorMessage("Legacy credential login does not support session refresh");
         result.setErrorCode("REFRESH_NOT_SUPPORTED");
         
         return result;
     }
     
     @Override
-    public boolean logout(String accessToken, String loginType) {
+    public boolean logout(String sessionId, String loginType) {
         logger.info("执行传统账密凭证登出操作");
         
         // 传统账密登录方式的登出操作主要是清理本地状态和调用Salesforce登出API
@@ -98,10 +98,10 @@ public class LegacyCredentialLoginStrategy implements LoginStrategy {
             Map<String, String> config = getSalesforceConfig();
             
             // 2. 调用Salesforce登出API
-            boolean logoutSuccess = executeSoapLogout(accessToken, config);
+            boolean logoutSuccess = executeSoapLogout(sessionId, config);
             
             // 3. 清理本地缓存
-            cleanupLocalCache(accessToken);
+            cleanupLocalCache(sessionId);
             
             if (logoutSuccess) {
                 logger.info("传统账密凭证登出成功");
@@ -421,7 +421,7 @@ public class LegacyCredentialLoginStrategy implements LoginStrategy {
 
                 switch (name) {
                     case "sessionId":
-                        result.setAccessToken(value);
+                        result.setSessionId(value);
                         break;
                     case "serverUrl":
                         extractInstanceUrl(result, value);
@@ -541,14 +541,14 @@ public class LegacyCredentialLoginStrategy implements LoginStrategy {
     /**
      * 执行SOAP登出操作
      * 
-     * @param accessToken 访问令牌
+     * @param sessionId Session ID
      * @param config 配置信息
      * @return 登出是否成功
      * @throws Exception 登出失败时抛出
      */
-    private boolean executeSoapLogout(String accessToken, Map<String, String> config) throws Exception {
+    private boolean executeSoapLogout(String sessionId, Map<String, String> config) throws Exception {
         // 构建登出SOAP请求
-        String soapLogoutRequest = buildSoapLogoutRequest(accessToken);
+        String soapLogoutRequest = buildSoapLogoutRequest(sessionId);
         
         // 发送登出请求
         String soapResponse = sendSoapRequest(soapLogoutRequest, config.get("endpointUrl"));
@@ -560,7 +560,7 @@ public class LegacyCredentialLoginStrategy implements LoginStrategy {
     /**
      * 构建SOAP登出请求
      * 
-     * @param sessionId 访问令牌
+     * @param sessionId Session ID
      * @return SOAP登出请求字符串
      */
     private String buildSoapLogoutRequest(String sessionId) {
@@ -646,13 +646,13 @@ public class LegacyCredentialLoginStrategy implements LoginStrategy {
     /**
      * 清理本地缓存
      * 
-     * @param accessToken 访问令牌
+     * @param sessionId Session ID
      */
-    private void cleanupLocalCache(String accessToken) {
-        // 清理与该令牌相关的缓存
+    private void cleanupLocalCache(String sessionId) {
+        // 清理与该Session相关的缓存
         try {
             // 这里可以添加具体的缓存清理逻辑
-            logger.debug("清理本地缓存，访问令牌: {}", accessToken.substring(0, Math.min(10, accessToken.length())) + "...");
+            logger.debug("清理本地缓存，Session ID: {}", sessionId.substring(0, Math.min(10, sessionId.length())) + "...");
         } catch (Exception e) {
             logger.error("清理本地缓存失败: {}", e.getMessage(), e);
         }

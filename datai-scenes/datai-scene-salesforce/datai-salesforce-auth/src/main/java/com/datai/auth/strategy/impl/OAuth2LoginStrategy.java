@@ -6,7 +6,7 @@ import com.datai.auth.domain.SalesforceLoginResult;
 import com.datai.auth.domain.SalesforceLoginRequest;
 import com.datai.auth.strategy.LoginStrategy;
 import com.datai.common.utils.CacheUtils;
-import com.datai.salesforce.common.constant.SalesforceConfigConstants;
+import com.datai.auth.constant.SalesforceConfigConstants;
 import com.datai.salesforce.common.exception.SalesforceOAuthException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,7 +38,7 @@ public class OAuth2LoginStrategy implements LoginStrategy {
     
     private static final Logger logger = LoggerFactory.getLogger(OAuth2LoginStrategy.class);
     
-    // 令牌撤销URL格式
+    // Session撤销URL格式
     private static final String REVOKE_TOKEN_URL_FORMAT = "%s/services/oauth2/revoke";
     
     // PKCE相关常量
@@ -119,14 +119,14 @@ public class OAuth2LoginStrategy implements LoginStrategy {
     
     @Override
     public SalesforceLoginResult refreshToken(String refreshToken, String loginType) {
-        logger.info("执行OAuth 2.0刷新令牌操作");
+        logger.info("执行OAuth 2.0刷新Session操作");
         
         SalesforceLoginResult result = new SalesforceLoginResult();
         
         try {
             // 1. 验证必要参数
             if (refreshToken == null || refreshToken.trim().isEmpty()) {
-                throw new SalesforceOAuthException("OAUTH2_MISSING_REFRESH_TOKEN", "Refresh token is required");
+                throw new SalesforceOAuthException("OAUTH2_MISSING_REFRESH_TOKEN", "Refresh session is required");
             }
             
             // 2. 获取Salesforce配置
@@ -146,7 +146,7 @@ public class OAuth2LoginStrategy implements LoginStrategy {
             JsonNode jsonResponse = objectMapper.readTree(response);
             
             // 6. 设置结果
-            result.setAccessToken(jsonResponse.get("access_token").asText());
+            result.setSessionId(jsonResponse.get("access_token").asText());
             result.setTokenType(jsonResponse.get("token_type").asText());
             result.setExpiresIn(jsonResponse.get("expires_in").asLong());
             result.setInstanceUrl(jsonResponse.get("instance_url").asText());
@@ -159,15 +159,15 @@ public class OAuth2LoginStrategy implements LoginStrategy {
                 result.setOrganizationId(jsonResponse.get("organization_id").asText());
             }
             
-            // 刷新令牌可能不存在于响应中
+            // 刷新Session可能不存在于响应中
             if (jsonResponse.has("refresh_token")) {
                 result.setRefreshToken(jsonResponse.get("refresh_token").asText());
             }
             
             result.setSuccess(true);
-            logger.info("OAuth 2.0刷新令牌成功");
+            logger.info("OAuth 2.0刷新Session成功");
         } catch (Exception e) {
-            logger.error("OAuth 2.0刷新令牌失败: {}", e.getMessage(), e);
+            logger.error("OAuth 2.0刷新Session失败: {}", e.getMessage(), e);
             result.setSuccess(false);
             if (e instanceof SalesforceOAuthException) {
                 result.setErrorMessage(e.getMessage());
@@ -182,21 +182,21 @@ public class OAuth2LoginStrategy implements LoginStrategy {
     }
     
     @Override
-    public boolean logout(String accessToken, String loginType) {
+    public boolean logout(String sessionId, String loginType) {
         logger.info("执行OAuth 2.0登出操作");
         
         try {
             // 1. 获取Salesforce配置
             Map<String, String> config = getSalesforceConfig();
             
-            // 2. 构建撤销令牌URL
+            // 2. 构建撤销Session URL
             String loginUrl = config.get("loginUrl");
             String instanceUrl = loginUrl.substring(0, loginUrl.indexOf("/services"));
             String revokeUrl = String.format(REVOKE_TOKEN_URL_FORMAT, instanceUrl);
             
             // 3. 构建请求参数
             Map<String, String> params = new HashMap<>();
-            params.put("token", accessToken);
+            params.put("token", sessionId);
             
             // 4. 发送请求
             sendPostRequest(revokeUrl, params);
@@ -306,7 +306,7 @@ public class OAuth2LoginStrategy implements LoginStrategy {
         
         // 4. 创建结果
         SalesforceLoginResult result = new SalesforceLoginResult();
-        result.setAccessToken(jsonResponse.get("access_token").asText());
+        result.setSessionId(jsonResponse.get("access_token").asText());
         result.setTokenType(jsonResponse.get("token_type").asText());
         result.setExpiresIn(jsonResponse.get("expires_in").asLong());
         result.setInstanceUrl(jsonResponse.get("instance_url").asText());
@@ -319,7 +319,7 @@ public class OAuth2LoginStrategy implements LoginStrategy {
             result.setOrganizationId(jsonResponse.get("organization_id").asText());
         }
         
-        // 刷新令牌可能不存在于响应中
+        // 刷新Session可能不存在于响应中
         if (jsonResponse.has("refresh_token")) {
             result.setRefreshToken(jsonResponse.get("refresh_token").asText());
         }
@@ -352,7 +352,7 @@ public class OAuth2LoginStrategy implements LoginStrategy {
         
         // 4. 创建结果
         SalesforceLoginResult result = new SalesforceLoginResult();
-        result.setAccessToken(jsonResponse.get("access_token").asText());
+        result.setSessionId(jsonResponse.get("access_token").asText());
         result.setTokenType(jsonResponse.get("token_type").asText());
         result.setExpiresIn(jsonResponse.get("expires_in").asLong());
         result.setInstanceUrl(jsonResponse.get("instance_url").asText());
@@ -423,7 +423,7 @@ public class OAuth2LoginStrategy implements LoginStrategy {
         
         // 9. 创建结果
         SalesforceLoginResult result = new SalesforceLoginResult();
-        result.setAccessToken(jsonResponse.get("access_token").asText());
+        result.setSessionId(jsonResponse.get("access_token").asText());
         result.setTokenType(jsonResponse.get("token_type").asText());
         result.setExpiresIn(jsonResponse.get("expires_in").asLong());
         result.setInstanceUrl(jsonResponse.get("instance_url").asText());
@@ -436,7 +436,7 @@ public class OAuth2LoginStrategy implements LoginStrategy {
             result.setOrganizationId(jsonResponse.get("organization_id").asText());
         }
         
-        // 刷新令牌可能不存在于响应中
+        // 刷新Session可能不存在于响应中
         if (jsonResponse.has("refresh_token")) {
             result.setRefreshToken(jsonResponse.get("refresh_token").asText());
         }

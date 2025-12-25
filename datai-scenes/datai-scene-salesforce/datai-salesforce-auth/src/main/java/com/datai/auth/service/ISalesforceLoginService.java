@@ -12,22 +12,14 @@ import com.datai.auth.domain.SalesforceLoginRequest;
  * @date 2025-12-14
  */
 public interface ISalesforceLoginService {
+
     /**
-     * 根据不同登录类型执行登录
+     * 执行登录操作
      * 
      * @param request 登录请求
      * @return 登录结果
      */
     SalesforceLoginResult login(SalesforceLoginRequest request);
-
-    /**
-     * 刷新访问令牌
-     * 
-     * @param refreshToken 刷新令牌
-     * @param loginType 登录类型
-     * @return 新的登录结果
-     */
-    SalesforceLoginResult refreshToken(String refreshToken, String loginType);
 
     /**
      * 执行登出操作
@@ -39,30 +31,18 @@ public interface ISalesforceLoginService {
     boolean logout(String sessionId, String loginType);
 
     /**
-     * 获取当前登录状态
+     * 获取当前登录信息
      * 
-     * @return 当前登录状态
+     * @param sessionId 会话ID
+     * @return 登录会话信息
      */
-    SalesforceLoginResult getCurrentLoginStatus();
+    DataiSfLoginSession getCurrentLoginInfo(String sessionId);
 
     /**
-     * 保存登录状态到缓存
+     * 自动登录
      * 
-     * @param result 登录结果
-     */
-    void saveLoginStatus(SalesforceLoginResult result);
-
-    /**
-     * 获取当前登录会话信息
-     * 
-     * @return 当前登录会话
-     */
-    DataiSfLoginSession getCurrentLoginSession();
-    
-    /**
-     * 自动登录，使用上一次成功登录的参数
-     * 
+     * @param historyId 登录历史ID
      * @return 登录结果
      */
-    SalesforceLoginResult autoLogin();
+    SalesforceLoginResult autoLogin(Long historyId);
 }

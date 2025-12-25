@@ -20,9 +20,9 @@ public interface LoginStrategy {
     SalesforceLoginResult login(SalesforceLoginRequest request);
     
     /**
-     * 刷新访问令牌
+     * 刷新Session
      * 
-     * @param refreshToken 刷新令牌
+     * @param refreshToken 刷新Session
      * @param loginType 登录类型
      * @return 新的登录结果
      */
@@ -31,11 +31,11 @@ public interface LoginStrategy {
     /**
      * 执行登出操作
      * 
-     * @param accessToken 访问令牌
+     * @param sessionId Session ID
      * @param loginType 登录类型
      * @return 登出是否成功
      */
-    boolean logout(String accessToken, String loginType);
+    boolean logout(String sessionId, String loginType);
     
     /**
      * 获取登录类型

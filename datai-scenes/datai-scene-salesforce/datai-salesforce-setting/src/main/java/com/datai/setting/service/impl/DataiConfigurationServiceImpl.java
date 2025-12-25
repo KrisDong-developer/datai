@@ -9,19 +9,13 @@ import com.datai.common.utils.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.datai.setting.mapper.DataiConfigurationMapper;
-import com.datai.common.utils.SecurityUtils;
 import com.datai.salesforce.common.constant.SalesforceConfigConstants;
 import com.datai.setting.config.SalesforceConfigCacheManager;
 import com.datai.setting.domain.DataiConfiguration;
-import com.datai.setting.mapper.DataiConfigurationMapper;
 import com.datai.setting.service.IDataiConfigurationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 /**
  * 配置Service业务层处理

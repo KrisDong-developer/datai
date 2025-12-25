@@ -57,7 +57,6 @@
         <module>datai-scene-file</module>
         <module>datai-scene-starter</module>
         <module>datai-scene-salesforce</module>
-
     </modules>
     <packaging>pom</packaging>
 </project>

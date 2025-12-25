@@ -24,23 +24,23 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Operation;
 
 /**
- * 登录会话Controller
+ * 登录会话信息Controller
  * 
  * @author datai
- * @date 2025-12-24
+ * @date 2025-12-25
  */
 @RestController
 @RequestMapping("/auth/session")
-@Tag(name = "【登录会话】管理")
+@Tag(name = "【登录会话信息】管理")
 public class DataiSfLoginSessionController extends BaseController
 {
     @Autowired
     private IDataiSfLoginSessionService dataiSfLoginSessionService;
 
     /**
-     * 查询登录会话列表
+     * 查询登录会话信息列表
      */
-    @Operation(summary = "查询登录会话列表")
+    @Operation(summary = "查询登录会话信息列表")
     @PreAuthorize("@ss.hasPermi('auth:session:list')")
     @GetMapping("/list")
     public TableDataInfo list(DataiSfLoginSession dataiSfLoginSession)
@@ -51,23 +51,23 @@ public class DataiSfLoginSessionController extends BaseController
     }
 
     /**
-     * 导出登录会话列表
+     * 导出登录会话信息列表
      */
-    @Operation(summary = "导出登录会话列表")
+    @Operation(summary = "导出登录会话信息列表")
     @PreAuthorize("@ss.hasPermi('auth:session:export')")
-    @Log(title = "登录会话", businessType = BusinessType.EXPORT)
+    @Log(title = "登录会话信息", businessType = BusinessType.EXPORT)
     @PostMapping("/export")
     public void export(HttpServletResponse response, DataiSfLoginSession dataiSfLoginSession)
     {
         List<DataiSfLoginSession> list = dataiSfLoginSessionService.selectDataiSfLoginSessionList(dataiSfLoginSession);
         ExcelUtil<DataiSfLoginSession> util = new ExcelUtil<DataiSfLoginSession>(DataiSfLoginSession.class);
-        util.exportExcel(response, list, "登录会话数据");
+        util.exportExcel(response, list, "登录会话信息数据");
     }
 
     /**
-     * 获取登录会话详细信息
+     * 获取登录会话信息详细信息
      */
-    @Operation(summary = "获取登录会话详细信息")
+    @Operation(summary = "获取登录会话信息详细信息")
     @PreAuthorize("@ss.hasPermi('auth:session:query')")
     @GetMapping(value = "/{id}")
     public AjaxResult getInfo(@PathVariable("id") Long id)
@@ -76,11 +76,11 @@ public class DataiSfLoginSessionController extends BaseController
     }
 
     /**
-     * 新增登录会话
+     * 新增登录会话信息
      */
-    @Operation(summary = "新增登录会话")
+    @Operation(summary = "新增登录会话信息")
     @PreAuthorize("@ss.hasPermi('auth:session:add')")
-    @Log(title = "登录会话", businessType = BusinessType.INSERT)
+    @Log(title = "登录会话信息", businessType = BusinessType.INSERT)
     @PostMapping
     public AjaxResult add(@RequestBody DataiSfLoginSession dataiSfLoginSession)
     {
@@ -88,11 +88,11 @@ public class DataiSfLoginSessionController extends BaseController
     }
 
     /**
-     * 修改登录会话
+     * 修改登录会话信息
      */
-    @Operation(summary = "修改登录会话")
+    @Operation(summary = "修改登录会话信息")
     @PreAuthorize("@ss.hasPermi('auth:session:edit')")
-    @Log(title = "登录会话", businessType = BusinessType.UPDATE)
+    @Log(title = "登录会话信息", businessType = BusinessType.UPDATE)
     @PutMapping
     public AjaxResult edit(@RequestBody DataiSfLoginSession dataiSfLoginSession)
     {
@@ -100,11 +100,11 @@ public class DataiSfLoginSessionController extends BaseController
     }
 
     /**
-     * 删除登录会话
+     * 删除登录会话信息
      */
-    @Operation(summary = "删除登录会话")
+    @Operation(summary = "删除登录会话信息")
     @PreAuthorize("@ss.hasPermi('auth:session:remove')")
-    @Log(title = "登录会话", businessType = BusinessType.DELETE)
+    @Log(title = "登录会话信息", businessType = BusinessType.DELETE)
     @DeleteMapping("/{ids}")
     public AjaxResult remove(@PathVariable( name = "ids" ) Long[] ids) 
     {

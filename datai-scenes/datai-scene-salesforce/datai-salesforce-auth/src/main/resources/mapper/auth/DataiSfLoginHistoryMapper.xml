@@ -1,0 +1,282 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.datai.auth.mapper.DataiSfLoginHistoryMapper">
+    
+    <resultMap type="DataiSfLoginHistory" id="DataiSfLoginHistoryResult">
+        <result property="id" column="id" />
+        <result property="loginType" column="login_type" />
+        <result property="username" column="username" />
+        <result property="passwordEncrypted" column="password_encrypted" />
+        <result property="securityTokenEncrypted" column="security_token_encrypted" />
+        <result property="clientId" column="client_id" />
+        <result property="clientSecretEncrypted" column="client_secret_encrypted" />
+        <result property="grantType" column="grant_type" />
+        <result property="orgAlias" column="org_alias" />
+        <result property="privateKeyPath" column="private_key_path" />
+        <result property="code" column="code" />
+        <result property="state" column="state" />
+        <result property="sessionId" column="session_id" />
+        <result property="environmentCode" column="environment_code" />
+        <result property="environmentId" column="environment_id" />
+        <result property="instanceUrl" column="instance_url" />
+        <result property="organizationId" column="organization_id" />
+        <result property="requestIp" column="request_ip" />
+        <result property="requestPort" column="request_port" />
+        <result property="userAgent" column="user_agent" />
+        <result property="deviceType" column="device_type" />
+        <result property="browserType" column="browser_type" />
+        <result property="osType" column="os_type" />
+        <result property="loginStatus" column="login_status" />
+        <result property="errorCode" column="error_code" />
+        <result property="errorMessage" column="error_message" />
+        <result property="sessionIdResult" column="session_id_result" />
+        <result property="refreshTokenEncrypted" column="refresh_token_encrypted" />
+        <result property="tokenType" column="token_type" />
+        <result property="expiresIn" column="expires_in" />
+        <result property="requestTime" column="request_time" />
+        <result property="responseTime" column="response_time" />
+        <result property="durationMs" column="duration_ms" />
+        <result property="operator" column="operator" />
+        <result property="deptId" column="dept_id" />
+        <result property="createBy" column="create_by" />
+        <result property="createTime" column="create_time" />
+        <result property="updateBy" column="update_by" />
+        <result property="updateTime" column="update_time" />
+        <result property="remark" column="remark" />
+    </resultMap>
+
+    <sql id="selectDataiSfLoginHistoryVo">
+        select 
+            dslh.id,
+            dslh.login_type,
+            dslh.username,
+            dslh.password_encrypted,
+            dslh.security_token_encrypted,
+            dslh.client_id,
+            dslh.client_secret_encrypted,
+            dslh.grant_type,
+            dslh.org_alias,
+            dslh.private_key_path,
+            dslh.code,
+            dslh.state,
+            dslh.session_id,
+            dslh.environment_code,
+            dslh.environment_id,
+            dslh.instance_url,
+            dslh.organization_id,
+            dslh.request_ip,
+            dslh.request_port,
+            dslh.user_agent,
+            dslh.device_type,
+            dslh.browser_type,
+            dslh.os_type,
+            dslh.login_status,
+            dslh.error_code,
+            dslh.error_message,
+            dslh.session_id_result,
+            dslh.refresh_token_encrypted,
+            dslh.token_type,
+            dslh.expires_in,
+            dslh.request_time,
+            dslh.response_time,
+            dslh.duration_ms,
+            dslh.operator,
+            dslh.dept_id,
+            dslh.create_by,
+            dslh.create_time,
+            dslh.update_by,
+            dslh.update_time,
+            dslh.remark
+        from datai_sf_login_history dslh
+    </sql>
+
+    <select id="selectDataiSfLoginHistoryList" parameterType="DataiSfLoginHistory" resultMap="DataiSfLoginHistoryResult">
+        <include refid="selectDataiSfLoginHistoryVo"/>
+        <where>
+            <if test="loginType != null  and loginType != ''"> and dslh.login_type = #{loginType}</if>
+            <if test="username != null  and username != ''"> and dslh.username like concat('%', #{username}, '%')</if>
+            <if test="passwordEncrypted != null  and passwordEncrypted != ''"> and dslh.password_encrypted = #{passwordEncrypted}</if>
+            <if test="securityTokenEncrypted != null  and securityTokenEncrypted != ''"> and dslh.security_token_encrypted = #{securityTokenEncrypted}</if>
+            <if test="clientId != null  and clientId != ''"> and dslh.client_id = #{clientId}</if>
+            <if test="clientSecretEncrypted != null  and clientSecretEncrypted != ''"> and dslh.client_secret_encrypted = #{clientSecretEncrypted}</if>
+            <if test="grantType != null  and grantType != ''"> and dslh.grant_type = #{grantType}</if>
+            <if test="orgAlias != null  and orgAlias != ''"> and dslh.org_alias = #{orgAlias}</if>
+            <if test="privateKeyPath != null  and privateKeyPath != ''"> and dslh.private_key_path = #{privateKeyPath}</if>
+            <if test="code != null  and code != ''"> and dslh.code = #{code}</if>
+            <if test="state != null  and state != ''"> and dslh.state = #{state}</if>
+            <if test="sessionId != null  and sessionId != ''"> and dslh.session_id = #{sessionId}</if>
+            <if test="environmentCode != null  and environmentCode != ''"> and dslh.environment_code = #{environmentCode}</if>
+            <if test="environmentId != null "> and dslh.environment_id = #{environmentId}</if>
+            <if test="instanceUrl != null  and instanceUrl != ''"> and dslh.instance_url = #{instanceUrl}</if>
+            <if test="organizationId != null  and organizationId != ''"> and dslh.organization_id = #{organizationId}</if>
+            <if test="requestIp != null  and requestIp != ''"> and dslh.request_ip = #{requestIp}</if>
+            <if test="requestPort != null "> and dslh.request_port = #{requestPort}</if>
+            <if test="userAgent != null  and userAgent != ''"> and dslh.user_agent = #{userAgent}</if>
+            <if test="deviceType != null  and deviceType != ''"> and dslh.device_type = #{deviceType}</if>
+            <if test="browserType != null  and browserType != ''"> and dslh.browser_type = #{browserType}</if>
+            <if test="osType != null  and osType != ''"> and dslh.os_type = #{osType}</if>
+            <if test="loginStatus != null  and loginStatus != ''"> and dslh.login_status = #{loginStatus}</if>
+            <if test="errorCode != null  and errorCode != ''"> and dslh.error_code = #{errorCode}</if>
+            <if test="errorMessage != null  and errorMessage != ''"> and dslh.error_message = #{errorMessage}</if>
+            <if test="sessionIdResult != null  and sessionIdResult != ''"> and dslh.session_id_result = #{sessionIdResult}</if>
+            <if test="refreshTokenEncrypted != null  and refreshTokenEncrypted != ''"> and dslh.refresh_token_encrypted = #{refreshTokenEncrypted}</if>
+            <if test="tokenType != null  and tokenType != ''"> and dslh.token_type = #{tokenType}</if>
+            <if test="expiresIn != null "> and dslh.expires_in = #{expiresIn}</if>
+            <if test="requestTime != null "> and dslh.request_time = #{requestTime}</if>
+            <if test="responseTime != null "> and dslh.response_time = #{responseTime}</if>
+            <if test="durationMs != null "> and dslh.duration_ms = #{durationMs}</if>
+            <if test="operator != null  and operator != ''"> and dslh.operator = #{operator}</if>
+            <if test="deptId != null "> and dslh.dept_id = #{deptId}</if>
+        </where>
+    </select>
+    
+    <select id="selectDataiSfLoginHistoryById" parameterType="Long" resultMap="DataiSfLoginHistoryResult">
+        <include refid="selectDataiSfLoginHistoryVo"/>
+        where dslh.id = #{id}
+    </select>
+        
+    <insert id="insertDataiSfLoginHistory" parameterType="DataiSfLoginHistory" useGeneratedKeys="true" keyProperty="id">
+        insert into datai_sf_login_history
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="loginType != null and loginType != ''">login_type,</if>
+            <if test="username != null">username,</if>
+            <if test="passwordEncrypted != null">password_encrypted,</if>
+            <if test="securityTokenEncrypted != null">security_token_encrypted,</if>
+            <if test="clientId != null">client_id,</if>
+            <if test="clientSecretEncrypted != null">client_secret_encrypted,</if>
+            <if test="grantType != null">grant_type,</if>
+            <if test="orgAlias != null">org_alias,</if>
+            <if test="privateKeyPath != null">private_key_path,</if>
+            <if test="code != null">code,</if>
+            <if test="state != null">state,</if>
+            <if test="sessionId != null">session_id,</if>
+            <if test="environmentCode != null">environment_code,</if>
+            <if test="environmentId != null">environment_id,</if>
+            <if test="instanceUrl != null">instance_url,</if>
+            <if test="organizationId != null">organization_id,</if>
+            <if test="requestIp != null">request_ip,</if>
+            <if test="requestPort != null">request_port,</if>
+            <if test="userAgent != null">user_agent,</if>
+            <if test="deviceType != null">device_type,</if>
+            <if test="browserType != null">browser_type,</if>
+            <if test="osType != null">os_type,</if>
+            <if test="loginStatus != null and loginStatus != ''">login_status,</if>
+            <if test="errorCode != null">error_code,</if>
+            <if test="errorMessage != null">error_message,</if>
+            <if test="sessionIdResult != null">session_id_result,</if>
+            <if test="refreshTokenEncrypted != null">refresh_token_encrypted,</if>
+            <if test="tokenType != null">token_type,</if>
+            <if test="expiresIn != null">expires_in,</if>
+            <if test="requestTime != null">request_time,</if>
+            <if test="responseTime != null">response_time,</if>
+            <if test="durationMs != null">duration_ms,</if>
+            <if test="operator != null">operator,</if>
+            <if test="deptId != null">dept_id,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="remark != null">remark,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="loginType != null and loginType != ''">#{loginType},</if>
+            <if test="username != null">#{username},</if>
+            <if test="passwordEncrypted != null">#{passwordEncrypted},</if>
+            <if test="securityTokenEncrypted != null">#{securityTokenEncrypted},</if>
+            <if test="clientId != null">#{clientId},</if>
+            <if test="clientSecretEncrypted != null">#{clientSecretEncrypted},</if>
+            <if test="grantType != null">#{grantType},</if>
+            <if test="orgAlias != null">#{orgAlias},</if>
+            <if test="privateKeyPath != null">#{privateKeyPath},</if>
+            <if test="code != null">#{code},</if>
+            <if test="state != null">#{state},</if>
+            <if test="sessionId != null">#{sessionId},</if>
+            <if test="environmentCode != null">#{environmentCode},</if>
+            <if test="environmentId != null">#{environmentId},</if>
+            <if test="instanceUrl != null">#{instanceUrl},</if>
+            <if test="organizationId != null">#{organizationId},</if>
+            <if test="requestIp != null">#{requestIp},</if>
+            <if test="requestPort != null">#{requestPort},</if>
+            <if test="userAgent != null">#{userAgent},</if>
+            <if test="deviceType != null">#{deviceType},</if>
+            <if test="browserType != null">#{browserType},</if>
+            <if test="osType != null">#{osType},</if>
+            <if test="loginStatus != null and loginStatus != ''">#{loginStatus},</if>
+            <if test="errorCode != null">#{errorCode},</if>
+            <if test="errorMessage != null">#{errorMessage},</if>
+            <if test="sessionIdResult != null">#{sessionIdResult},</if>
+            <if test="refreshTokenEncrypted != null">#{refreshTokenEncrypted},</if>
+            <if test="tokenType != null">#{tokenType},</if>
+            <if test="expiresIn != null">#{expiresIn},</if>
+            <if test="requestTime != null">#{requestTime},</if>
+            <if test="responseTime != null">#{responseTime},</if>
+            <if test="durationMs != null">#{durationMs},</if>
+            <if test="operator != null">#{operator},</if>
+            <if test="deptId != null">#{deptId},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="remark != null">#{remark},</if>
+         </trim>
+    </insert>
+
+    <update id="updateDataiSfLoginHistory" parameterType="DataiSfLoginHistory">
+        update datai_sf_login_history
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="loginType != null and loginType != ''">login_type = #{loginType},</if>
+            <if test="username != null">username = #{username},</if>
+            <if test="passwordEncrypted != null">password_encrypted = #{passwordEncrypted},</if>
+            <if test="securityTokenEncrypted != null">security_token_encrypted = #{securityTokenEncrypted},</if>
+            <if test="clientId != null">client_id = #{clientId},</if>
+            <if test="clientSecretEncrypted != null">client_secret_encrypted = #{clientSecretEncrypted},</if>
+            <if test="grantType != null">grant_type = #{grantType},</if>
+            <if test="orgAlias != null">org_alias = #{orgAlias},</if>
+            <if test="privateKeyPath != null">private_key_path = #{privateKeyPath},</if>
+            <if test="code != null">code = #{code},</if>
+            <if test="state != null">state = #{state},</if>
+            <if test="sessionId != null">session_id = #{sessionId},</if>
+            <if test="environmentCode != null">environment_code = #{environmentCode},</if>
+            <if test="environmentId != null">environment_id = #{environmentId},</if>
+            <if test="instanceUrl != null">instance_url = #{instanceUrl},</if>
+            <if test="organizationId != null">organization_id = #{organizationId},</if>
+            <if test="requestIp != null">request_ip = #{requestIp},</if>
+            <if test="requestPort != null">request_port = #{requestPort},</if>
+            <if test="userAgent != null">user_agent = #{userAgent},</if>
+            <if test="deviceType != null">device_type = #{deviceType},</if>
+            <if test="browserType != null">browser_type = #{browserType},</if>
+            <if test="osType != null">os_type = #{osType},</if>
+            <if test="loginStatus != null and loginStatus != ''">login_status = #{loginStatus},</if>
+            <if test="errorCode != null">error_code = #{errorCode},</if>
+            <if test="errorMessage != null">error_message = #{errorMessage},</if>
+            <if test="sessionIdResult != null">session_id_result = #{sessionIdResult},</if>
+            <if test="refreshTokenEncrypted != null">refresh_token_encrypted = #{refreshTokenEncrypted},</if>
+            <if test="tokenType != null">token_type = #{tokenType},</if>
+            <if test="expiresIn != null">expires_in = #{expiresIn},</if>
+            <if test="requestTime != null">request_time = #{requestTime},</if>
+            <if test="responseTime != null">response_time = #{responseTime},</if>
+            <if test="durationMs != null">duration_ms = #{durationMs},</if>
+            <if test="operator != null">operator = #{operator},</if>
+            <if test="deptId != null">dept_id = #{deptId},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="remark != null">remark = #{remark},</if>
+        </trim>
+        where datai_sf_login_history.id = #{id}
+    </update>
+
+    <delete id="deleteDataiSfLoginHistoryById" parameterType="Long">
+        delete from datai_sf_login_history where id = #{id}
+    </delete>
+
+    <delete id="deleteDataiSfLoginHistoryByIds" parameterType="String">
+        delete from datai_sf_login_history where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

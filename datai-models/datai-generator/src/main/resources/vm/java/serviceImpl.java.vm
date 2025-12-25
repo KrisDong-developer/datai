@@ -10,16 +10,16 @@ import java.util.List;
     #end
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-    #if($table.sub)
-    import java.util.ArrayList;
-    import com.datai.common.utils.StringUtils;
-    import org.springframework.transaction.annotation.Transactional;
-    import ${packageName}.domain.${subClassName};
-    #end
+#if($table.sub)
+import java.util.ArrayList;
+import com.datai.common.utils.StringUtils;
+import org.springframework.transaction.annotation.Transactional;
+import ${packageName}.domain.${subClassName};
+#end
 import ${packageName}.mapper.${ClassName}Mapper;
 import ${packageName}.domain.${ClassName};
 import ${packageName}.service.I${ClassName}Service;
-
+import com.datai.common.core.domain.model.LoginUser;
 
 /**
  * ${functionName}Service业务层处理

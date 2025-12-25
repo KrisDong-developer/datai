@@ -17,7 +17,7 @@ import java.util.regex.Pattern;
 
 /**
  * Salesforce CLI登录策略实现
- * 支持通过Salesforce CLI获取和使用访问令牌
+ * 支持通过Salesforce CLI获取和使用Session
  * 
  * @author datai
  * @date 2025-12-14
@@ -40,7 +40,7 @@ public class SalesforceCliLoginStrategy implements LoginStrategy {
                 throw new SalesforceCliLoginException("CLI_NOT_INSTALLED", "Salesforce CLI not installed");
             }
             
-            // 2. 获取访问令牌
+            // 2. 获取Session ID
             String[] command;
             if (request.getOrgAlias() != null && !request.getOrgAlias().trim().isEmpty()) {
                 // 使用指定的组织别名
@@ -53,7 +53,7 @@ public class SalesforceCliLoginStrategy implements LoginStrategy {
             String output = executeCommand(command);
             logger.debug("Salesforce CLI输出: {}", output);
             
-            // 3. 解析CLI输出，获取令牌信息
+            // 3. 解析CLI输出，获取Session信息
             result = parseCliOutput(output);
             result.setSuccess(true);
         } catch (Exception e) {
@@ -73,21 +73,21 @@ public class SalesforceCliLoginStrategy implements LoginStrategy {
     
     @Override
     public SalesforceLoginResult refreshToken(String refreshToken, String loginType) {
-        logger.info("执行Salesforce CLI刷新令牌操作");
+        logger.info("执行Salesforce CLI刷新Session操作");
         
-        // Salesforce CLI会自动处理令牌刷新，所以这里只需要重新获取令牌即可
+        // Salesforce CLI会自动处理Session刷新，所以这里只需要重新获取Session即可
         SalesforceLoginResult result = new SalesforceLoginResult();
         
         try {
-            // 1. 执行CLI命令获取最新令牌
+            // 1. 执行CLI命令获取最新Session
             String[] command = new String[] { "sf", "org", "display", "--json" };
             String output = executeCommand(command);
             
-            // 2. 解析CLI输出，获取新的令牌信息
+            // 2. 解析CLI输出，获取新的Session信息
             result = parseCliOutput(output);
             result.setSuccess(true);
         } catch (Exception e) {
-            logger.error("Salesforce CLI刷新令牌失败: {}", e.getMessage(), e);
+            logger.error("Salesforce CLI刷新Session失败: {}", e.getMessage(), e);
             result.setSuccess(false);
             if (e instanceof SalesforceCliLoginException) {
                 result.setErrorMessage(e.getMessage());
@@ -102,7 +102,7 @@ public class SalesforceCliLoginStrategy implements LoginStrategy {
     }
     
     @Override
-    public boolean logout(String accessToken, String loginType) {
+    public boolean logout(String sessionId, String loginType) {
         logger.info("执行Salesforce CLI登出操作");
         
         try {
@@ -168,7 +168,7 @@ public class SalesforceCliLoginStrategy implements LoginStrategy {
     }
     
     /**
-     * 解析Salesforce CLI输出，提取令牌信息
+     * 解析Salesforce CLI输出，提取Session信息
      * 
      * @param output CLI输出
      * @return 登录结果
@@ -187,19 +187,19 @@ public class SalesforceCliLoginStrategy implements LoginStrategy {
             result.setInstanceUrl(instanceUrlMatcher.group(1));
         }
         
-        // 提取访问令牌
-        Pattern accessTokenPattern = Pattern.compile("accessToken.*?:.*?\"(.*?)\"");
-        Matcher accessTokenMatcher = accessTokenPattern.matcher(output);
-        if (accessTokenMatcher.find()) {
-            result.setAccessToken(accessTokenMatcher.group(1));
+        // 提取Session
+        Pattern sessionIdPattern = Pattern.compile("accessToken.*?:.*?\"(.*?)\"");
+        Matcher sessionIdMatcher = sessionIdPattern.matcher(output);
+        if (sessionIdMatcher.find()) {
+            result.setSessionId(sessionIdMatcher.group(1));
         } else {
-            // 尝试其他可能的令牌字段名
+            // 尝试其他可能的Session字段名
             Pattern tokenPattern = Pattern.compile("token.*?:.*?\"(.*?)\"");
             Matcher tokenMatcher = tokenPattern.matcher(output);
             if (tokenMatcher.find()) {
-                result.setAccessToken(tokenMatcher.group(1));
+                result.setSessionId(tokenMatcher.group(1));
             } else {
-                throw new SalesforceCliLoginException("CLI_PARSE_ERROR", "Failed to extract access token from CLI output");
+                throw new SalesforceCliLoginException("CLI_PARSE_ERROR", "Failed to extract session from CLI output");
             }
         }
         

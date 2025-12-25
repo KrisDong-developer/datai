@@ -471,7 +471,7 @@ CREATE TABLE `datai_sf_login_audit`  (
   `login_type` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '登录类型',
   `error_message` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL COMMENT '错误信息',
   `session_id` bigint NULL DEFAULT NULL COMMENT '会话ID',
-  `token_id` bigint NULL DEFAULT NULL COMMENT '令牌ID',
+  `token_id` bigint NULL DEFAULT NULL COMMENT 'SeesionID',
   `request_id` varchar(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '请求ID',
   `create_by` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '创建人',
   `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -505,7 +505,7 @@ CREATE TABLE `datai_sf_login_session`  (
   `device_info` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '设备信息',
   `browser_info` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '浏览器信息',
   `session_id` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '会话标识',
-  `token_id` bigint NULL DEFAULT NULL COMMENT '令牌ID',
+  `token_id` bigint NULL DEFAULT NULL COMMENT 'SeesionID',
   `create_by` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '创建人',
   `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `update_by` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '更新人',
@@ -548,19 +548,19 @@ CREATE TABLE `datai_sf_login_statistics`  (
 -- ----------------------------
 DROP TABLE IF EXISTS `datai_sf_token`;
 CREATE TABLE `datai_sf_token`  (
-  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '令牌ID',
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT 'SeesionID',
   `dept_id` bigint NULL DEFAULT NULL COMMENT '部门ID',
   `username` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '用户名',
-  `access_token` varchar(1024) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '访问令牌',
-  `refresh_token` varchar(1024) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '刷新令牌',
-  `access_token_expire` datetime NOT NULL COMMENT '访问令牌过期时间',
-  `refresh_token_expire` datetime NULL DEFAULT NULL COMMENT '刷新令牌过期时间',
-  `status` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '令牌状态',
+  `access_token` varchar(1024) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '访问Seesion',
+  `refresh_token` varchar(1024) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '刷新Seesion',
+  `access_token_expire` datetime NOT NULL COMMENT '访问Seesion过期时间',
+  `refresh_token_expire` datetime NULL DEFAULT NULL COMMENT '刷新Seesion过期时间',
+  `status` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT 'Seesion状态',
   `instance_url` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '实例URL',
   `login_type` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '登录类型',
   `client_id` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '客户端ID',
   `scope` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '作用域',
-  `token_type` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '令牌类型',
+  `token_type` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT 'Seesion类型',
   `organization_id` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '组织ID',
   `user_id` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '用户ID',
   `create_by` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '创建人',
@@ -574,7 +574,7 @@ CREATE TABLE `datai_sf_token`  (
   INDEX `idx_status`(`status` ASC) USING BTREE,
   INDEX `idx_access_expire`(`access_token_expire` ASC) USING BTREE,
   INDEX `idx_refresh_expire`(`refresh_token_expire` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 10 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '令牌表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 10 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = 'Seesion表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Table structure for datai_sf_token_binding
@@ -583,7 +583,7 @@ DROP TABLE IF EXISTS `datai_sf_token_binding`;
 CREATE TABLE `datai_sf_token_binding`  (
   `id` bigint NOT NULL AUTO_INCREMENT COMMENT '绑定ID',
   `dept_id` bigint NULL DEFAULT NULL COMMENT '部门ID',
-  `token_id` bigint NOT NULL COMMENT '令牌ID',
+  `token_id` bigint NOT NULL COMMENT 'SeesionID',
   `binding_type` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '绑定类型',
   `device_id` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '设备ID',
   `binding_ip` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '绑定IP',
@@ -600,6 +600,6 @@ CREATE TABLE `datai_sf_token_binding`  (
   INDEX `idx_device_id`(`device_id` ASC) USING BTREE,
   INDEX `idx_binding_ip`(`binding_ip` ASC) USING BTREE,
   INDEX `idx_status`(`status` ASC) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '令牌绑定表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = 'Seesion绑定表' ROW_FORMAT = Dynamic;
 
 SET FOREIGN_KEY_CHECKS = 1;

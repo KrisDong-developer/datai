@@ -9,12 +9,12 @@ import com.datai.common.annotation.Excel;
 import com.datai.common.core.domain.BaseEntity;
 
 /**
- * 登录会话对象 datai_sf_login_session
+ * 登录会话信息对象 datai_sf_login_session
  * 
  * @author datai
- * @date 2025-12-24
+ * @date 2025-12-25
  */
-@Schema(description = "登录会话对象")
+@Schema(description = "登录会话信息对象")
 public class DataiSfLoginSession extends BaseEntity
 {
     private static final long serialVersionUID = 1L;
@@ -23,10 +23,6 @@ public class DataiSfLoginSession extends BaseEntity
     /** 会话ID */
     @Schema(title = "会话ID")
     private Long id;
-
-    /** 部门ID */
-    @Schema(title = "部门ID")
-    private Long deptId;
 
     /** 用户名 */
     @Schema(title = "用户名")
@@ -73,15 +69,32 @@ public class DataiSfLoginSession extends BaseEntity
     @Excel(name = "浏览器信息")
     private String browserInfo;
 
-    /** 会话标识 */
-    @Schema(title = "会话标识")
-    @Excel(name = "会话标识")
+    /** 会话ID */
+    @Schema(title = "会话ID")
+    @Excel(name = "会话ID")
     private String sessionId;
 
-    /** 令牌ID */
-    @Schema(title = "令牌ID")
-    @Excel(name = "令牌ID")
+    /** Session ID */
+    @Schema(title = "Session ID")
+    @Excel(name = "Session ID")
     private Long tokenId;
+
+    /** 部门ID */
+    @Schema(title = "部门ID")
+    private Long deptId;
+
+    /** Salesforce用户ID */
+    @Schema(title = "Salesforce用户ID")
+    private String userId;
+
+    /** Salesforce组织ID */
+    @Schema(title = "Salesforce组织ID")
+    private String organizationId;
+
+    /** 实例URL */
+    @Schema(title = "实例URL")
+    private String instanceUrl;
+
     public void setId(Long id) 
     {
         this.id = id;
@@ -90,17 +103,6 @@ public class DataiSfLoginSession extends BaseEntity
     public Long getId() 
     {
         return id;
-    }
-
-
-    public void setDeptId(Long deptId) 
-    {
-        this.deptId = deptId;
-    }
-
-    public Long getDeptId() 
-    {
-        return deptId;
     }
 
 
@@ -225,12 +227,52 @@ public class DataiSfLoginSession extends BaseEntity
     }
 
 
+    public void setDeptId(Long deptId) 
+    {
+        this.deptId = deptId;
+    }
+
+    public Long getDeptId() 
+    {
+        return deptId;
+    }
+
+    public void setUserId(String userId)
+    {
+        this.userId = userId;
+    }
+
+    public String getUserId()
+    {
+        return userId;
+    }
+
+    public void setOrganizationId(String organizationId)
+    {
+        this.organizationId = organizationId;
+    }
+
+    public String getOrganizationId()
+    {
+        return organizationId;
+    }
+
+    public void setInstanceUrl(String instanceUrl)
+    {
+        this.instanceUrl = instanceUrl;
+    }
+
+    public String getInstanceUrl()
+    {
+        return instanceUrl;
+    }
+
+
 
     @Override
     public String toString() {
         return new ToStringBuilder(this,ToStringStyle.MULTI_LINE_STYLE)
             .append("id", getId())
-            .append("deptId", getDeptId())
             .append("username", getUsername())
             .append("loginType", getLoginType())
             .append("status", getStatus())
@@ -242,6 +284,10 @@ public class DataiSfLoginSession extends BaseEntity
             .append("browserInfo", getBrowserInfo())
             .append("sessionId", getSessionId())
             .append("tokenId", getTokenId())
+            .append("deptId", getDeptId())
+            .append("userId", getUserId())
+            .append("organizationId", getOrganizationId())
+            .append("instanceUrl", getInstanceUrl())
             .append("createBy", getCreateBy())
             .append("createTime", getCreateTime())
             .append("updateBy", getUpdateBy())

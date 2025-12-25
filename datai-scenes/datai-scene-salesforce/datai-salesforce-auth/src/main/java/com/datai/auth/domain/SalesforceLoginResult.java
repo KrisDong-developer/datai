@@ -16,7 +16,7 @@ public class SalesforceLoginResult implements Serializable {
     private String errorMessage;
 
     /** 核心授权信息 */
-    private String accessToken;   // 对应 SOAP 的 sessionId
+    private String sessionId;   // 对应 SOAP 的 sessionId
     private String refreshToken;  // 仅在 OAuth 流程中存在
     private String tokenType = "Bearer";
     private long expiresIn;       // 过期时间(秒)
@@ -45,10 +45,10 @@ public class SalesforceLoginResult implements Serializable {
     // --- 业务辅助方法 ---
 
     /**
-     * 判断 Token 是否有效（基于本地时间估算）
+     * 判断 sessionId 是否有效（基于本地时间估算）
      * 提前 5 分钟判断为过期，以预留网络传输时间
      */
-    public boolean isTokenExpired() {
+    public boolean isSessionExpired() {
         if (expiresIn <= 0) return false; // 如果永不过期
         long bufferMillis = 300 * 1000; // 5分钟缓冲
         return System.currentTimeMillis() > (loginTimestamp + (expiresIn * 1000) - bufferMillis);

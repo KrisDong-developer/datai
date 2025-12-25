@@ -4,7 +4,7 @@ import com.datai.auth.domain.SalesforceLoginResult;
 import com.datai.auth.domain.SalesforceLoginRequest;
 import com.datai.auth.strategy.LoginStrategy;
 import com.datai.common.utils.CacheUtils;
-import com.datai.salesforce.common.constant.SalesforceConfigConstants;
+import com.datai.auth.constant.SalesforceConfigConstants;
 import com.datai.salesforce.common.exception.SalesforceSessionIdLoginException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,8 +67,8 @@ public class SessionIdLoginStrategy implements LoginStrategy {
             
             // 构建登录结果
             result.setSuccess(true);
-            result.setAccessToken(sessionId); // Session ID作为访问令牌
-            result.setRefreshToken(null); // Session ID登录通常没有刷新令牌
+            result.setSessionId(sessionId); // Session ID作为会话ID
+            result.setRefreshToken(null); // Session ID登录通常没有刷新Session
             result.setInstanceUrl(userInfo.get("instance_url"));
             result.setOrganizationId(userInfo.get("organization_id"));
             result.setUserId(userInfo.get("user_id"));
@@ -94,26 +94,26 @@ public class SessionIdLoginStrategy implements LoginStrategy {
     
     @Override
     public SalesforceLoginResult refreshToken(String refreshToken, String loginType) {
-        logger.info("Session ID登录不支持刷新令牌");
+        logger.info("Session ID登录不支持刷新Session");
         
         SalesforceLoginResult result = new SalesforceLoginResult();
         result.setSuccess(false);
-        result.setErrorMessage("Session ID登录不支持刷新令牌");
+        result.setErrorMessage("Session ID登录不支持刷新Session");
         result.setErrorCode("REFRESH_TOKEN_NOT_SUPPORTED");
         
         return result;
     }
     
     @Override
-    public boolean logout(String accessToken, String loginType) {
-        logger.info("执行Session ID登出操作，访问令牌: {}", accessToken.substring(0, 10) + "...");
+    public boolean logout(String sessionId, String loginType) {
+        logger.info("执行Session ID登出操作，Session: {}", sessionId.substring(0, 10) + "...");
         
         try {
             // 获取Salesforce配置
             Map<String, String> config = getSalesforceConfig();
             
             // 调用Salesforce登出API
-            boolean logoutSuccess = executeLogout(accessToken, config);
+            boolean logoutSuccess = executeLogout(sessionId, config);
             
             logger.info("Session ID登出{}", logoutSuccess ? "成功" : "失败");
             return logoutSuccess;
@@ -344,12 +344,12 @@ public class SessionIdLoginStrategy implements LoginStrategy {
     /**
      * 执行登出操作
      * 
-     * @param accessToken 访问令牌
+     * @param sessionId Session ID
      * @param config Salesforce配置
      * @return 登出是否成功
      * @throws Exception 登出失败时抛出
      */
-    private boolean executeLogout(String accessToken, Map<String, String> config) throws Exception {
+    private boolean executeLogout(String sessionId, Map<String, String> config) throws Exception {
         // 构建登出URL
         String logoutUrl = config.get("endpointUrl").replace("/services/Soap/u/", "/services/oauth2/revoke");
         
@@ -363,7 +363,7 @@ public class SessionIdLoginStrategy implements LoginStrategy {
         connection.setDoInput(true);
         
         // 构建请求体
-        String requestBody = "token=" + accessToken;
+        String requestBody = "token=" + sessionId;
         
         // 发送请求
         try (var outputStream = connection.getOutputStream()) {

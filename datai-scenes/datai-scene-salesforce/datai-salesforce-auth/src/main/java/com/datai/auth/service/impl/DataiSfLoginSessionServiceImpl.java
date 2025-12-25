@@ -10,12 +10,11 @@ import com.datai.auth.domain.DataiSfLoginSession;
 import com.datai.auth.service.IDataiSfLoginSessionService;
 import com.datai.common.core.domain.model.LoginUser;
 
-
 /**
- * 登录会话Service业务层处理
+ * 登录会话信息Service业务层处理
  *
  * @author datai
- * @date 2025-12-24
+ * @date 2025-12-25
  */
 @Service
 public class DataiSfLoginSessionServiceImpl implements IDataiSfLoginSessionService {
@@ -23,10 +22,10 @@ public class DataiSfLoginSessionServiceImpl implements IDataiSfLoginSessionServi
     private DataiSfLoginSessionMapper dataiSfLoginSessionMapper;
 
     /**
-     * 查询登录会话
+     * 查询登录会话信息
      *
-     * @param id 登录会话主键
-     * @return 登录会话
+     * @param id 登录会话信息主键
+     * @return 登录会话信息
      */
     @Override
     public DataiSfLoginSession selectDataiSfLoginSessionById(Long id)
@@ -34,11 +33,17 @@ public class DataiSfLoginSessionServiceImpl implements IDataiSfLoginSessionServi
         return dataiSfLoginSessionMapper.selectDataiSfLoginSessionById(id);
     }
 
+    @Override
+    public DataiSfLoginSession selectDataiSfLoginSessionBySessionId(String sessionId)
+    {
+        return dataiSfLoginSessionMapper.selectDataiSfLoginSessionBySessionId(sessionId);
+    }
+
     /**
-     * 查询登录会话列表
+     * 查询登录会话信息列表
      *
-     * @param dataiSfLoginSession 登录会话
-     * @return 登录会话
+     * @param dataiSfLoginSession 登录会话信息
+     * @return 登录会话信息
      */
     @Override
     public List<DataiSfLoginSession> selectDataiSfLoginSessionList(DataiSfLoginSession dataiSfLoginSession)
@@ -47,9 +52,9 @@ public class DataiSfLoginSessionServiceImpl implements IDataiSfLoginSessionServi
     }
 
     /**
-     * 新增登录会话
+     * 新增登录会话信息
      *
-     * @param dataiSfLoginSession 登录会话
+     * @param dataiSfLoginSession 登录会话信息
      * @return 结果
      */
     @Override
@@ -66,9 +71,9 @@ public class DataiSfLoginSessionServiceImpl implements IDataiSfLoginSessionServi
     }
 
     /**
-     * 修改登录会话
+     * 修改登录会话信息
      *
-     * @param dataiSfLoginSession 登录会话
+     * @param dataiSfLoginSession 登录会话信息
      * @return 结果
      */
     @Override
@@ -83,9 +88,9 @@ public class DataiSfLoginSessionServiceImpl implements IDataiSfLoginSessionServi
     }
 
     /**
-     * 批量删除登录会话
+     * 批量删除登录会话信息
      *
-     * @param ids 需要删除的登录会话主键
+     * @param ids 需要删除的登录会话信息主键
      * @return 结果
      */
     @Override
@@ -95,9 +100,9 @@ public class DataiSfLoginSessionServiceImpl implements IDataiSfLoginSessionServi
     }
 
     /**
-     * 删除登录会话信息
+     * 删除登录会话信息信息
      *
-     * @param id 登录会话主键
+     * @param id 登录会话信息主键
      * @return 结果
      */
     @Override

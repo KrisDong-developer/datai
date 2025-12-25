@@ -9,12 +9,10 @@ import com.datai.setting.mapper.DataiConfigEnvironmentMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import jakarta.annotation.PostConstruct;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Salesforce配置缓存管理器
