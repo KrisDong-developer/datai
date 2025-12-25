@@ -137,15 +137,5 @@ public class DataiConfigurationController extends BaseController
         return success("配置缓存状态正常");
     }
 
-    /**
-     * 验证配置值合法性
-     */
-    @Operation(summary = "验证配置值合法性")
-    @PreAuthorize("@ss.hasPermi('setting:configuration:validate')")
-    @PostMapping("/validate")
-    public AjaxResult validateConfig(@RequestBody DataiConfiguration config)
-    {
-        boolean isValid = dataiConfigurationService.validateConfigValue(config);
-        return isValid ? success("配置值验证通过") : error("配置值验证失败");
-    }
+
 }

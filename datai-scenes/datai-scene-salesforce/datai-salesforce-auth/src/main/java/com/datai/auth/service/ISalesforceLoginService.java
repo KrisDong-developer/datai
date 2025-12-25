@@ -32,11 +32,11 @@ public interface ISalesforceLoginService {
     /**
      * 执行登出操作
      * 
-     * @param accessToken 访问令牌
+     * @param sessionId 会话ID
      * @param loginType 登录类型
      * @return 登出是否成功
      */
-    boolean logout(String accessToken, String loginType);
+    boolean logout(String sessionId, String loginType);
 
     /**
      * 获取当前登录状态

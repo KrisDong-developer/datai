@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import com.datai.common.annotation.Log;
 import com.datai.common.core.controller.BaseController;
@@ -22,6 +23,7 @@ import com.datai.common.utils.poi.ExcelUtil;
 import com.datai.common.core.page.TableDataInfo;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 
 /**
  * 配置环境Controller
@@ -109,5 +111,45 @@ public class DataiConfigEnvironmentController extends BaseController
     public AjaxResult remove(@PathVariable( name = "ids" ) Long[] ids) 
     {
         return toAjax(dataiConfigEnvironmentService.deleteDataiConfigEnvironmentByIds(ids));
+    }
+
+    /**
+     * 切换当前环境
+     */
+    @Operation(summary = "切换当前环境")
+    @PreAuthorize("@ss.hasPermi('setting:environment:switch')")
+    @Log(title = "配置环境", businessType = BusinessType.UPDATE)
+    @PostMapping("/switch")
+    public AjaxResult switchEnvironment(
+            @Parameter(description = "环境编码", required = true) @RequestParam String environmentCode,
+            @Parameter(description = "切换原因", required = false) @RequestParam(required = false) String switchReason)
+    {
+        if (switchReason == null || switchReason.trim().isEmpty()) {
+            switchReason = "手动切换";
+        }
+        
+        boolean result = dataiConfigEnvironmentService.switchEnvironment(environmentCode, switchReason);
+        
+        if (result) {
+            DataiConfigEnvironment currentEnvironment = dataiConfigEnvironmentService.getCurrentActiveEnvironment();
+            return success("环境切换成功：" + currentEnvironment.getEnvironmentName());
+        } else {
+            return error("环境切换失败，请检查环境编码是否正确且已激活");
+        }
+    }
+
+    /**
+     * 获取当前激活的环境
+     */
+    @Operation(summary = "获取当前激活的环境")
+    @PreAuthorize("@ss.hasPermi('setting:environment:query')")
+    @GetMapping("/current")
+    public AjaxResult getCurrentEnvironment()
+    {
+        DataiConfigEnvironment currentEnvironment = dataiConfigEnvironmentService.getCurrentActiveEnvironment();
+        if (currentEnvironment == null) {
+            return error("未找到当前激活的环境");
+        }
+        return success(currentEnvironment);
     }
 }

@@ -63,8 +63,11 @@ public class DataiConfigurationServiceImpl implements IDataiConfigurationService
      */
     @Override
     public String selectConfigValueByKey(String configKey) {
-        // 先从缓存获取
-        String configValue = CacheUtils.get(SalesforceConfigConstants.SALESFORCE_CONFIG_CACHE_KEY, configKey, String.class);
+        // 获取环境隔离的缓存键 (格式: SALESFORCE_CONFIG_CACHE_KEY:environmentCode)
+        String cacheKey = SalesforceConfigConstants.SALESFORCE_CONFIG_CACHE_KEY + ":" + SalesforceConfigCacheManager.getCurrentEnvironmentCode();
+        
+        // 先从缓存获取 - 缓存优先策略
+        String configValue = CacheUtils.get(cacheKey, configKey, String.class);
         if (configValue != null) {
             return configValue;
         }
@@ -73,12 +76,13 @@ public class DataiConfigurationServiceImpl implements IDataiConfigurationService
         DataiConfiguration query = new DataiConfiguration();
         query.setConfigKey(configKey);
         query.setIsActive(true);
+        query.setEnvironmentId(SalesforceConfigCacheManager.getCurrentEnvironmentId()); // 按当前环境过滤
         List<DataiConfiguration> configs = dataiConfigurationMapper.selectDataiConfigurationList(query);
 
         if (!configs.isEmpty()) {
             configValue = configs.get(0).getConfigValue();
-            // 更新缓存
-            CacheUtils.getCache(SalesforceConfigConstants.SALESFORCE_CONFIG_CACHE_KEY).put(configKey, configValue);
+            // 更新缓存 - 写回到缓存
+            CacheUtils.getCache(cacheKey).put(configKey, configValue);
             return configValue;
         }
 
@@ -106,12 +110,6 @@ public class DataiConfigurationServiceImpl implements IDataiConfigurationService
     @Override
     public int insertDataiConfiguration(DataiConfiguration dataiConfiguration)
     {
-        // 验证配置值合法性
-        if (!validateConfigValue(dataiConfiguration)) {
-            logger.error("配置值验证失败: {}", dataiConfiguration.getConfigKey());
-            return 0;
-        }
-
         LoginUser loginUser = SecurityUtils.getLoginUser();
         String username = loginUser.getUsername();
 
@@ -120,14 +118,26 @@ public class DataiConfigurationServiceImpl implements IDataiConfigurationService
         dataiConfiguration.setCreateBy(username);
         dataiConfiguration.setUpdateBy(username);
 
+        // 设置当前环境ID
+        dataiConfiguration.setEnvironmentId(SalesforceConfigCacheManager.getCurrentEnvironmentId());
+        
+        // 设置初始版本号为1
+        dataiConfiguration.setVersion(1);
+
+        // 1. 先写入数据库
         int result = dataiConfigurationMapper.insertDataiConfiguration(dataiConfiguration);
         if (result > 0) {
-            // 更新缓存
-            CacheUtils.getCache(SalesforceConfigConstants.SALESFORCE_CONFIG_CACHE_KEY)
+            // 2. 再更新缓存 - 缓存优先策略：数据库变更后立即更新缓存
+            String cacheKey = SalesforceConfigCacheManager.getCurrentEnvironmentCode() + ":" + SalesforceConfigConstants.SALESFORCE_CONFIG_CACHE_KEY;
+            CacheUtils.getCache(cacheKey)
                     .put(dataiConfiguration.getConfigKey(), dataiConfiguration.getConfigValue());
 
-            // 发布配置变更事件
+            // 3. 发布配置变更事件
             publishConfigChangeEvent(dataiConfiguration, "CREATE", null, dataiConfiguration.getConfigValue());
+            
+            logger.info("[缓存更新] 新增配置后更新缓存成功: {} = {}, 版本: {}, 环境: {}", 
+                dataiConfiguration.getConfigKey(), dataiConfiguration.getConfigValue(), 
+                dataiConfiguration.getVersion(), SalesforceConfigCacheManager.getCurrentEnvironmentCode());
         }
 
         return result;
@@ -142,12 +152,6 @@ public class DataiConfigurationServiceImpl implements IDataiConfigurationService
     @Override
     public int updateDataiConfiguration(DataiConfiguration dataiConfiguration)
     {
-        // 验证配置值合法性
-        if (!validateConfigValue(dataiConfiguration)) {
-            logger.error("配置值验证失败: {}", dataiConfiguration.getConfigKey());
-            return 0;
-        }
-
         LoginUser loginUser = SecurityUtils.getLoginUser();
         String username = loginUser.getUsername();
 
@@ -157,21 +161,39 @@ public class DataiConfigurationServiceImpl implements IDataiConfigurationService
         // 获取旧配置，用于审计日志和缓存清理
         DataiConfiguration oldConfig = selectDataiConfigurationById(dataiConfiguration.getId());
         String oldValue = oldConfig != null ? oldConfig.getConfigValue() : null;
+        String oldConfigKey = oldConfig != null ? oldConfig.getConfigKey() : null;
+        
+        // 版本自动递增：如果是更新操作，版本号+1
+        if (oldConfig != null) {
+            Integer currentVersion = oldConfig.getVersion();
+            dataiConfiguration.setVersion(currentVersion != null ? currentVersion + 1 : 1);
+        } else {
+            dataiConfiguration.setVersion(1); // 防止旧记录没有版本号
+        }
 
+        // 1. 先更新数据库
         int result = dataiConfigurationMapper.updateDataiConfiguration(dataiConfiguration);
         if (result > 0) {
-            // 如果配置键发生变化，清理旧键的缓存
-            if (oldConfig != null && !oldConfig.getConfigKey().equals(dataiConfiguration.getConfigKey())) {
-                CacheUtils.getCache(SalesforceConfigConstants.SALESFORCE_CONFIG_CACHE_KEY)
-                        .evict(oldConfig.getConfigKey());
+            String cacheKey = SalesforceConfigCacheManager.getCurrentEnvironmentCode() + ":" + SalesforceConfigConstants.SALESFORCE_CONFIG_CACHE_KEY;
+            
+            // 2. 缓存更新策略：先删除旧键，再添加新键
+            if (oldConfig != null && !oldConfigKey.equals(dataiConfiguration.getConfigKey())) {
+                // 如果配置键发生变化，清理旧键的缓存
+                CacheUtils.getCache(cacheKey).evict(oldConfigKey);
+                logger.info("[缓存更新] 配置键变更，已清理旧缓存键: {}, 环境: {}", 
+                    oldConfigKey, SalesforceConfigCacheManager.getCurrentEnvironmentCode());
             }
 
-            // 更新缓存
-            CacheUtils.getCache(SalesforceConfigConstants.SALESFORCE_CONFIG_CACHE_KEY)
+            // 3. 更新缓存 - 缓存优先策略：数据库变更后立即更新缓存
+            CacheUtils.getCache(cacheKey)
                     .put(dataiConfiguration.getConfigKey(), dataiConfiguration.getConfigValue());
 
-            // 发布配置变更事件
+            // 4. 发布配置变更事件
             publishConfigChangeEvent(dataiConfiguration, "UPDATE", oldValue, dataiConfiguration.getConfigValue());
+            
+            logger.info("[缓存更新] 修改配置后更新缓存成功: {} -> {} = {}, 版本: {}, 环境: {}", 
+                oldValue, dataiConfiguration.getConfigKey(), dataiConfiguration.getConfigValue(), 
+                dataiConfiguration.getVersion(), SalesforceConfigCacheManager.getCurrentEnvironmentCode());
         }
 
         return result;
@@ -187,16 +209,23 @@ public class DataiConfigurationServiceImpl implements IDataiConfigurationService
     public int deleteDataiConfigurationByIds(Long[] configIds)
     {
         int result = 0;
+        String cacheKey = SalesforceConfigCacheManager.getCurrentEnvironmentCode() + ":" + SalesforceConfigConstants.SALESFORCE_CONFIG_CACHE_KEY;
+        
         for (Long configId : configIds) {
             DataiConfiguration config = selectDataiConfigurationById(configId);
             if (config != null) {
                 String oldValue = config.getConfigValue();
+                String configKeyToDelete = config.getConfigKey();
+                
+                // 1. 先删除数据库记录
                 result += dataiConfigurationMapper.deleteDataiConfigurationById(configId);
-                // 删除缓存
-                CacheUtils.getCache(SalesforceConfigConstants.SALESFORCE_CONFIG_CACHE_KEY)
-                        .evict(config.getConfigKey());
+                
+                // 2. 再删除缓存 - 缓存优先策略：数据库变更后立即清理缓存
+                CacheUtils.getCache(cacheKey).evict(configKeyToDelete);
+                logger.info("[缓存更新] 批量删除配置后清理缓存: {}, 环境: {}", 
+                    configKeyToDelete, SalesforceConfigCacheManager.getCurrentEnvironmentCode());
 
-                // 发布配置变更事件
+                // 3. 发布配置变更事件
                 publishConfigChangeEvent(config, "DELETE", oldValue, null);
             }
         }
@@ -218,13 +247,18 @@ public class DataiConfigurationServiceImpl implements IDataiConfigurationService
         }
 
         String oldValue = config.getConfigValue();
+        String configKeyToDelete = config.getConfigKey();
+        String cacheKey = SalesforceConfigCacheManager.getCurrentEnvironmentCode() + ":" + SalesforceConfigConstants.SALESFORCE_CONFIG_CACHE_KEY;
+        
+        // 1. 先删除数据库记录
         int result = dataiConfigurationMapper.deleteDataiConfigurationById(configId);
         if (result > 0) {
-            // 删除缓存
-            CacheUtils.getCache(SalesforceConfigConstants.SALESFORCE_CONFIG_CACHE_KEY)
-                    .evict(config.getConfigKey());
+            // 2. 再删除缓存 - 缓存优先策略：数据库变更后立即清理缓存
+            CacheUtils.getCache(cacheKey).evict(configKeyToDelete);
+            logger.info("[缓存更新] 删除配置后清理缓存: {}, 环境: {}", 
+                configKeyToDelete, SalesforceConfigCacheManager.getCurrentEnvironmentCode());
 
-            // 发布配置变更事件
+            // 3. 发布配置变更事件
             publishConfigChangeEvent(config, "DELETE", oldValue, null);
         }
 
@@ -255,27 +289,7 @@ public class DataiConfigurationServiceImpl implements IDataiConfigurationService
         SalesforceConfigCacheManager.resetConfigCache();
     }
 
-    @Autowired
-    private IDataiConfigValidationRuleService configValidationRuleService;
 
-    /**
-     * 验证配置值合法性
-     *
-     * @param dataiConfiguration 配置
-     * @return 验证结果
-     */
-    @Override
-    public boolean validateConfigValue(DataiConfiguration dataiConfiguration) {
-        // 1. 基础验证：配置键不能为空
-        String configKey = dataiConfiguration.getConfigKey();
-        if (configKey == null || configKey.isEmpty()) {
-            logger.error("配置键不能为空");
-            return false;
-        }
-
-        // 2. 使用新的配置验证规则服务进行验证
-        return configValidationRuleService.validateConfigIntegrity(dataiConfiguration);
-    }
 
     /**
      * 发布配置变更事件

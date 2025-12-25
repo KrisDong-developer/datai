@@ -60,6 +60,11 @@ public class DataiConfiguration extends BaseEntity
     @Schema(title = "是否激活")
     @Excel(name = "是否激活")
     private Boolean isActive;
+
+    /** 配置版本号 */
+    @Schema(title = "配置版本号")
+    @Excel(name = "配置版本号")
+    private Integer version;
     public void setId(Long id) 
     {
         this.id = id;
@@ -158,6 +163,16 @@ public class DataiConfiguration extends BaseEntity
         return isActive;
     }
 
+    public void setVersion(Integer version) 
+    {
+        this.version = version;
+    }
+
+    public Integer getVersion() 
+    {
+        return version;
+    }
+
 
 
     @Override
@@ -172,6 +187,7 @@ public class DataiConfiguration extends BaseEntity
             .append("isEncrypted", getIsEncrypted())
             .append("description", getDescription())
             .append("isActive", getIsActive())
+            .append("version", getVersion())
             .append("remark", getRemark())
             .append("createBy", getCreateBy())
             .append("createTime", getCreateTime())

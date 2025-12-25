@@ -33,10 +33,10 @@ public class DataiSfToken extends BaseEntity
     @Excel(name = "用户名")
     private String username;
 
-    /** 访问令牌 */
-    @Schema(title = "访问令牌")
-    @Excel(name = "访问令牌")
-    private String accessToken;
+    /** 会话ID */
+    @Schema(title = "会话ID")
+    @Excel(name = "会话ID")
+    private String sessionId;
 
     /** 刷新令牌 */
     @Schema(title = "刷新令牌")
@@ -264,7 +264,7 @@ public class DataiSfToken extends BaseEntity
             .append("id", getId())
             .append("deptId", getDeptId())
             .append("username", getUsername())
-            .append("accessToken", getAccessToken())
+            .append("sessionId", getSessionId())
             .append("refreshToken", getRefreshToken())
             .append("accessTokenExpire", getAccessTokenExpire())
             .append("refreshTokenExpire", getRefreshTokenExpire())

@@ -14,6 +14,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="isEncrypted" column="is_encrypted" />
         <result property="description" column="description" />
         <result property="isActive" column="is_active" />
+        <result property="version" column="version" />
         <result property="remark" column="remark" />
         <result property="createBy" column="create_by" />
         <result property="createTime" column="create_time" />
@@ -32,6 +33,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             dc.is_encrypted,
             dc.description,
             dc.is_active,
+            dc.version,
             dc.remark,
             dc.create_by,
             dc.create_time,
@@ -70,6 +72,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="isEncrypted != null">is_encrypted,</if>
             <if test="description != null">description,</if>
             <if test="isActive != null">is_active,</if>
+            <if test="version != null">version,</if>
             <if test="remark != null">remark,</if>
             <if test="createBy != null and createBy != ''">create_by,</if>
             <if test="createTime != null">create_time,</if>
@@ -85,6 +88,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="isEncrypted != null">#{isEncrypted},</if>
             <if test="description != null">#{description},</if>
             <if test="isActive != null">#{isActive},</if>
+            <if test="version != null">#{version},</if>
             <if test="remark != null">#{remark},</if>
             <if test="createBy != null and createBy != ''">#{createBy},</if>
             <if test="createTime != null">#{createTime},</if>
@@ -104,6 +108,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="isEncrypted != null">is_encrypted = #{isEncrypted},</if>
             <if test="description != null">description = #{description},</if>
             <if test="isActive != null">is_active = #{isActive},</if>
+            <if test="version != null">version = #{version},</if>
             <if test="remark != null">remark = #{remark},</if>
             <if test="createBy != null and createBy != ''">create_by = #{createBy},</if>
             <if test="createTime != null">create_time = #{createTime},</if>

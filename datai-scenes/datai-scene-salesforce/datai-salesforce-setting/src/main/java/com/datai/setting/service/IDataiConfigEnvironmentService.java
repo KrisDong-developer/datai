@@ -58,4 +58,20 @@ public interface IDataiConfigEnvironmentService
      * @return 结果
      */
     public int deleteDataiConfigEnvironmentById(Long id);
+
+    /**
+     * 切换当前环境
+     * 
+     * @param environmentCode 环境编码
+     * @param switchReason 切换原因
+     * @return 切换结果
+     */
+    public boolean switchEnvironment(String environmentCode, String switchReason);
+
+    /**
+     * 获取当前激活的环境
+     * 
+     * @return 当前激活的环境
+     */
+    public DataiConfigEnvironment getCurrentActiveEnvironment();
 }

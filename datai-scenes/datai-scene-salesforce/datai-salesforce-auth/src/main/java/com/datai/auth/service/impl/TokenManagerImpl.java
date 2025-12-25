@@ -37,22 +37,22 @@ public class TokenManagerImpl implements ITokenManager {
     /**
      * 验证令牌有效性
      * 
-     * @param accessToken 访问令牌
+     * @param sessionId 会话ID
      * @return 是否有效
      */
     @Override
-    public boolean validateToken(String accessToken) {
-        if (accessToken == null || accessToken.isEmpty()) {
+    public boolean validateToken(String sessionId) {
+        if (sessionId == null || sessionId.isEmpty()) {
             logger.warn("令牌为空，无法验证");
             return false;
         }
         
-        String tokenPrefix = accessToken.substring(0, Math.min(10, accessToken.length()));
-        logger.info("验证令牌有效性，访问令牌: {}", tokenPrefix + "...");
+        String tokenPrefix = sessionId.substring(0, Math.min(10, sessionId.length()));
+        logger.info("验证令牌有效性，会话ID: {}", tokenPrefix + "...");
         
-        // 1. 根据访问令牌查找令牌信息
+        // 1. 根据会话ID查找令牌信息
         DataiSfToken queryToken = new DataiSfToken();
-        queryToken.setAccessToken(accessToken);
+        queryToken.setSessionId(sessionId);
         List<DataiSfToken> tokens = tokenService.selectDataiSfTokenList(queryToken);
         
         // 2. 验证令牌是否存在且状态有效
@@ -69,7 +69,7 @@ public class TokenManagerImpl implements ITokenManager {
         }
         
         // 3. 验证令牌是否过期
-        if (token.getAccessTokenExpire() != null && new Date().after(Date.from(token.getAccessTokenExpire().atZone(ZoneId.systemDefault()).toInstant()))) {
+        if (token.getSessionIdExpire() != null && new Date().after(Date.from(token.getSessionIdExpire().atZone(ZoneId.systemDefault()).toInstant()))) {
             logger.warn("令牌已过期，令牌ID: {}", token.getId());
             // 更新令牌状态为过期
             token.setStatus("EXPIRED");
@@ -127,24 +127,24 @@ public class TokenManagerImpl implements ITokenManager {
     /**
      * 绑定令牌到设备/IP
      * 
-     * @param accessToken 访问令牌
+     * @param sessionId 会话ID
      * @param deviceId 设备ID
      * @param ip IP地址
      */
     @Override
-    public void bindToken(String accessToken, String deviceId, String ip) {
-        if (accessToken == null || accessToken.isEmpty()) {
+    public void bindToken(String sessionId, String deviceId, String ip) {
+        if (sessionId == null || sessionId.isEmpty()) {
             logger.warn("令牌为空，无法绑定");
             return;
         }
         
-        String tokenPrefix = accessToken.substring(0, Math.min(10, accessToken.length()));
-        logger.info("绑定令牌到设备/IP，访问令牌: {}, 设备ID: {}, IP: {}", 
+        String tokenPrefix = sessionId.substring(0, Math.min(10, sessionId.length()));
+        logger.info("绑定令牌到设备/IP，会话ID: {}, 设备ID: {}, IP: {}", 
                 tokenPrefix + "...", deviceId, ip);
         
-        // 1. 根据访问令牌查找令牌信息
+        // 1. 根据会话ID查找令牌信息
         DataiSfToken queryToken = new DataiSfToken();
-        queryToken.setAccessToken(accessToken);
+        queryToken.setSessionId(sessionId);
         List<DataiSfToken> tokens = tokenService.selectDataiSfTokenList(queryToken);
         
         if (tokens.isEmpty()) {
@@ -179,7 +179,7 @@ public class TokenManagerImpl implements ITokenManager {
         binding.setStatus("ACTIVE");
         binding.setBindingTime(LocalDateTime.now());
         // 绑定有效期与令牌有效期一致
-        binding.setExpireTime(token.getAccessTokenExpire());
+        binding.setExpireTime(token.getSessionIdExpire());
         binding.setCreateTime(new Date());
         binding.setUpdateTime(new Date());
         

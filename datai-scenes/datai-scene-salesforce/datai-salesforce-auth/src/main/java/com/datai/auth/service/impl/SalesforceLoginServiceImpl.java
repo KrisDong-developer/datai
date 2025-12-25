@@ -19,6 +19,8 @@ import com.datai.auth.cache.SalesforceAuthCacheManager;
 import com.datai.common.utils.DateUtils;
 import com.datai.common.utils.CacheUtils;
 import com.datai.salesforce.common.exception.SalesforceAuthException;
+import com.datai.setting.config.SalesforceConfigCacheManager;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -70,6 +72,9 @@ public class SalesforceLoginServiceImpl implements ISalesforceLoginService {
     
     @Autowired
     private SalesforceAuthCacheManager cacheManager;
+    
+    @Autowired
+    private SalesforceConfigCacheManager configCacheManager;
     
     /**
      * 根据不同登录类型执行登录
@@ -165,6 +170,9 @@ public class SalesforceLoginServiceImpl implements ISalesforceLoginService {
                 
                 // 清除登录失败记录
                 clearFailedLoginRecords(request.getUsername());
+                
+                // 登录成功后，触发配置加载到Redis
+                loadConfigToRedis();
                 
                 // 记录登录审计日志
                 recordLoginAudit(request, result, "SUCCESS");
@@ -290,11 +298,11 @@ public class SalesforceLoginServiceImpl implements ISalesforceLoginService {
     /**
      * 执行登出操作
      * 
-     * @param accessToken 访问令牌
+     * @param sessionId 会话ID
      * @param loginType 登录类型
      * @return 登出是否成功
      */
-    public boolean logout(String accessToken, String loginType) {
+    public boolean logout(String sessionId, String loginType) {
         // 添加跟踪ID到日志上下文
         String traceId = UUID.randomUUID().toString();
         MDC.put("traceId", traceId);
@@ -305,7 +313,7 @@ public class SalesforceLoginServiceImpl implements ISalesforceLoginService {
         
         try {
             // 清除相关缓存
-            cacheManager.evictAccessTokenCache(accessToken);
+            cacheManager.evictAccessTokenCache(sessionId);
             
             // 1. 获取登录策略
             LoginStrategy strategy;
@@ -313,25 +321,25 @@ public class SalesforceLoginServiceImpl implements ISalesforceLoginService {
                 strategy = loginStrategyFactory.getLoginStrategy(loginType);
             } catch (Exception e) {
                 logger.error("获取登录策略失败，登录类型: {}", loginType, e);
-                recordLogoutAudit(accessToken, loginType, "FAILED");
+                recordLogoutAudit(sessionId, loginType, "FAILED");
                 return false;
             }
             
             // 2. 执行登出操作
             boolean success;
             try {
-                success = strategy.logout(accessToken, loginType);
+                success = strategy.logout(sessionId, loginType);
             } catch (Exception e) {
                 logger.error("执行登出策略失败，登录类型: {}", loginType, e);
-                recordLogoutAudit(accessToken, loginType, "FAILED");
+                recordLogoutAudit(sessionId, loginType, "FAILED");
                 return false;
             }
             
             // 3. 清理登录状态
-            String tokenPrefix = accessToken != null ? accessToken.substring(0, Math.min(10, accessToken.length())) : "null";
+            String tokenPrefix = sessionId != null ? sessionId.substring(0, Math.min(10, sessionId.length())) : "null";
             if (success) {
                 logger.info("登出操作成功，登录类型: {}, 令牌前缀: {}", loginType, tokenPrefix);
-                cleanupLoginStatus(accessToken);
+                cleanupLoginStatus(sessionId);
                 
                 // 4. 更新登录统计（令牌吊销）
                 updateLoginStatisticsForRevoke(loginType);
@@ -340,7 +348,7 @@ public class SalesforceLoginServiceImpl implements ISalesforceLoginService {
             }
             
             // 5. 记录登出审计日志
-            recordLogoutAudit(accessToken, loginType, success ? "SUCCESS" : "FAILED");
+            recordLogoutAudit(sessionId, loginType, success ? "SUCCESS" : "FAILED");
             
             return success;
         } finally {
@@ -389,12 +397,12 @@ public class SalesforceLoginServiceImpl implements ISalesforceLoginService {
                     result.setTokenType(token.getTokenType());
                     
                     // 计算剩余过期时间（秒）
-                    // 注意：这里假设accessTokenExpire存储的是日期，实际应使用DateTime类型
+                    // 注意：这里假设sessionIdExpire存储的是日期，实际应使用DateTime类型
                     long expiresIn = 7200; // 默认为2小时
                     result.setExpiresIn(expiresIn);
                     
-                    logger.info("获取登录状态成功，访问令牌前缀: {}", 
-                        result.getAccessToken() != null ? result.getAccessToken().substring(0, Math.min(10, result.getAccessToken().length())) : "null");
+                    logger.info("获取登录状态成功，会话ID前缀: {}", 
+                        result.getSessionId() != null ? result.getSessionId().substring(0, Math.min(10, result.getSessionId().length())) : "null");
                     return result;
                 }
             }
@@ -425,9 +433,9 @@ public class SalesforceLoginServiceImpl implements ISalesforceLoginService {
      * @param result 登录结果
      */
     public void saveLoginStatus(SalesforceLoginResult result) {
-        String accessToken = result.getAccessToken();
-        String tokenPrefix = accessToken != null ? accessToken.substring(0, Math.min(10, accessToken.length())) : "null";
-        logger.info("保存登录状态到缓存，访问令牌: {}", tokenPrefix + "...");
+        String sessionId = result.getSessionId();
+        String tokenPrefix = sessionId != null ? sessionId.substring(0, Math.min(10, sessionId.length())) : "null";
+        logger.info("保存登录状态到缓存，会话ID: {}", tokenPrefix + "...");
         
         try {
             // 实现保存登录状态到Redis缓存的逻辑
@@ -436,7 +444,7 @@ public class SalesforceLoginServiceImpl implements ISalesforceLoginService {
             String cacheName = "salesforce_login_cache";
             
             // 使用带有过期时间的put方法设置缓存
-            CacheUtils.put(cacheName, "current_access_token", result.getAccessToken(), expiresInSeconds, java.util.concurrent.TimeUnit.SECONDS);
+            CacheUtils.put(cacheName, "current_access_token", result.getSessionId(), expiresInSeconds, java.util.concurrent.TimeUnit.SECONDS);
             CacheUtils.put(cacheName, "current_instance_url", result.getInstanceUrl(), expiresInSeconds, java.util.concurrent.TimeUnit.SECONDS);
             CacheUtils.put(cacheName, "current_user_id", result.getUserId(), expiresInSeconds, java.util.concurrent.TimeUnit.SECONDS);
             CacheUtils.put(cacheName, "current_organization_id", result.getOrganizationId(), expiresInSeconds, java.util.concurrent.TimeUnit.SECONDS);
@@ -711,22 +719,22 @@ public class SalesforceLoginServiceImpl implements ISalesforceLoginService {
      * @param result 新的登录结果
      */
     private void updateLoginStatus(SalesforceLoginResult result) {
-        String tokenPrefix = result.getAccessToken() != null ? 
-            result.getAccessToken().substring(0, Math.min(10, result.getAccessToken().length())) : "null";
-        logger.info("更新登录状态，访问令牌: {}", tokenPrefix + "...");
+        String tokenPrefix = result.getSessionId() != null ? 
+            result.getSessionId().substring(0, Math.min(10, result.getSessionId().length())) : "null";
+        logger.info("更新登录状态，会话ID: {}", tokenPrefix + "...");
         
         try {
-            // 1. 根据旧的访问令牌查找令牌信息
+            // 1. 根据旧的会话ID查找令牌信息
             // 这里简化处理，实际应该从refreshToken查找
-            // 或者在refreshToken方法中传递旧的accessToken
+            // 或者在refreshToken方法中传递旧的sessionId
             
             // 2. 创建新的令牌记录
             DataiSfToken newToken = new DataiSfToken();
             newToken.setUsername("unknown"); // 实际应该从用户上下文获取
-            newToken.setAccessToken(result.getAccessToken());
+            newToken.setSessionId(result.getSessionId());
             newToken.setRefreshToken(result.getRefreshToken());
             // 注意：LocalDate只能保存日期，不能保存时间，实际应使用LocalDateTime类型
-            newToken.setAccessTokenExpire(LocalDateTime.now());
+            newToken.setSessionIdExpire(LocalDateTime.now());
             if (result.getRefreshToken() != null) {
                 // 刷新令牌默认有效期30天
                 newToken.setRefreshTokenExpire(LocalDateTime.now().plusDays(30));
@@ -771,18 +779,18 @@ public class SalesforceLoginServiceImpl implements ISalesforceLoginService {
     /**
      * 清理登录状态
      * 
-     * @param accessToken 访问令牌
+     * @param sessionId 会话ID
      */
-    private void cleanupLoginStatus(String accessToken) {
-        String tokenPrefix = accessToken != null ? accessToken.substring(0, Math.min(10, accessToken.length())) : "null";
-        logger.info("清理登录状态，访问令牌: {}", tokenPrefix + "...");
+    private void cleanupLoginStatus(String sessionId) {
+        String tokenPrefix = sessionId != null ? sessionId.substring(0, Math.min(10, sessionId.length())) : "null";
+        logger.info("清理登录状态，会话ID: {}", tokenPrefix + "...");
         
         try {
             // 1. 查找令牌信息
-            // 注意：这里需要根据accessToken查询令牌，但当前接口只支持根据tokenId查询
+            // 注意：这里需要根据sessionId查询令牌，但当前接口只支持根据tokenId查询
             // 这里简化处理，查询所有令牌并遍历查找
             DataiSfToken queryToken = new DataiSfToken();
-            queryToken.setAccessToken(accessToken);
+            queryToken.setSessionId(sessionId);
             List<DataiSfToken> tokens = tokenService.selectDataiSfTokenList(queryToken);
             
             if (!tokens.isEmpty()) {
@@ -806,15 +814,15 @@ public class SalesforceLoginServiceImpl implements ISalesforceLoginService {
                 }
                 
                 // 清除相关缓存
-                cacheManager.evictAccessTokenCache(accessToken);
+                cacheManager.evictAccessTokenCache(sessionId);
                 if (token.getRefreshToken() != null) {
                     cacheManager.evictRefreshTokenCache(token.getRefreshToken());
                 }
             }
             
-            logger.info("登录状态清理成功，访问令牌: {}", accessToken.substring(0, Math.min(10, accessToken.length())) + "...");
+            logger.info("登录状态清理成功，会话ID: {}", sessionId.substring(0, Math.min(10, sessionId.length())) + "...");
         } catch (Exception e) {
-            logger.error("清理登录状态失败，访问令牌: {}", accessToken.substring(0, Math.min(10, accessToken.length())), e);
+            logger.error("清理登录状态失败，会话ID: {}", sessionId.substring(0, Math.min(10, sessionId.length())), e);
             // 不抛出异常，因为清理失败不应该影响主要流程
         }
     }
@@ -873,11 +881,11 @@ public class SalesforceLoginServiceImpl implements ISalesforceLoginService {
     /**
      * 记录登出审计日志
      * 
-     * @param accessToken 访问令牌
+     * @param sessionId 会话ID
      * @param loginType 登录类型
      * @param resultStr 操作结果
      */
-    private void recordLogoutAudit(String accessToken, String loginType, String resultStr) {
+    private void recordLogoutAudit(String sessionId, String loginType, String resultStr) {
         try {
             DataiSfLoginAudit audit = new DataiSfLoginAudit();
             audit.setOperationType("LOGOUT");
@@ -1135,6 +1143,25 @@ public class SalesforceLoginServiceImpl implements ISalesforceLoginService {
             
             // 查询当前统计记录
             DataiSfLoginStatistics query = new DataiSfLoginStatistics();
+    }
+    
+    /**
+     * 登录成功后加载配置到Redis
+     * 
+     * 该方法在Salesforce登录成功后调用，确保最新的配置被加载到Redis缓存中
+     */
+    private void loadConfigToRedis() {
+        logger.info("登录成功，开始加载配置到Redis...");
+        
+        try {
+            // 调用配置缓存管理器重置配置缓存，触发配置加载到Redis
+            configCacheManager.resetConfigCache();
+            
+            logger.info("配置加载到Redis成功");
+        } catch (Exception e) {
+            logger.error("配置加载到Redis失败: {}", e.getMessage(), e);
+            // 不抛出异常，因为配置加载失败不应该影响登录流程
+        }
             query.setStatDate(nowDate);
             query.setStatHour(hour);
             query.setLoginType(loginType);

@@ -11,35 +11,35 @@ public interface ITokenManager {
     /**
      * 验证令牌有效性
      * 
-     * @param accessToken 访问令牌
+     * @param sessionId 会话ID
      * @return 是否有效
      */
-    boolean validateToken(String accessToken);
+    boolean validateToken(String sessionId);
 
     /**
      * 吊销令牌
      * 
-     * @param accessToken 访问令牌
+     * @param sessionId 会话ID
      * @return 是否吊销成功
      */
-    boolean revokeToken(String accessToken);
+    boolean revokeToken(String sessionId);
 
     /**
      * 绑定令牌到设备/IP
      * 
-     * @param accessToken 访问令牌
+     * @param sessionId 会话ID
      * @param deviceId 设备ID
      * @param ip IP地址
      */
-    void bindToken(String accessToken, String deviceId, String ip);
+    void bindToken(String sessionId, String deviceId, String ip);
 
     /**
      * 检查令牌绑定
      * 
-     * @param accessToken 访问令牌
+     * @param sessionId 会话ID
      * @param deviceId 设备ID
      * @param ip IP地址
      * @return 是否绑定匹配
      */
-    boolean checkTokenBinding(String accessToken, String deviceId, String ip);
+    boolean checkTokenBinding(String sessionId, String deviceId, String ip);
 }

@@ -83,11 +83,4 @@ public interface IDataiConfigurationService
      */
     public void resetConfigCache();
 
-    /**
-     * 验证配置值合法性
-     *
-     * @param dataiConfiguration 配置
-     * @return 验证结果
-     */
-    public boolean validateConfigValue(DataiConfiguration dataiConfiguration);
 }

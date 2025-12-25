@@ -59,8 +59,8 @@ public class SalesforceLoginResult implements Serializable {
     public boolean isSuccess() { return success; }
     public void setSuccess(boolean success) { this.success = success; }
 
-    public String getAccessToken() { return accessToken; }
-    public void setAccessToken(String accessToken) { this.accessToken = accessToken; }
+    public String getSessionId() { return sessionId; }
+    public void setSessionId(String sessionId) { this.sessionId = sessionId; }
 
     public String getRefreshToken() { return refreshToken; }
     public void setRefreshToken(String refreshToken) { this.refreshToken = refreshToken; }
