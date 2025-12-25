@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.datai.setting.mapper.DataiConfigVersionMapper">
+    
+    <resultMap type="DataiConfigVersion" id="DataiConfigVersionResult">
+        <result property="id" column="id" />
+        <result property="deptId" column="dept_id" />
+        <result property="versionNumber" column="version_number" />
+        <result property="versionDesc" column="version_desc" />
+        <result property="snapshotId" column="snapshot_id" />
+        <result property="snapshotContent" column="snapshot_content" />
+        <result property="status" column="status" />
+        <result property="publishTime" column="publish_time" />
+        <result property="remark" column="remark" />
+        <result property="createBy" column="create_by" />
+        <result property="createTime" column="create_time" />
+        <result property="updateBy" column="update_by" />
+        <result property="updateTime" column="update_time" />
+    </resultMap>
+
+    <sql id="selectDataiConfigVersionVo">
+        select 
+            dcv.id,
+            dcv.dept_id,
+            dcv.version_number,
+            dcv.version_desc,
+            dcv.snapshot_id,
+            dcv.snapshot_content,
+            dcv.status,
+            dcv.publish_time,
+            dcv.remark,
+            dcv.create_by,
+            dcv.create_time,
+            dcv.update_by,
+            dcv.update_time
+        from datai_config_version dcv
+    </sql>
+
+    <select id="selectDataiConfigVersionList" parameterType="DataiConfigVersion" resultMap="DataiConfigVersionResult">
+        <include refid="selectDataiConfigVersionVo"/>
+        <where>
+            <if test="deptId != null "> and dcv.dept_id = #{deptId}</if>
+            <if test="versionNumber != null  and versionNumber != ''"> and dcv.version_number = #{versionNumber}</if>
+            <if test="versionDesc != null  and versionDesc != ''"> and dcv.version_desc = #{versionDesc}</if>
+            <if test="snapshotId != null  and snapshotId != ''"> and dcv.snapshot_id = #{snapshotId}</if>
+            <if test="snapshotContent != null  and snapshotContent != ''"> and dcv.snapshot_content = #{snapshotContent}</if>
+            <if test="status != null  and status != ''"> and dcv.status = #{status}</if>
+            <if test="publishTime != null "> and dcv.publish_time = #{publishTime}</if>
+        </where>
+    </select>
+    
+    <select id="selectDataiConfigVersionById" parameterType="Long" resultMap="DataiConfigVersionResult">
+        <include refid="selectDataiConfigVersionVo"/>
+        where dcv.id = #{id}
+    </select>
+        
+    <insert id="insertDataiConfigVersion" parameterType="DataiConfigVersion" useGeneratedKeys="true" keyProperty="id">
+        insert into datai_config_version
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="deptId != null">dept_id,</if>
+            <if test="versionNumber != null and versionNumber != ''">version_number,</if>
+            <if test="versionDesc != null">version_desc,</if>
+            <if test="snapshotId != null">snapshot_id,</if>
+            <if test="snapshotContent != null">snapshot_content,</if>
+            <if test="status != null and status != ''">status,</if>
+            <if test="publishTime != null">publish_time,</if>
+            <if test="remark != null">remark,</if>
+            <if test="createBy != null and createBy != ''">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null and updateBy != ''">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="deptId != null">#{deptId},</if>
+            <if test="versionNumber != null and versionNumber != ''">#{versionNumber},</if>
+            <if test="versionDesc != null">#{versionDesc},</if>
+            <if test="snapshotId != null">#{snapshotId},</if>
+            <if test="snapshotContent != null">#{snapshotContent},</if>
+            <if test="status != null and status != ''">#{status},</if>
+            <if test="publishTime != null">#{publishTime},</if>
+            <if test="remark != null">#{remark},</if>
+            <if test="createBy != null and createBy != ''">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null and updateBy != ''">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateDataiConfigVersion" parameterType="DataiConfigVersion">
+        update datai_config_version
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="deptId != null">dept_id = #{deptId},</if>
+            <if test="versionNumber != null and versionNumber != ''">version_number = #{versionNumber},</if>
+            <if test="versionDesc != null">version_desc = #{versionDesc},</if>
+            <if test="snapshotId != null">snapshot_id = #{snapshotId},</if>
+            <if test="snapshotContent != null">snapshot_content = #{snapshotContent},</if>
+            <if test="status != null and status != ''">status = #{status},</if>
+            <if test="publishTime != null">publish_time = #{publishTime},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            <if test="createBy != null and createBy != ''">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null and updateBy != ''">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where datai_config_version.id = #{id}
+    </update>
+
+    <delete id="deleteDataiConfigVersionById" parameterType="Long">
+        delete from datai_config_version where id = #{id}
+    </delete>
+
+    <delete id="deleteDataiConfigVersionByIds" parameterType="String">
+        delete from datai_config_version where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

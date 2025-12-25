@@ -46,20 +46,55 @@ public class GenConstants
     /** 数据库日期类型 */
     public static final String[] COLUMNTYPE_DATE = { "date" };
 
-    /** 数据库数字类型 */
-    public static final String[] COLUMNTYPE_NUMBER = { "tinyint", "smallint", "mediumint", "int", "number", "integer",
-            "bit", "bigint", "float", "double", "decimal" };
+    /**
+     * 映射为 Java Integer 的数据库类型
+     * (通常为 32 位及以下的整数)
+     */
+    public static final String[] COLUMNTYPE_INT = {
+            "int", "integer", "mediumint", "smallint", "int2", "int4"
+    };
+
+    /**
+     * 映射为 Java Long 的数据库类型
+     * (通常为 64 位整数)
+     */
+    public static final String[] COLUMNTYPE_LONG = {
+            "bigint", "int8", "bigserial"
+    };
+
+    /** * 数据库浮点数类型 (Approximate Numeric Types)
+     * 包含：单精度、双精度浮点数
+     */
+    public static final String[] COLUMNTYPE_FLOAT = {
+            "float", "float4", "float8", "double", "real",
+            "double precision", "binary_float", "binary_double"
+    };
+
+    /** * 数据库定点数/金额类型 (Exact Numeric Types)
+     * 包含：高精度数值、金额，适用于财务计算
+     */
+    public static final String[] COLUMNTYPE_NUMBER = {
+            "number", "decimal", "numeric", "money", "smallmoney"
+    };
+
+    /** * 数据库逻辑/位类型 (Boolean/Bit Types)
+     * 包含：布尔值、位图类型
+     */
+    public static final String[] COLUMNTYPE_BOOLEAN = {
+            "tinyint", "bit", "boolean", "bool"
+    };
+
+    /** 页面不需要插入字段 */
+    public static final String[] COLUMNNAME_NOT_INSERT = { "id", "create_by", "create_time", "dept_id", "update_by", "update_time" };
 
     /** 页面不需要编辑字段 */
-    public static final String[] COLUMNNAME_NOT_EDIT = { "id", "create_by", "create_time", "del_flag" };
+    public static final String[] COLUMNNAME_NOT_EDIT = { "id", "create_by", "create_time", "dept_id", "update_by", "update_time" };
 
     /** 页面不需要显示的列表字段 */
-    public static final String[] COLUMNNAME_NOT_LIST = { "id", "create_by", "create_time", "del_flag", "update_by",
-            "update_time" };
+    public static final String[] COLUMNNAME_NOT_LIST = { "id", "create_by", "create_time", "dept_id", "update_by", "update_time" };
 
     /** 页面不需要显示的详情字段 */
-    public static final String[] COLUMNNAME_NOT_DETAIL = { "id", "create_by", "create_time", "del_flag", "update_by",
-            "update_time" };
+    public static final String[] COLUMNNAME_NOT_DETAIL = { };
 
     /** 页面不需要查询字段 */
     public static final String[] COLUMNNAME_NOT_QUERY = { "id", "create_by", "create_time", "del_flag", "update_by",
@@ -115,6 +150,12 @@ public class GenConstants
 
     /** 浮点型 */
     public static final String TYPE_DOUBLE = "Double";
+
+    /**
+     * 布尔
+     */
+    public static final String TYPE_BOOLEAN= "Boolean";
+
 
     /** 高精度计算类型 */
     public static final String TYPE_BIGDECIMAL = "BigDecimal";

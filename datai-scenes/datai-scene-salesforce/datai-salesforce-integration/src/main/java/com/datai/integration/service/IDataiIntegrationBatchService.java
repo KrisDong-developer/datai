@@ -7,7 +7,7 @@ import com.datai.integration.domain.DataiIntegrationBatch;
  * 数据批次Service接口
  * 
  * @author datai
- * @date 2025-12-22
+ * @date 2025-12-24
  */
 public interface IDataiIntegrationBatchService 
 {
@@ -17,7 +17,7 @@ public interface IDataiIntegrationBatchService
      * @param id 数据批次主键
      * @return 数据批次
      */
-    public DataiIntegrationBatch selectDataiIntegrationBatchById(Long id);
+    public DataiIntegrationBatch selectDataiIntegrationBatchById(Integer id);
 
     /**
      * 查询数据批次列表
@@ -49,7 +49,7 @@ public interface IDataiIntegrationBatchService
      * @param ids 需要删除的数据批次主键集合
      * @return 结果
      */
-    public int deleteDataiIntegrationBatchByIds(Long[] ids);
+    public int deleteDataiIntegrationBatchByIds(Integer[] ids);
 
     /**
      * 删除数据批次信息
@@ -57,5 +57,5 @@ public interface IDataiIntegrationBatchService
      * @param id 数据批次主键
      * @return 结果
      */
-    public int deleteDataiIntegrationBatchById(Long id);
+    public int deleteDataiIntegrationBatchById(Integer id);
 }

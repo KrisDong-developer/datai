@@ -27,7 +27,7 @@ import io.swagger.v3.oas.annotations.Operation;
  * 登录审计日志Controller
  * 
  * @author datai
- * @date 2025-12-14
+ * @date 2025-12-24
  */
 @RestController
 @RequestMapping("/auth/audit")
@@ -69,10 +69,10 @@ public class DataiSfLoginAuditController extends BaseController
      */
     @Operation(summary = "获取登录审计日志详细信息")
     @PreAuthorize("@ss.hasPermi('auth:audit:query')")
-    @GetMapping(value = "/{auditId}")
-    public AjaxResult getInfo(@PathVariable("auditId") Long auditId)
+    @GetMapping(value = "/{id}")
+    public AjaxResult getInfo(@PathVariable("id") Long id)
     {
-        return success(dataiSfLoginAuditService.selectDataiSfLoginAuditByAuditId(auditId));
+        return success(dataiSfLoginAuditService.selectDataiSfLoginAuditById(id));
     }
 
     /**
@@ -105,9 +105,9 @@ public class DataiSfLoginAuditController extends BaseController
     @Operation(summary = "删除登录审计日志")
     @PreAuthorize("@ss.hasPermi('auth:audit:remove')")
     @Log(title = "登录审计日志", businessType = BusinessType.DELETE)
-    @DeleteMapping("/{auditIds}")
-    public AjaxResult remove(@PathVariable( name = "auditIds" ) Long[] auditIds) 
+    @DeleteMapping("/{ids}")
+    public AjaxResult remove(@PathVariable( name = "ids" ) Long[] ids) 
     {
-        return toAjax(dataiSfLoginAuditService.deleteDataiSfLoginAuditByAuditIds(auditIds));
+        return toAjax(dataiSfLoginAuditService.deleteDataiSfLoginAuditByIds(ids));
     }
 }

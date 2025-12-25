@@ -12,7 +12,7 @@ import com.datai.common.core.domain.BaseEntity;
  * 登录审计日志对象 datai_sf_login_audit
  * 
  * @author datai
- * @date 2025-12-14
+ * @date 2025-12-24
  */
 @Schema(description = "登录审计日志对象")
 public class DataiSfLoginAudit extends BaseEntity
@@ -22,12 +22,11 @@ public class DataiSfLoginAudit extends BaseEntity
 
     /** 日志ID */
     @Schema(title = "日志ID")
-    private Long auditId;
+    private Long id;
 
-    /** 租户编号 */
-    @Schema(title = "租户编号")
-    @Excel(name = "租户编号")
-    private String tenantId;
+    /** 部门ID */
+    @Schema(title = "部门ID")
+    private Long deptId;
 
     /** 用户名 */
     @Schema(title = "用户名")
@@ -88,25 +87,25 @@ public class DataiSfLoginAudit extends BaseEntity
     @Schema(title = "请求ID")
     @Excel(name = "请求ID")
     private String requestId;
-    public void setAuditId(Long auditId) 
+    public void setId(Long id) 
     {
-        this.auditId = auditId;
+        this.id = id;
     }
 
-    public Long getAuditId() 
+    public Long getId() 
     {
-        return auditId;
+        return id;
     }
 
 
-    public void setTenantId(String tenantId) 
+    public void setDeptId(Long deptId) 
     {
-        this.tenantId = tenantId;
+        this.deptId = deptId;
     }
 
-    public String getTenantId() 
+    public Long getDeptId() 
     {
-        return tenantId;
+        return deptId;
     }
 
 
@@ -143,12 +142,12 @@ public class DataiSfLoginAudit extends BaseEntity
     }
 
 
-    public void setOperationTime(LocalDateTime operationTime)
+    public void setOperationTime(LocalDateTime operationTime) 
     {
         this.operationTime = operationTime;
     }
 
-    public LocalDateTime getOperationTime()
+    public LocalDateTime getOperationTime() 
     {
         return operationTime;
     }
@@ -246,8 +245,8 @@ public class DataiSfLoginAudit extends BaseEntity
     @Override
     public String toString() {
         return new ToStringBuilder(this,ToStringStyle.MULTI_LINE_STYLE)
-            .append("auditId", getAuditId())
-            .append("tenantId", getTenantId())
+            .append("id", getId())
+            .append("deptId", getDeptId())
             .append("username", getUsername())
             .append("operationType", getOperationType())
             .append("result", getResult())
@@ -262,6 +261,8 @@ public class DataiSfLoginAudit extends BaseEntity
             .append("requestId", getRequestId())
             .append("createBy", getCreateBy())
             .append("createTime", getCreateTime())
+            .append("updateBy", getUpdateBy())
+            .append("updateTime", getUpdateTime())
             .toString();
     }
 }

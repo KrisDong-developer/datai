@@ -1,22 +1,21 @@
 package com.datai.integration.service.impl;
 
 import java.util.List;
-
-import com.datai.common.core.domain.model.LoginUser;
-import com.datai.common.utils.DateUtils;
+        import com.datai.common.utils.DateUtils;
         import com.datai.common.utils.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.datai.integration.mapper.DataiIntegrationObjectMapper;
 import com.datai.integration.domain.DataiIntegrationObject;
 import com.datai.integration.service.IDataiIntegrationObjectService;
+import com.datai.common.core.domain.model.LoginUser;
 
 
 /**
- * 对象信息Service业务层处理
+ * 对象同步控制Service业务层处理
  *
  * @author datai
- * @date 2025-12-22
+ * @date 2025-12-24
  */
 @Service
 public class DataiIntegrationObjectServiceImpl implements IDataiIntegrationObjectService {
@@ -24,22 +23,22 @@ public class DataiIntegrationObjectServiceImpl implements IDataiIntegrationObjec
     private DataiIntegrationObjectMapper dataiIntegrationObjectMapper;
 
     /**
-     * 查询对象信息
+     * 查询对象同步控制
      *
-     * @param id 对象信息主键
-     * @return 对象信息
+     * @param id 对象同步控制主键
+     * @return 对象同步控制
      */
     @Override
-    public DataiIntegrationObject selectDataiIntegrationObjectById(Long id)
+    public DataiIntegrationObject selectDataiIntegrationObjectById(Integer id)
     {
         return dataiIntegrationObjectMapper.selectDataiIntegrationObjectById(id);
     }
 
     /**
-     * 查询对象信息列表
+     * 查询对象同步控制列表
      *
-     * @param dataiIntegrationObject 对象信息
-     * @return 对象信息
+     * @param dataiIntegrationObject 对象同步控制
+     * @return 对象同步控制
      */
     @Override
     public List<DataiIntegrationObject> selectDataiIntegrationObjectList(DataiIntegrationObject dataiIntegrationObject)
@@ -48,9 +47,9 @@ public class DataiIntegrationObjectServiceImpl implements IDataiIntegrationObjec
     }
 
     /**
-     * 新增对象信息
+     * 新增对象同步控制
      *
-     * @param dataiIntegrationObject 对象信息
+     * @param dataiIntegrationObject 对象同步控制
      * @return 结果
      */
     @Override
@@ -67,9 +66,9 @@ public class DataiIntegrationObjectServiceImpl implements IDataiIntegrationObjec
     }
 
     /**
-     * 修改对象信息
+     * 修改对象同步控制
      *
-     * @param dataiIntegrationObject 对象信息
+     * @param dataiIntegrationObject 对象同步控制
      * @return 结果
      */
     @Override
@@ -84,25 +83,25 @@ public class DataiIntegrationObjectServiceImpl implements IDataiIntegrationObjec
     }
 
     /**
-     * 批量删除对象信息
+     * 批量删除对象同步控制
      *
-     * @param ids 需要删除的对象信息主键
+     * @param ids 需要删除的对象同步控制主键
      * @return 结果
      */
     @Override
-    public int deleteDataiIntegrationObjectByIds(Long[] ids)
+    public int deleteDataiIntegrationObjectByIds(Integer[] ids)
     {
         return dataiIntegrationObjectMapper.deleteDataiIntegrationObjectByIds(ids);
     }
 
     /**
-     * 删除对象信息信息
+     * 删除对象同步控制信息
      *
-     * @param id 对象信息主键
+     * @param id 对象同步控制主键
      * @return 结果
      */
     @Override
-    public int deleteDataiIntegrationObjectById(Long id)
+    public int deleteDataiIntegrationObjectById(Integer id)
     {
         return dataiIntegrationObjectMapper.deleteDataiIntegrationObjectById(id);
     }

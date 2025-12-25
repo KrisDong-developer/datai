@@ -1,7 +1,6 @@
 package com.datai.auth.domain;
 
 import java.time.LocalDateTime;
-
 import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -13,7 +12,7 @@ import com.datai.common.core.domain.BaseEntity;
  * 登录会话对象 datai_sf_login_session
  * 
  * @author datai
- * @date 2025-12-14
+ * @date 2025-12-24
  */
 @Schema(description = "登录会话对象")
 public class DataiSfLoginSession extends BaseEntity
@@ -23,12 +22,11 @@ public class DataiSfLoginSession extends BaseEntity
 
     /** 会话ID */
     @Schema(title = "会话ID")
-    private Long sessionId;
+    private Long id;
 
-    /** 租户编号 */
-    @Schema(title = "租户编号")
-    @Excel(name = "租户编号")
-    private String tenantId;
+    /** 部门ID */
+    @Schema(title = "部门ID")
+    private Long deptId;
 
     /** 用户名 */
     @Schema(title = "用户名")
@@ -78,31 +76,31 @@ public class DataiSfLoginSession extends BaseEntity
     /** 会话标识 */
     @Schema(title = "会话标识")
     @Excel(name = "会话标识")
-    private String sessionToken;
+    private String sessionId;
 
     /** 令牌ID */
     @Schema(title = "令牌ID")
     @Excel(name = "令牌ID")
     private Long tokenId;
-    public void setSessionId(Long sessionId) 
+    public void setId(Long id) 
     {
-        this.sessionId = sessionId;
+        this.id = id;
     }
 
-    public Long getSessionId() 
+    public Long getId() 
     {
-        return sessionId;
+        return id;
     }
 
 
-    public void setTenantId(String tenantId) 
+    public void setDeptId(Long deptId) 
     {
-        this.tenantId = tenantId;
+        this.deptId = deptId;
     }
 
-    public String getTenantId() 
+    public Long getDeptId() 
     {
-        return tenantId;
+        return deptId;
     }
 
 
@@ -139,34 +137,34 @@ public class DataiSfLoginSession extends BaseEntity
     }
 
 
-    public void setLoginTime(LocalDateTime loginTime)
+    public void setLoginTime(LocalDateTime loginTime) 
     {
         this.loginTime = loginTime;
     }
 
-    public LocalDateTime getLoginTime()
+    public LocalDateTime getLoginTime() 
     {
         return loginTime;
     }
 
 
-    public void setExpireTime(LocalDateTime expireTime)
+    public void setExpireTime(LocalDateTime expireTime) 
     {
         this.expireTime = expireTime;
     }
 
-    public LocalDateTime getExpireTime()
+    public LocalDateTime getExpireTime() 
     {
         return expireTime;
     }
 
 
-    public void setLastActivityTime(LocalDateTime lastActivityTime)
+    public void setLastActivityTime(LocalDateTime lastActivityTime) 
     {
         this.lastActivityTime = lastActivityTime;
     }
 
-    public LocalDateTime getLastActivityTime()
+    public LocalDateTime getLastActivityTime() 
     {
         return lastActivityTime;
     }
@@ -205,14 +203,14 @@ public class DataiSfLoginSession extends BaseEntity
     }
 
 
-    public void setSessionToken(String sessionToken) 
+    public void setSessionId(String sessionId) 
     {
-        this.sessionToken = sessionToken;
+        this.sessionId = sessionId;
     }
 
-    public String getSessionToken() 
+    public String getSessionId() 
     {
-        return sessionToken;
+        return sessionId;
     }
 
 
@@ -231,8 +229,8 @@ public class DataiSfLoginSession extends BaseEntity
     @Override
     public String toString() {
         return new ToStringBuilder(this,ToStringStyle.MULTI_LINE_STYLE)
-            .append("sessionId", getSessionId())
-            .append("tenantId", getTenantId())
+            .append("id", getId())
+            .append("deptId", getDeptId())
             .append("username", getUsername())
             .append("loginType", getLoginType())
             .append("status", getStatus())
@@ -242,7 +240,7 @@ public class DataiSfLoginSession extends BaseEntity
             .append("loginIp", getLoginIp())
             .append("deviceInfo", getDeviceInfo())
             .append("browserInfo", getBrowserInfo())
-            .append("sessionToken", getSessionToken())
+            .append("sessionId", getSessionId())
             .append("tokenId", getTokenId())
             .append("createBy", getCreateBy())
             .append("createTime", getCreateTime())

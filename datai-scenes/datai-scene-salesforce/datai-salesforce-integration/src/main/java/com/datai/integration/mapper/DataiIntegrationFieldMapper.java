@@ -7,7 +7,7 @@ import com.datai.integration.domain.DataiIntegrationField;
  * 对象字段信息Mapper接口
  * 
  * @author datai
- * @date 2025-12-22
+ * @date 2025-12-24
  */
 public interface DataiIntegrationFieldMapper 
 {
@@ -17,7 +17,7 @@ public interface DataiIntegrationFieldMapper
      * @param id 对象字段信息主键
      * @return 对象字段信息
      */
-    public DataiIntegrationField selectDataiIntegrationFieldById(Long id);
+    public DataiIntegrationField selectDataiIntegrationFieldById(Integer id);
 
     /**
      * 查询对象字段信息列表
@@ -49,7 +49,7 @@ public interface DataiIntegrationFieldMapper
      * @param id 对象字段信息主键
      * @return 结果
      */
-    public int deleteDataiIntegrationFieldById(Long id);
+    public int deleteDataiIntegrationFieldById(Integer id);
 
     /**
      * 批量删除对象字段信息
@@ -57,5 +57,5 @@ public interface DataiIntegrationFieldMapper
      * @param ids 需要删除的数据主键集合
      * @return 结果
      */
-    public int deleteDataiIntegrationFieldByIds(Long[] ids);
+    public int deleteDataiIntegrationFieldByIds(Integer[] ids);
 }

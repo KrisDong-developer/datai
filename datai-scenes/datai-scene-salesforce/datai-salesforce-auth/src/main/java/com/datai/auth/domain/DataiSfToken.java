@@ -12,7 +12,7 @@ import com.datai.common.core.domain.BaseEntity;
  * 令牌对象 datai_sf_token
  * 
  * @author datai
- * @date 2025-12-14
+ * @date 2025-12-24
  */
 @Schema(description = "令牌对象")
 public class DataiSfToken extends BaseEntity
@@ -22,12 +22,11 @@ public class DataiSfToken extends BaseEntity
 
     /** 令牌ID */
     @Schema(title = "令牌ID")
-    private Long tokenId;
+    private Long id;
 
-    /** 租户编号 */
-    @Schema(title = "租户编号")
-    @Excel(name = "租户编号")
-    private String tenantId;
+    /** 部门ID */
+    @Schema(title = "部门ID")
+    private Long deptId;
 
     /** 用户名 */
     @Schema(title = "用户名")
@@ -93,25 +92,25 @@ public class DataiSfToken extends BaseEntity
     @Schema(title = "用户ID")
     @Excel(name = "用户ID")
     private String userId;
-    public void setTokenId(Long tokenId) 
+    public void setId(Long id) 
     {
-        this.tokenId = tokenId;
+        this.id = id;
     }
 
-    public Long getTokenId() 
+    public Long getId() 
     {
-        return tokenId;
+        return id;
     }
 
 
-    public void setTenantId(String tenantId) 
+    public void setDeptId(Long deptId) 
     {
-        this.tenantId = tenantId;
+        this.deptId = deptId;
     }
 
-    public String getTenantId() 
+    public Long getDeptId() 
     {
-        return tenantId;
+        return deptId;
     }
 
 
@@ -148,23 +147,23 @@ public class DataiSfToken extends BaseEntity
     }
 
 
-    public void setAccessTokenExpire(LocalDateTime accessTokenExpire)
+    public void setAccessTokenExpire(LocalDateTime accessTokenExpire) 
     {
         this.accessTokenExpire = accessTokenExpire;
     }
 
-    public LocalDateTime getAccessTokenExpire()
+    public LocalDateTime getAccessTokenExpire() 
     {
         return accessTokenExpire;
     }
 
 
-    public void setRefreshTokenExpire(LocalDateTime refreshTokenExpire)
+    public void setRefreshTokenExpire(LocalDateTime refreshTokenExpire) 
     {
         this.refreshTokenExpire = refreshTokenExpire;
     }
 
-    public LocalDateTime getRefreshTokenExpire()
+    public LocalDateTime getRefreshTokenExpire() 
     {
         return refreshTokenExpire;
     }
@@ -262,8 +261,8 @@ public class DataiSfToken extends BaseEntity
     @Override
     public String toString() {
         return new ToStringBuilder(this,ToStringStyle.MULTI_LINE_STYLE)
-            .append("tokenId", getTokenId())
-            .append("tenantId", getTenantId())
+            .append("id", getId())
+            .append("deptId", getDeptId())
             .append("username", getUsername())
             .append("accessToken", getAccessToken())
             .append("refreshToken", getRefreshToken())

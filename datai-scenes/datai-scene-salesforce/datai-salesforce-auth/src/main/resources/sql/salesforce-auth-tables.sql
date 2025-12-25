@@ -34,7 +34,7 @@ CREATE TABLE `datai_sf_login_session` (
   -- 浏览器信息，用户登录时的浏览器信息
   `browser_info` VARCHAR(500) DEFAULT NULL COMMENT '浏览器信息',
   -- 会话标识，用于标识会话的唯一字符串
-  `session_token` VARCHAR(255) DEFAULT NULL COMMENT '会话标识',
+  `session_id` VARCHAR(255) DEFAULT NULL COMMENT '会话标识',
   -- 关联的令牌ID，关联到令牌表
   `token_id` BIGINT(20) DEFAULT NULL COMMENT '令牌ID',
   -- 创建人，记录创建会话的用户

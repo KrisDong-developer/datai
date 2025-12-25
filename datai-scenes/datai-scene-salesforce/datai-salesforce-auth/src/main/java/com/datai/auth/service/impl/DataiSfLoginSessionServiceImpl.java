@@ -1,22 +1,21 @@
 package com.datai.auth.service.impl;
 
 import java.util.List;
-
-import com.datai.common.core.domain.model.LoginUser;
-import com.datai.common.utils.DateUtils;
+        import com.datai.common.utils.DateUtils;
         import com.datai.common.utils.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.datai.auth.mapper.DataiSfLoginSessionMapper;
 import com.datai.auth.domain.DataiSfLoginSession;
 import com.datai.auth.service.IDataiSfLoginSessionService;
+import com.datai.common.core.domain.model.LoginUser;
 
 
 /**
  * 登录会话Service业务层处理
  *
  * @author datai
- * @date 2025-12-14
+ * @date 2025-12-24
  */
 @Service
 public class DataiSfLoginSessionServiceImpl implements IDataiSfLoginSessionService {
@@ -26,13 +25,13 @@ public class DataiSfLoginSessionServiceImpl implements IDataiSfLoginSessionServi
     /**
      * 查询登录会话
      *
-     * @param sessionId 登录会话主键
+     * @param id 登录会话主键
      * @return 登录会话
      */
     @Override
-    public DataiSfLoginSession selectDataiSfLoginSessionBySessionId(Long sessionId)
+    public DataiSfLoginSession selectDataiSfLoginSessionById(Long id)
     {
-        return dataiSfLoginSessionMapper.selectDataiSfLoginSessionBySessionId(sessionId);
+        return dataiSfLoginSessionMapper.selectDataiSfLoginSessionById(id);
     }
 
     /**
@@ -86,24 +85,24 @@ public class DataiSfLoginSessionServiceImpl implements IDataiSfLoginSessionServi
     /**
      * 批量删除登录会话
      *
-     * @param sessionIds 需要删除的登录会话主键
+     * @param ids 需要删除的登录会话主键
      * @return 结果
      */
     @Override
-    public int deleteDataiSfLoginSessionBySessionIds(Long[] sessionIds)
+    public int deleteDataiSfLoginSessionByIds(Long[] ids)
     {
-        return dataiSfLoginSessionMapper.deleteDataiSfLoginSessionBySessionIds(sessionIds);
+        return dataiSfLoginSessionMapper.deleteDataiSfLoginSessionByIds(ids);
     }
 
     /**
      * 删除登录会话信息
      *
-     * @param sessionId 登录会话主键
+     * @param id 登录会话主键
      * @return 结果
      */
     @Override
-    public int deleteDataiSfLoginSessionBySessionId(Long sessionId)
+    public int deleteDataiSfLoginSessionById(Long id)
     {
-        return dataiSfLoginSessionMapper.deleteDataiSfLoginSessionBySessionId(sessionId);
+        return dataiSfLoginSessionMapper.deleteDataiSfLoginSessionById(id);
     }
 }

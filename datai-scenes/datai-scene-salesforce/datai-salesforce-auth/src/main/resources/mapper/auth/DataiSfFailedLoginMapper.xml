@@ -5,8 +5,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 <mapper namespace="com.datai.auth.mapper.DataiSfFailedLoginMapper">
     
     <resultMap type="DataiSfFailedLogin" id="DataiSfFailedLoginResult">
-        <result property="failedId" column="failed_id" />
-        <result property="tenantId" column="tenant_id" />
+        <result property="id" column="id" />
+        <result property="deptId" column="dept_id" />
         <result property="username" column="username" />
         <result property="loginType" column="login_type" />
         <result property="failedTime" column="failed_time" />
@@ -19,12 +19,14 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="lockReason" column="lock_reason" />
         <result property="createBy" column="create_by" />
         <result property="createTime" column="create_time" />
+        <result property="updateBy" column="update_by" />
+        <result property="updateTime" column="update_time" />
     </resultMap>
 
     <sql id="selectDataiSfFailedLoginVo">
         select 
-            dsfl.failed_id,
-            dsfl.tenant_id,
+            dsfl.id,
+            dsfl.dept_id,
             dsfl.username,
             dsfl.login_type,
             dsfl.failed_time,
@@ -36,14 +38,16 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             dsfl.unlock_time,
             dsfl.lock_reason,
             dsfl.create_by,
-            dsfl.create_time
+            dsfl.create_time,
+            dsfl.update_by,
+            dsfl.update_time
         from datai_sf_failed_login dsfl
     </sql>
 
     <select id="selectDataiSfFailedLoginList" parameterType="DataiSfFailedLogin" resultMap="DataiSfFailedLoginResult">
         <include refid="selectDataiSfFailedLoginVo"/>
         <where>
-            <if test="tenantId != null  and tenantId != ''"> and dsfl.tenant_id = #{tenantId}</if>
+            <if test="deptId != null "> and dsfl.dept_id = #{deptId}</if>
             <if test="username != null  and username != ''"> and dsfl.username like concat('%', #{username}, '%')</if>
             <if test="loginType != null  and loginType != ''"> and dsfl.login_type = #{loginType}</if>
             <if test="failedTime != null "> and dsfl.failed_time = #{failedTime}</if>
@@ -57,15 +61,15 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         </where>
     </select>
     
-    <select id="selectDataiSfFailedLoginByFailedId" parameterType="Long" resultMap="DataiSfFailedLoginResult">
+    <select id="selectDataiSfFailedLoginById" parameterType="Long" resultMap="DataiSfFailedLoginResult">
         <include refid="selectDataiSfFailedLoginVo"/>
-        where dsfl.failed_id = #{failedId}
+        where dsfl.id = #{id}
     </select>
         
-    <insert id="insertDataiSfFailedLogin" parameterType="DataiSfFailedLogin" useGeneratedKeys="true" keyProperty="failedId">
+    <insert id="insertDataiSfFailedLogin" parameterType="DataiSfFailedLogin" useGeneratedKeys="true" keyProperty="id">
         insert into datai_sf_failed_login
         <trim prefix="(" suffix=")" suffixOverrides=",">
-            <if test="tenantId != null">tenant_id,</if>
+            <if test="deptId != null">dept_id,</if>
             <if test="username != null">username,</if>
             <if test="loginType != null">login_type,</if>
             <if test="failedTime != null">failed_time,</if>
@@ -78,9 +82,11 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="lockReason != null">lock_reason,</if>
             <if test="createBy != null">create_by,</if>
             <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
          </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
-            <if test="tenantId != null">#{tenantId},</if>
+            <if test="deptId != null">#{deptId},</if>
             <if test="username != null">#{username},</if>
             <if test="loginType != null">#{loginType},</if>
             <if test="failedTime != null">#{failedTime},</if>
@@ -93,13 +99,15 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="lockReason != null">#{lockReason},</if>
             <if test="createBy != null">#{createBy},</if>
             <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
          </trim>
     </insert>
 
     <update id="updateDataiSfFailedLogin" parameterType="DataiSfFailedLogin">
         update datai_sf_failed_login
         <trim prefix="SET" suffixOverrides=",">
-            <if test="tenantId != null">tenant_id = #{tenantId},</if>
+            <if test="deptId != null">dept_id = #{deptId},</if>
             <if test="username != null">username = #{username},</if>
             <if test="loginType != null">login_type = #{loginType},</if>
             <if test="failedTime != null">failed_time = #{failedTime},</if>
@@ -112,18 +120,20 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="lockReason != null">lock_reason = #{lockReason},</if>
             <if test="createBy != null">create_by = #{createBy},</if>
             <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
         </trim>
-        where datai_sf_failed_login.failed_id = #{failedId}
+        where datai_sf_failed_login.id = #{id}
     </update>
 
-    <delete id="deleteDataiSfFailedLoginByFailedId" parameterType="Long">
-        delete from datai_sf_failed_login where failed_id = #{failedId}
+    <delete id="deleteDataiSfFailedLoginById" parameterType="Long">
+        delete from datai_sf_failed_login where id = #{id}
     </delete>
 
-    <delete id="deleteDataiSfFailedLoginByFailedIds" parameterType="String">
-        delete from datai_sf_failed_login where failed_id in 
-        <foreach item="failedId" collection="array" open="(" separator="," close=")">
-            #{failedId}
+    <delete id="deleteDataiSfFailedLoginByIds" parameterType="String">
+        delete from datai_sf_failed_login where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
         </foreach>
     </delete>
 </mapper>

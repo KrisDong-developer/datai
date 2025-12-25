@@ -1,22 +1,21 @@
 package com.datai.auth.service.impl;
 
 import java.util.List;
-
-import com.datai.common.core.domain.model.LoginUser;
-import com.datai.common.utils.DateUtils;
+        import com.datai.common.utils.DateUtils;
         import com.datai.common.utils.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.datai.auth.mapper.DataiSfLoginStatisticsMapper;
 import com.datai.auth.domain.DataiSfLoginStatistics;
 import com.datai.auth.service.IDataiSfLoginStatisticsService;
+import com.datai.common.core.domain.model.LoginUser;
 
 
 /**
  * 登录统计Service业务层处理
  *
  * @author datai
- * @date 2025-12-14
+ * @date 2025-12-24
  */
 @Service
 public class DataiSfLoginStatisticsServiceImpl implements IDataiSfLoginStatisticsService {
@@ -26,13 +25,13 @@ public class DataiSfLoginStatisticsServiceImpl implements IDataiSfLoginStatistic
     /**
      * 查询登录统计
      *
-     * @param statId 登录统计主键
+     * @param id 登录统计主键
      * @return 登录统计
      */
     @Override
-    public DataiSfLoginStatistics selectDataiSfLoginStatisticsByStatId(Long statId)
+    public DataiSfLoginStatistics selectDataiSfLoginStatisticsById(Long id)
     {
-        return dataiSfLoginStatisticsMapper.selectDataiSfLoginStatisticsByStatId(statId);
+        return dataiSfLoginStatisticsMapper.selectDataiSfLoginStatisticsById(id);
     }
 
     /**
@@ -86,24 +85,24 @@ public class DataiSfLoginStatisticsServiceImpl implements IDataiSfLoginStatistic
     /**
      * 批量删除登录统计
      *
-     * @param statIds 需要删除的登录统计主键
+     * @param ids 需要删除的登录统计主键
      * @return 结果
      */
     @Override
-    public int deleteDataiSfLoginStatisticsByStatIds(Long[] statIds)
+    public int deleteDataiSfLoginStatisticsByIds(Long[] ids)
     {
-        return dataiSfLoginStatisticsMapper.deleteDataiSfLoginStatisticsByStatIds(statIds);
+        return dataiSfLoginStatisticsMapper.deleteDataiSfLoginStatisticsByIds(ids);
     }
 
     /**
      * 删除登录统计信息
      *
-     * @param statId 登录统计主键
+     * @param id 登录统计主键
      * @return 结果
      */
     @Override
-    public int deleteDataiSfLoginStatisticsByStatId(Long statId)
+    public int deleteDataiSfLoginStatisticsById(Long id)
     {
-        return dataiSfLoginStatisticsMapper.deleteDataiSfLoginStatisticsByStatId(statId);
+        return dataiSfLoginStatisticsMapper.deleteDataiSfLoginStatisticsById(id);
     }
 }

@@ -27,10 +27,10 @@ import io.swagger.v3.oas.annotations.Operation;
  * 数据同步日志Controller
  * 
  * @author datai
- * @date 2025-12-22
+ * @date 2025-12-24
  */
 @RestController
-@RequestMapping("/integration/syncLog")
+@RequestMapping("/integration/log")
 @Tag(name = "【数据同步日志】管理")
 public class DataiIntegrationLogController extends BaseController
 {
@@ -41,7 +41,7 @@ public class DataiIntegrationLogController extends BaseController
      * 查询数据同步日志列表
      */
     @Operation(summary = "查询数据同步日志列表")
-    @PreAuthorize("@ss.hasPermi('integration:syncLog:list')")
+    @PreAuthorize("@ss.hasPermi('integration:log:list')")
     @GetMapping("/list")
     public TableDataInfo list(DataiIntegrationLog dataiIntegrationLog)
     {
@@ -54,7 +54,7 @@ public class DataiIntegrationLogController extends BaseController
      * 导出数据同步日志列表
      */
     @Operation(summary = "导出数据同步日志列表")
-    @PreAuthorize("@ss.hasPermi('integration:syncLog:export')")
+    @PreAuthorize("@ss.hasPermi('integration:log:export')")
     @Log(title = "数据同步日志", businessType = BusinessType.EXPORT)
     @PostMapping("/export")
     public void export(HttpServletResponse response, DataiIntegrationLog dataiIntegrationLog)
@@ -68,7 +68,7 @@ public class DataiIntegrationLogController extends BaseController
      * 获取数据同步日志详细信息
      */
     @Operation(summary = "获取数据同步日志详细信息")
-    @PreAuthorize("@ss.hasPermi('integration:syncLog:query')")
+    @PreAuthorize("@ss.hasPermi('integration:log:query')")
     @GetMapping(value = "/{id}")
     public AjaxResult getInfo(@PathVariable("id") Long id)
     {
@@ -79,7 +79,7 @@ public class DataiIntegrationLogController extends BaseController
      * 新增数据同步日志
      */
     @Operation(summary = "新增数据同步日志")
-    @PreAuthorize("@ss.hasPermi('integration:syncLog:add')")
+    @PreAuthorize("@ss.hasPermi('integration:log:add')")
     @Log(title = "数据同步日志", businessType = BusinessType.INSERT)
     @PostMapping
     public AjaxResult add(@RequestBody DataiIntegrationLog dataiIntegrationLog)
@@ -91,7 +91,7 @@ public class DataiIntegrationLogController extends BaseController
      * 修改数据同步日志
      */
     @Operation(summary = "修改数据同步日志")
-    @PreAuthorize("@ss.hasPermi('integration:syncLog:edit')")
+    @PreAuthorize("@ss.hasPermi('integration:log:edit')")
     @Log(title = "数据同步日志", businessType = BusinessType.UPDATE)
     @PutMapping
     public AjaxResult edit(@RequestBody DataiIntegrationLog dataiIntegrationLog)
@@ -103,7 +103,7 @@ public class DataiIntegrationLogController extends BaseController
      * 删除数据同步日志
      */
     @Operation(summary = "删除数据同步日志")
-    @PreAuthorize("@ss.hasPermi('integration:syncLog:remove')")
+    @PreAuthorize("@ss.hasPermi('integration:log:remove')")
     @Log(title = "数据同步日志", businessType = BusinessType.DELETE)
     @DeleteMapping("/{ids}")
     public AjaxResult remove(@PathVariable( name = "ids" ) Long[] ids) 

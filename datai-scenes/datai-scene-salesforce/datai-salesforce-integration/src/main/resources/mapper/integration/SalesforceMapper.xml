@@ -1,0 +1,290 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.datai.integration.mapper.SalesforceMapper">
+
+    <!-- 根据时间字段查询列表 -->
+    <select id="list">
+        <!-- 动态选择字段和对象 -->
+        select ${param.select} from ${param.api}
+        <where>
+            <if test="param != null">
+
+                <!-- 根据创建时间范围查询（开始时间） -->
+                <if test="param.beginDate != null">
+                    AND ${param.dateField} >= #{param.beginDate}
+                </if>
+
+                <!-- 根据创建时间范围查询（结束时间） -->
+                <if test="param.endDate != null">
+                    AND ${param.dateField} &lt; #{param.endDate}
+                </if>
+
+                <!-- 根据删除状态查询 -->
+                <if test="param.isDeleted != null">
+                    AND IsDeleted = #{param.isDeleted}
+                </if>
+
+                <!-- 判断 param.api 是否以 "Share" 结尾，如果是则添加RowCause条件 -->
+                <if test="param.api != null and param.api.endsWith('Share')">
+                    AND RowCause = 'Manual'
+                </if>
+
+                <!-- 时间戳查询条件 -->
+                <if test="param.timestamp != null">
+                    <choose>
+                        <when test="param.maxId != null">
+                            AND (${param.dateField} > #{param.timestamp} OR (${param.dateField} = #{param.timestamp} AND id > #{param.maxId}))
+                        </when>
+                        <otherwise>
+                            AND ${param.dateField} >= #{param.timestamp}
+                        </otherwise>
+                    </choose>
+                </if>
+            </if>
+        </where>
+        <!-- 按创建时间和ID升序排列 -->
+        order by ${param.dateField} asc, Id asc
+        <!-- 限制返回记录数 -->
+        <if test="param != null and param.limit != null">
+            limit #{param.limit}
+        </if>
+    </select>
+    <!--
+        根据参数查询Salesforce数据列表
+        支持多种查询条件：
+        - 根据ID列表查询
+        - 根据修改时间范围查询
+        - 根据创建时间范围查询
+        - 根据删除状态查询
+        - 支持Share对象的RowCause条件过滤
+        - 支持时间戳查询
+    -->
+    <select id="stockList">
+        <!-- 动态选择字段和对象 -->
+        select ${param.select} from ${param.api}
+        <where>
+            <if test="param != null">
+
+                <!-- 根据创建时间范围查询（开始时间） -->
+                <if test="param.beginCreateDate != null">
+                    AND CreatedDate >= #{param.beginCreateDate}
+                </if>
+
+                <!-- 根据创建时间范围查询（结束时间） -->
+                <if test="param.endCreateDate != null">
+                    AND CreatedDate &lt; #{param.endCreateDate}
+                </if>
+
+                <!-- 根据删除状态查询 -->
+                <if test="param.isDeleted != null">
+                    AND IsDeleted = #{param.isDeleted}
+                </if>
+
+                <!-- 判断 param.api 是否以 "Share" 结尾，如果是则添加RowCause条件 -->
+                <if test="param.api != null and param.api.endsWith('Share')">
+                    AND RowCause = 'Manual'
+                </if>
+
+                <!-- 时间戳查询条件 -->
+                <if test="param.timestamp != null">
+                    <choose>
+                        <when test="param.maxId != null">
+                            AND (CreatedDate > #{param.timestamp} OR (CreatedDate = #{param.timestamp} AND id > #{param.maxId}))
+                        </when>
+                        <otherwise>
+                            AND CreatedDate >= #{param.timestamp}
+                        </otherwise>
+                    </choose>
+                </if>
+            </if>
+        </where>
+        <!-- 按创建时间和ID升序排列 -->
+        order by CreatedDate asc, Id asc
+        <!-- 限制返回记录数 -->
+        <if test="param != null and param.limit != null">
+            limit #{param.limit}
+        </if>
+    </select>
+
+    <select id="incrementList">
+        <!-- 动态选择字段和对象 -->
+        select ${param.select} from ${param.api}
+        <where>
+            <if test="param != null">
+
+                <!-- 根据修改时间范围查询（开始时间） -->
+                <if test="param.beginModifyDate != null">
+                    AND ${param.dateField} >= #{param.beginModifyDate}
+                </if>
+
+                <!-- 根据修改时间范围查询（结束时间） -->
+                <if test="param.endModifyDate != null">
+                    AND ${param.dateField} &lt; #{param.endModifyDate}
+                </if>
+
+                <!-- 根据删除状态查询 -->
+                <if test="param.isDeleted != null">
+                    AND IsDeleted = #{param.isDeleted}
+                </if>
+
+                <!-- 判断 param.api 是否以 "Share" 结尾，如果是则添加RowCause条件 -->
+                <if test="param.api != null and param.api.endsWith('Share')">
+                    AND RowCause = 'Manual'
+                </if>
+
+                <!-- 时间戳查询条件 -->
+                <if test="param.timestamp != null">
+                    <choose>
+                        <when test="param.maxId != null">
+                            AND (${param.updateField} > #{param.timestamp} OR (${param.updateField} = #{param.timestamp} AND id > #{param.maxId}))
+                        </when>
+                        <otherwise>
+                            AND ${param.updateField} >= #{param.timestamp}
+                        </otherwise>
+                    </choose>
+                </if>
+            </if>
+        </where>
+        <!-- 按指定更新字段和ID升序排列 -->
+        order by ${param.updateField} asc, Id asc
+        <!-- 限制返回记录数 -->
+        <if test="param != null and param.limit != null">
+            limit #{param.limit}
+        </if>
+    </select>
+
+    <!-- 根据时间字段查询总数 -->
+    <select id="count" resultType="int">
+        <!-- 统计指定对象的记录数 -->
+        select COUNT(Id) num from ${param.api}
+        <where>
+            <if test="param != null">
+                <!-- 根据删除状态查询 -->
+                <if test="param.isDeleted != null">
+                    AND IsDeleted = #{param.isDeleted}
+                </if>
+
+                <if test="param.beginDate != null">
+                    AND ${param.dateField} >= #{param.beginDate}
+                </if>
+                <if test="param.endDate != null">
+                    AND ${param.dateField} &lt; #{param.endDate}
+                </if>
+                <!-- 判断 param.api 是否以 "Share" 结尾，如果是则添加RowCause条件 -->
+                <if test="param.api != null and param.api.endsWith('Share')">
+                    AND RowCause = 'Manual'
+                </if>
+            </if>
+        </where>
+    </select>
+
+    <select id="stockCount" resultType="int">
+        <!-- 统计指定对象的记录数 -->
+        select COUNT(Id) num from ${param.api}
+        <where>
+            <if test="param != null">
+                <!-- 根据删除状态查询 -->
+                <if test="param.isDeleted != null">
+                    AND IsDeleted = #{param.isDeleted}
+                </if>
+
+                <!-- 根据创建时间范围查询（开始时间） -->
+                <if test="param.beginCreateDate != null">
+                    AND CreatedDate >= #{param.beginCreateDate}
+                </if>
+                <!-- 根据创建时间范围查询（结束时间） -->
+                <if test="param.endCreateDate != null">
+                    AND CreatedDate &lt; #{param.endCreateDate}
+                </if>
+                <!-- 判断 param.api 是否以 "Share" 结尾，如果是则添加RowCause条件 -->
+                <if test="param.api != null and param.api.endsWith('Share')">
+                    AND RowCause = 'Manual'
+                </if>
+            </if>
+        </where>
+    </select>
+
+    <!--
+        统计Salesforce数据数量
+        根据对象类型不同（是否以Share结尾），使用不同的时间字段进行过滤
+    -->
+    <select id="incrementCount" resultType="int">
+        <!-- 统计指定对象的记录数 -->
+        select COUNT(Id) num from ${param.api}
+        <where>
+            <if test="param != null">
+
+                <if test="param.beginModifyDate != null ">
+                    AND ${param.dateField} >= #{param.beginModifyDate}
+                </if>
+                <!-- 根据修改时间范围查询（结束时间） -->
+                <if test="param.endModifyDate != null">
+                    AND ${param.dateField} &lt; #{param.endModifyDate}
+                </if>
+                <!-- 根据删除状态查询 -->
+                <if test="param.isDeleted != null">
+                    AND IsDeleted = #{param.isDeleted}
+                </if>
+                <!-- 判断 param.api 是否以 "Share" 结尾，如果是则添加RowCause条件 -->
+                <if test="param.api != null and param.api.endsWith('Share')">
+                    AND RowCause = 'Manual'
+                </if>
+            </if>
+        </where>
+    </select>
+
+    <!--
+        根据ID排序查询Salesforce数据列表
+        主要以ID字段进行排序查询
+    -->
+    <select id="listOrderById">
+        <!-- 动态选择字段和对象 -->
+        select ${param.select} from ${param.api}
+        <where>
+            <if test="param != null">
+                <!-- 根据最大ID查询 -->
+                <if test="param.maxId != null">
+                   AND id > #{param.maxId}
+                </if>
+
+                <!-- 根据删除状态查询 -->
+                <if test="param.isDeleted != null">
+                    AND IsDeleted = #{param.isDeleted}
+                </if>
+
+                <!-- 自定义SQL条件 -->
+                <if test="param.sql != null">
+                    AND ${param.sql}
+                </if>
+
+                <!-- 判断 param.api 是否以 "Share" 结尾，如果是则添加RowCause条件 -->
+                <if test="param.api != null and param.api.endsWith('Share')">
+                    AND RowCause = 'Manual'
+                </if>
+                <if test="param.beginModifyDate != null ">
+                    AND ${param.dateField} >= #{param.beginModifyDate}
+                </if>
+                <!-- 根据修改时间范围查询（结束时间） -->
+                <if test="param.endModifyDate != null">
+                    AND ${param.dateField} &lt; #{param.endModifyDate}
+                </if>
+                <!-- 根据创建时间范围查询（开始时间） -->
+                <if test="param.beginCreateDate != null">
+                    AND CreatedDate >= #{param.beginCreateDate}
+                </if>
+                <!-- 根据创建时间范围查询（结束时间） -->
+                <if test="param.endCreateDate != null">
+                    AND CreatedDate &lt; #{param.endCreateDate}
+                </if>
+            </if>
+        </where>
+        <!-- 按指定字段升序排列 -->
+        <if test="param != null">
+            <if test="param.idField != null">
+                order by ${param.idField} asc
+            </if>
+        </if>
+    </select>
+
+
+</mapper>

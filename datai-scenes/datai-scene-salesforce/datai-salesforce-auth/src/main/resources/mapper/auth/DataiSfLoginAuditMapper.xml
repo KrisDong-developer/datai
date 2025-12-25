@@ -5,8 +5,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 <mapper namespace="com.datai.auth.mapper.DataiSfLoginAuditMapper">
     
     <resultMap type="DataiSfLoginAudit" id="DataiSfLoginAuditResult">
-        <result property="auditId" column="audit_id" />
-        <result property="tenantId" column="tenant_id" />
+        <result property="id" column="id" />
+        <result property="deptId" column="dept_id" />
         <result property="username" column="username" />
         <result property="operationType" column="operation_type" />
         <result property="result" column="result" />
@@ -21,12 +21,14 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="requestId" column="request_id" />
         <result property="createBy" column="create_by" />
         <result property="createTime" column="create_time" />
+        <result property="updateBy" column="update_by" />
+        <result property="updateTime" column="update_time" />
     </resultMap>
 
     <sql id="selectDataiSfLoginAuditVo">
         select 
-            dsla.audit_id,
-            dsla.tenant_id,
+            dsla.id,
+            dsla.dept_id,
             dsla.username,
             dsla.operation_type,
             dsla.result,
@@ -40,14 +42,16 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             dsla.token_id,
             dsla.request_id,
             dsla.create_by,
-            dsla.create_time
+            dsla.create_time,
+            dsla.update_by,
+            dsla.update_time
         from datai_sf_login_audit dsla
     </sql>
 
     <select id="selectDataiSfLoginAuditList" parameterType="DataiSfLoginAudit" resultMap="DataiSfLoginAuditResult">
         <include refid="selectDataiSfLoginAuditVo"/>
         <where>
-            <if test="tenantId != null  and tenantId != ''"> and dsla.tenant_id = #{tenantId}</if>
+            <if test="deptId != null "> and dsla.dept_id = #{deptId}</if>
             <if test="username != null  and username != ''"> and dsla.username like concat('%', #{username}, '%')</if>
             <if test="operationType != null  and operationType != ''"> and dsla.operation_type = #{operationType}</if>
             <if test="result != null  and result != ''"> and dsla.result = #{result}</if>
@@ -63,15 +67,15 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         </where>
     </select>
     
-    <select id="selectDataiSfLoginAuditByAuditId" parameterType="Long" resultMap="DataiSfLoginAuditResult">
+    <select id="selectDataiSfLoginAuditById" parameterType="Long" resultMap="DataiSfLoginAuditResult">
         <include refid="selectDataiSfLoginAuditVo"/>
-        where dsla.audit_id = #{auditId}
+        where dsla.id = #{id}
     </select>
         
-    <insert id="insertDataiSfLoginAudit" parameterType="DataiSfLoginAudit" useGeneratedKeys="true" keyProperty="auditId">
+    <insert id="insertDataiSfLoginAudit" parameterType="DataiSfLoginAudit" useGeneratedKeys="true" keyProperty="id">
         insert into datai_sf_login_audit
         <trim prefix="(" suffix=")" suffixOverrides=",">
-            <if test="tenantId != null">tenant_id,</if>
+            <if test="deptId != null">dept_id,</if>
             <if test="username != null">username,</if>
             <if test="operationType != null and operationType != ''">operation_type,</if>
             <if test="result != null and result != ''">result,</if>
@@ -86,9 +90,11 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="requestId != null">request_id,</if>
             <if test="createBy != null">create_by,</if>
             <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
          </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
-            <if test="tenantId != null">#{tenantId},</if>
+            <if test="deptId != null">#{deptId},</if>
             <if test="username != null">#{username},</if>
             <if test="operationType != null and operationType != ''">#{operationType},</if>
             <if test="result != null and result != ''">#{result},</if>
@@ -103,13 +109,15 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="requestId != null">#{requestId},</if>
             <if test="createBy != null">#{createBy},</if>
             <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
          </trim>
     </insert>
 
     <update id="updateDataiSfLoginAudit" parameterType="DataiSfLoginAudit">
         update datai_sf_login_audit
         <trim prefix="SET" suffixOverrides=",">
-            <if test="tenantId != null">tenant_id = #{tenantId},</if>
+            <if test="deptId != null">dept_id = #{deptId},</if>
             <if test="username != null">username = #{username},</if>
             <if test="operationType != null and operationType != ''">operation_type = #{operationType},</if>
             <if test="result != null and result != ''">result = #{result},</if>
@@ -124,18 +132,20 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="requestId != null">request_id = #{requestId},</if>
             <if test="createBy != null">create_by = #{createBy},</if>
             <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
         </trim>
-        where datai_sf_login_audit.audit_id = #{auditId}
+        where datai_sf_login_audit.id = #{id}
     </update>
 
-    <delete id="deleteDataiSfLoginAuditByAuditId" parameterType="Long">
-        delete from datai_sf_login_audit where audit_id = #{auditId}
+    <delete id="deleteDataiSfLoginAuditById" parameterType="Long">
+        delete from datai_sf_login_audit where id = #{id}
     </delete>
 
-    <delete id="deleteDataiSfLoginAuditByAuditIds" parameterType="String">
-        delete from datai_sf_login_audit where audit_id in 
-        <foreach item="auditId" collection="array" open="(" separator="," close=")">
-            #{auditId}
+    <delete id="deleteDataiSfLoginAuditByIds" parameterType="String">
+        delete from datai_sf_login_audit where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
         </foreach>
     </delete>
 </mapper>

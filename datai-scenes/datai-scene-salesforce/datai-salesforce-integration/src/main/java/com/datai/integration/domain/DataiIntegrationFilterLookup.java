@@ -10,7 +10,7 @@ import com.datai.common.core.domain.BaseEntity;
  * 字段过滤查找信息对象 datai_integration_filter_lookup
  * 
  * @author datai
- * @date 2025-12-22
+ * @date 2025-12-24
  */
 @Schema(description = "字段过滤查找信息对象")
 public class DataiIntegrationFilterLookup extends BaseEntity
@@ -20,7 +20,11 @@ public class DataiIntegrationFilterLookup extends BaseEntity
 
     /** 主键ID */
     @Schema(title = "主键ID")
-    private Long id;
+    private Integer id;
+
+    /** 部门ID */
+    @Schema(title = "部门ID")
+    private Long deptId;
 
     /** 对象API */
     @Schema(title = "对象API")
@@ -40,25 +44,31 @@ public class DataiIntegrationFilterLookup extends BaseEntity
     /** 是否依赖字段 */
     @Schema(title = "是否依赖字段")
     @Excel(name = "是否依赖字段")
-    private Integer dependent;
+    private Boolean dependent;
 
     /** 过滤条件 */
     @Schema(title = "过滤条件")
     @Excel(name = "过滤条件")
     private String lookupFilter;
-
-    /** 租户编号 */
-    @Schema(title = "租户编号")
-    @Excel(name = "租户编号")
-    private String tenantId;
-    public void setId(Long id) 
+    public void setId(Integer id) 
     {
         this.id = id;
     }
 
-    public Long getId() 
+    public Integer getId() 
     {
         return id;
+    }
+
+
+    public void setDeptId(Long deptId) 
+    {
+        this.deptId = deptId;
+    }
+
+    public Long getDeptId() 
+    {
+        return deptId;
     }
 
 
@@ -95,12 +105,12 @@ public class DataiIntegrationFilterLookup extends BaseEntity
     }
 
 
-    public void setDependent(Integer dependent) 
+    public void setDependent(Boolean dependent) 
     {
         this.dependent = dependent;
     }
 
-    public Integer getDependent() 
+    public Boolean getDependent() 
     {
         return dependent;
     }
@@ -117,33 +127,22 @@ public class DataiIntegrationFilterLookup extends BaseEntity
     }
 
 
-    public void setTenantId(String tenantId) 
-    {
-        this.tenantId = tenantId;
-    }
-
-    public String getTenantId() 
-    {
-        return tenantId;
-    }
-
-
 
     @Override
     public String toString() {
         return new ToStringBuilder(this,ToStringStyle.MULTI_LINE_STYLE)
             .append("id", getId())
+            .append("deptId", getDeptId())
             .append("api", getApi())
             .append("field", getField())
             .append("controllingField", getControllingField())
             .append("dependent", getDependent())
             .append("lookupFilter", getLookupFilter())
+            .append("remark", getRemark())
             .append("createBy", getCreateBy())
             .append("createTime", getCreateTime())
             .append("updateBy", getUpdateBy())
             .append("updateTime", getUpdateTime())
-            .append("remark", getRemark())
-            .append("tenantId", getTenantId())
             .toString();
     }
 }

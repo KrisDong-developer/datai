@@ -5,8 +5,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 <mapper namespace="com.datai.auth.mapper.DataiSfLoginSessionMapper">
     
     <resultMap type="DataiSfLoginSession" id="DataiSfLoginSessionResult">
-        <result property="sessionId" column="session_id" />
-        <result property="tenantId" column="tenant_id" />
+        <result property="id" column="id" />
+        <result property="deptId" column="dept_id" />
         <result property="username" column="username" />
         <result property="loginType" column="login_type" />
         <result property="status" column="status" />
@@ -16,7 +16,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="loginIp" column="login_ip" />
         <result property="deviceInfo" column="device_info" />
         <result property="browserInfo" column="browser_info" />
-        <result property="sessionToken" column="session_token" />
+        <result property="sessionId" column="session_id" />
         <result property="tokenId" column="token_id" />
         <result property="createBy" column="create_by" />
         <result property="createTime" column="create_time" />
@@ -26,8 +26,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 
     <sql id="selectDataiSfLoginSessionVo">
         select 
-            dsls.session_id,
-            dsls.tenant_id,
+            dsls.id,
+            dsls.dept_id,
             dsls.username,
             dsls.login_type,
             dsls.status,
@@ -37,7 +37,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             dsls.login_ip,
             dsls.device_info,
             dsls.browser_info,
-            dsls.session_token,
+            dsls.session_id,
             dsls.token_id,
             dsls.create_by,
             dsls.create_time,
@@ -49,7 +49,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <select id="selectDataiSfLoginSessionList" parameterType="DataiSfLoginSession" resultMap="DataiSfLoginSessionResult">
         <include refid="selectDataiSfLoginSessionVo"/>
         <where>
-            <if test="tenantId != null  and tenantId != ''"> and dsls.tenant_id = #{tenantId}</if>
+            <if test="deptId != null "> and dsls.dept_id = #{deptId}</if>
             <if test="username != null  and username != ''"> and dsls.username like concat('%', #{username}, '%')</if>
             <if test="loginType != null  and loginType != ''"> and dsls.login_type = #{loginType}</if>
             <if test="status != null  and status != ''"> and dsls.status = #{status}</if>
@@ -59,20 +59,20 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="loginIp != null  and loginIp != ''"> and dsls.login_ip = #{loginIp}</if>
             <if test="deviceInfo != null  and deviceInfo != ''"> and dsls.device_info = #{deviceInfo}</if>
             <if test="browserInfo != null  and browserInfo != ''"> and dsls.browser_info = #{browserInfo}</if>
-            <if test="sessionToken != null  and sessionToken != ''"> and dsls.session_token = #{sessionToken}</if>
+            <if test="sessionId != null  and sessionId != ''"> and dsls.session_id = #{sessionId}</if>
             <if test="tokenId != null "> and dsls.token_id = #{tokenId}</if>
         </where>
     </select>
     
-    <select id="selectDataiSfLoginSessionBySessionId" parameterType="Long" resultMap="DataiSfLoginSessionResult">
+    <select id="selectDataiSfLoginSessionById" parameterType="Long" resultMap="DataiSfLoginSessionResult">
         <include refid="selectDataiSfLoginSessionVo"/>
-        where dsls.session_id = #{sessionId}
+        where dsls.id = #{id}
     </select>
         
-    <insert id="insertDataiSfLoginSession" parameterType="DataiSfLoginSession" useGeneratedKeys="true" keyProperty="sessionId">
+    <insert id="insertDataiSfLoginSession" parameterType="DataiSfLoginSession" useGeneratedKeys="true" keyProperty="id">
         insert into datai_sf_login_session
         <trim prefix="(" suffix=")" suffixOverrides=",">
-            <if test="tenantId != null">tenant_id,</if>
+            <if test="deptId != null">dept_id,</if>
             <if test="username != null and username != ''">username,</if>
             <if test="loginType != null and loginType != ''">login_type,</if>
             <if test="status != null and status != ''">status,</if>
@@ -82,7 +82,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="loginIp != null">login_ip,</if>
             <if test="deviceInfo != null">device_info,</if>
             <if test="browserInfo != null">browser_info,</if>
-            <if test="sessionToken != null">session_token,</if>
+            <if test="sessionId != null">session_id,</if>
             <if test="tokenId != null">token_id,</if>
             <if test="createBy != null">create_by,</if>
             <if test="createTime != null">create_time,</if>
@@ -90,7 +90,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="updateTime != null">update_time,</if>
          </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
-            <if test="tenantId != null">#{tenantId},</if>
+            <if test="deptId != null">#{deptId},</if>
             <if test="username != null and username != ''">#{username},</if>
             <if test="loginType != null and loginType != ''">#{loginType},</if>
             <if test="status != null and status != ''">#{status},</if>
@@ -100,7 +100,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="loginIp != null">#{loginIp},</if>
             <if test="deviceInfo != null">#{deviceInfo},</if>
             <if test="browserInfo != null">#{browserInfo},</if>
-            <if test="sessionToken != null">#{sessionToken},</if>
+            <if test="sessionId != null">#{sessionId},</if>
             <if test="tokenId != null">#{tokenId},</if>
             <if test="createBy != null">#{createBy},</if>
             <if test="createTime != null">#{createTime},</if>
@@ -112,7 +112,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <update id="updateDataiSfLoginSession" parameterType="DataiSfLoginSession">
         update datai_sf_login_session
         <trim prefix="SET" suffixOverrides=",">
-            <if test="tenantId != null">tenant_id = #{tenantId},</if>
+            <if test="deptId != null">dept_id = #{deptId},</if>
             <if test="username != null and username != ''">username = #{username},</if>
             <if test="loginType != null and loginType != ''">login_type = #{loginType},</if>
             <if test="status != null and status != ''">status = #{status},</if>
@@ -122,24 +122,24 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="loginIp != null">login_ip = #{loginIp},</if>
             <if test="deviceInfo != null">device_info = #{deviceInfo},</if>
             <if test="browserInfo != null">browser_info = #{browserInfo},</if>
-            <if test="sessionToken != null">session_token = #{sessionToken},</if>
+            <if test="sessionId != null">session_id = #{sessionId},</if>
             <if test="tokenId != null">token_id = #{tokenId},</if>
             <if test="createBy != null">create_by = #{createBy},</if>
             <if test="createTime != null">create_time = #{createTime},</if>
             <if test="updateBy != null">update_by = #{updateBy},</if>
             <if test="updateTime != null">update_time = #{updateTime},</if>
         </trim>
-        where datai_sf_login_session.session_id = #{sessionId}
+        where datai_sf_login_session.id = #{id}
     </update>
 
-    <delete id="deleteDataiSfLoginSessionBySessionId" parameterType="Long">
-        delete from datai_sf_login_session where session_id = #{sessionId}
+    <delete id="deleteDataiSfLoginSessionById" parameterType="Long">
+        delete from datai_sf_login_session where id = #{id}
     </delete>
 
-    <delete id="deleteDataiSfLoginSessionBySessionIds" parameterType="String">
-        delete from datai_sf_login_session where session_id in 
-        <foreach item="sessionId" collection="array" open="(" separator="," close=")">
-            #{sessionId}
+    <delete id="deleteDataiSfLoginSessionByIds" parameterType="String">
+        delete from datai_sf_login_session where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
         </foreach>
     </delete>
 </mapper>

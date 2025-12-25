@@ -12,7 +12,7 @@ import com.datai.common.core.domain.BaseEntity;
  * 令牌绑定对象 datai_sf_token_binding
  * 
  * @author datai
- * @date 2025-12-14
+ * @date 2025-12-24
  */
 @Schema(description = "令牌绑定对象")
 public class DataiSfTokenBinding extends BaseEntity
@@ -22,12 +22,11 @@ public class DataiSfTokenBinding extends BaseEntity
 
     /** 绑定ID */
     @Schema(title = "绑定ID")
-    private Long bindingId;
+    private Long id;
 
-    /** 租户编号 */
-    @Schema(title = "租户编号")
-    @Excel(name = "租户编号")
-    private String tenantId;
+    /** 部门ID */
+    @Schema(title = "部门ID")
+    private Long deptId;
 
     /** 令牌ID */
     @Schema(title = "令牌ID")
@@ -63,25 +62,25 @@ public class DataiSfTokenBinding extends BaseEntity
     @Schema(title = "过期时间")
     @Excel(name = "过期时间")
     private LocalDateTime expireTime;
-    public void setBindingId(Long bindingId) 
+    public void setId(Long id) 
     {
-        this.bindingId = bindingId;
+        this.id = id;
     }
 
-    public Long getBindingId() 
+    public Long getId() 
     {
-        return bindingId;
+        return id;
     }
 
 
-    public void setTenantId(String tenantId) 
+    public void setDeptId(Long deptId) 
     {
-        this.tenantId = tenantId;
+        this.deptId = deptId;
     }
 
-    public String getTenantId() 
+    public Long getDeptId() 
     {
-        return tenantId;
+        return deptId;
     }
 
 
@@ -140,23 +139,23 @@ public class DataiSfTokenBinding extends BaseEntity
     }
 
 
-    public void setBindingTime(LocalDateTime bindingTime)
+    public void setBindingTime(LocalDateTime bindingTime) 
     {
         this.bindingTime = bindingTime;
     }
 
-    public LocalDateTime getBindingTime()
+    public LocalDateTime getBindingTime() 
     {
         return bindingTime;
     }
 
 
-    public void setExpireTime(LocalDateTime expireTime)
+    public void setExpireTime(LocalDateTime expireTime) 
     {
         this.expireTime = expireTime;
     }
 
-    public LocalDateTime getExpireTime()
+    public LocalDateTime getExpireTime() 
     {
         return expireTime;
     }
@@ -166,8 +165,8 @@ public class DataiSfTokenBinding extends BaseEntity
     @Override
     public String toString() {
         return new ToStringBuilder(this,ToStringStyle.MULTI_LINE_STYLE)
-            .append("bindingId", getBindingId())
-            .append("tenantId", getTenantId())
+            .append("id", getId())
+            .append("deptId", getDeptId())
             .append("tokenId", getTokenId())
             .append("bindingType", getBindingType())
             .append("deviceId", getDeviceId())

@@ -10,7 +10,7 @@ import com.datai.common.core.domain.BaseEntity;
  * 对象字段信息对象 datai_integration_field
  * 
  * @author datai
- * @date 2025-12-22
+ * @date 2025-12-24
  */
 @Schema(description = "对象字段信息对象")
 public class DataiIntegrationField extends BaseEntity
@@ -20,7 +20,11 @@ public class DataiIntegrationField extends BaseEntity
 
     /** 主键ID */
     @Schema(title = "主键ID")
-    private Long id;
+    private Integer id;
+
+    /** 部门ID */
+    @Schema(title = "部门ID")
+    private Long deptId;
 
     /** 所属对象API */
     @Schema(title = "所属对象API")
@@ -40,122 +44,122 @@ public class DataiIntegrationField extends BaseEntity
     /** 是否可创建 */
     @Schema(title = "是否可创建")
     @Excel(name = "是否可创建")
-    private Integer isCreateable;
+    private Boolean isCreateable;
 
     /** 是否为空 */
     @Schema(title = "是否为空")
     @Excel(name = "是否为空")
-    private Integer isNillable;
+    private Boolean isNillable;
 
     /** 是否可更新 */
     @Schema(title = "是否可更新")
     @Excel(name = "是否可更新")
-    private Integer isUpdateable;
+    private Boolean isUpdateable;
 
     /** 是否默认值 */
     @Schema(title = "是否默认值")
     @Excel(name = "是否默认值")
-    private Integer isDefaultedOnCreate;
+    private Boolean isDefaultedOnCreate;
 
     /** 是否唯一 */
     @Schema(title = "是否唯一")
     @Excel(name = "是否唯一")
-    private Integer isUnique;
+    private Boolean isUnique;
 
     /** 是否可过滤 */
     @Schema(title = "是否可过滤")
     @Excel(name = "是否可过滤")
-    private Integer isFilterable;
+    private Boolean isFilterable;
 
     /** 是否可排序 */
     @Schema(title = "是否可排序")
     @Excel(name = "是否可排序")
-    private Integer isSortable;
+    private Boolean isSortable;
 
     /** 是否可聚合 */
     @Schema(title = "是否可聚合")
     @Excel(name = "是否可聚合")
-    private Integer isAggregatable;
+    private Boolean isAggregatable;
 
     /** 是否可分组 */
     @Schema(title = "是否可分组")
     @Excel(name = "是否可分组")
-    private Integer isGroupable;
+    private Boolean isGroupable;
 
     /** 是否多态外键 */
     @Schema(title = "是否多态外键")
     @Excel(name = "是否多态外键")
-    private Integer isPolymorphicForeignKey;
+    private Boolean isPolymorphicForeignKey;
 
     /** 是否外部ID */
     @Schema(title = "是否外部ID")
     @Excel(name = "是否外部ID")
-    private Integer isExternalId;
+    private Boolean isExternalId;
 
     /** 是否自定义字段 */
     @Schema(title = "是否自定义字段")
     @Excel(name = "是否自定义字段")
-    private Integer isCustom;
+    private Boolean isCustom;
 
     /** 是否计算字段 */
     @Schema(title = "是否计算字段")
     @Excel(name = "是否计算字段")
-    private Integer isCalculated;
+    private Boolean isCalculated;
 
     /** 是否自动编号字段 */
     @Schema(title = "是否自动编号字段")
     @Excel(name = "是否自动编号字段")
-    private Integer isAutoNumber;
+    private Boolean isAutoNumber;
 
     /** 是否区分大小写 */
     @Schema(title = "是否区分大小写")
     @Excel(name = "是否区分大小写")
-    private Integer isCaseSensitive;
+    private Boolean isCaseSensitive;
 
     /** 是否加密字段 */
     @Schema(title = "是否加密字段")
     @Excel(name = "是否加密字段")
-    private Integer isEncrypted;
+    private Boolean isEncrypted;
 
     /** 是否HTML格式字段 */
     @Schema(title = "是否HTML格式字段")
     @Excel(name = "是否HTML格式字段")
-    private Integer isHtmlFormatted;
+    private Boolean isHtmlFormatted;
 
     /** 是否可通过ID查找 */
     @Schema(title = "是否可通过ID查找")
     @Excel(name = "是否可通过ID查找")
-    private Integer isIdLookup;
+    private Boolean isIdLookup;
 
     /** 是否可设置权限 */
     @Schema(title = "是否可设置权限")
     @Excel(name = "是否可设置权限")
-    private Integer isPermissionable;
+    private Boolean isPermissionable;
 
     /** 是否限制选择列表 */
     @Schema(title = "是否限制选择列表")
     @Excel(name = "是否限制选择列表")
-    private Integer isRestrictedPicklist;
+    private Boolean isRestrictedPicklist;
 
     /** 是否限制删除 */
     @Schema(title = "是否限制删除")
     @Excel(name = "是否限制删除")
-    private Integer isRestrictedDelete;
+    private Boolean isRestrictedDelete;
 
     /** 写入时是否需要主读 */
     @Schema(title = "写入时是否需要主读")
     @Excel(name = "写入时是否需要主读")
-    private Integer isWriteRequiresMasterRead;
+    private Boolean isWriteRequiresMasterRead;
 
     /** 是否可以通过距离查询 */
     @Schema(title = "是否可以通过距离查询")
     @Excel(name = "是否可以通过距离查询")
-    private Integer queryByDistance;
+    private Boolean queryByDistance;
 
     /** 是否可以预过滤搜索 */
     @Schema(title = "是否可以预过滤搜索")
     @Excel(name = "是否可以预过滤搜索")
-    private Integer searchPrefilterable;
+    private Boolean searchPrefilterable;
 
     /** 字段数据类型 */
     @Schema(title = "字段数据类型")
@@ -165,22 +169,22 @@ public class DataiIntegrationField extends BaseEntity
     /** 字段长度 */
     @Schema(title = "字段长度")
     @Excel(name = "字段长度")
-    private Long fieldLength;
+    private Integer fieldLength;
 
     /** 数字字段的精度 */
     @Schema(title = "数字字段的精度")
     @Excel(name = "数字字段的精度")
-    private Long fieldPrecision;
+    private Integer fieldPrecision;
 
     /** 数字字段的小数位数 */
     @Schema(title = "数字字段的小数位数")
     @Excel(name = "数字字段的小数位数")
-    private Long fieldScale;
+    private Integer fieldScale;
 
     /** 字段的字节长度 */
     @Schema(title = "字段的字节长度")
     @Excel(name = "字段的字节长度")
-    private Long fieldByteLength;
+    private Integer fieldByteLength;
 
     /** SOAP类型 */
     @Schema(title = "SOAP类型")
@@ -210,7 +214,7 @@ public class DataiIntegrationField extends BaseEntity
     /** 关系顺序 */
     @Schema(title = "关系顺序")
     @Excel(name = "关系顺序")
-    private Long relationshipOrder;
+    private Integer relationshipOrder;
 
     /** 默认值 */
     @Schema(title = "默认值")
@@ -241,19 +245,25 @@ public class DataiIntegrationField extends BaseEntity
     @Schema(title = "选择列表值 (JSON或其他格式)")
     @Excel(name = "选择列表值 (JSON或其他格式)")
     private String picklistValues;
-
-    /** 租户编号 */
-    @Schema(title = "租户编号")
-    @Excel(name = "租户编号")
-    private String tenantId;
-    public void setId(Long id) 
+    public void setId(Integer id) 
     {
         this.id = id;
     }
 
-    public Long getId() 
+    public Integer getId() 
     {
         return id;
+    }
+
+
+    public void setDeptId(Long deptId) 
+    {
+        this.deptId = deptId;
+    }
+
+    public Long getDeptId() 
+    {
+        return deptId;
     }
 
 
@@ -290,265 +300,265 @@ public class DataiIntegrationField extends BaseEntity
     }
 
 
-    public void setIsCreateable(Integer isCreateable) 
+    public void setIsCreateable(Boolean isCreateable) 
     {
         this.isCreateable = isCreateable;
     }
 
-    public Integer getIsCreateable() 
+    public Boolean getIsCreateable() 
     {
         return isCreateable;
     }
 
 
-    public void setIsNillable(Integer isNillable) 
+    public void setIsNillable(Boolean isNillable) 
     {
         this.isNillable = isNillable;
     }
 
-    public Integer getIsNillable() 
+    public Boolean getIsNillable() 
     {
         return isNillable;
     }
 
 
-    public void setIsUpdateable(Integer isUpdateable) 
+    public void setIsUpdateable(Boolean isUpdateable) 
     {
         this.isUpdateable = isUpdateable;
     }
 
-    public Integer getIsUpdateable() 
+    public Boolean getIsUpdateable() 
     {
         return isUpdateable;
     }
 
 
-    public void setIsDefaultedOnCreate(Integer isDefaultedOnCreate) 
+    public void setIsDefaultedOnCreate(Boolean isDefaultedOnCreate) 
     {
         this.isDefaultedOnCreate = isDefaultedOnCreate;
     }
 
-    public Integer getIsDefaultedOnCreate() 
+    public Boolean getIsDefaultedOnCreate() 
     {
         return isDefaultedOnCreate;
     }
 
 
-    public void setIsUnique(Integer isUnique) 
+    public void setIsUnique(Boolean isUnique) 
     {
         this.isUnique = isUnique;
     }
 
-    public Integer getIsUnique() 
+    public Boolean getIsUnique() 
     {
         return isUnique;
     }
 
 
-    public void setIsFilterable(Integer isFilterable) 
+    public void setIsFilterable(Boolean isFilterable) 
     {
         this.isFilterable = isFilterable;
     }
 
-    public Integer getIsFilterable() 
+    public Boolean getIsFilterable() 
     {
         return isFilterable;
     }
 
 
-    public void setIsSortable(Integer isSortable) 
+    public void setIsSortable(Boolean isSortable) 
     {
         this.isSortable = isSortable;
     }
 
-    public Integer getIsSortable() 
+    public Boolean getIsSortable() 
     {
         return isSortable;
     }
 
 
-    public void setIsAggregatable(Integer isAggregatable) 
+    public void setIsAggregatable(Boolean isAggregatable) 
     {
         this.isAggregatable = isAggregatable;
     }
 
-    public Integer getIsAggregatable() 
+    public Boolean getIsAggregatable() 
     {
         return isAggregatable;
     }
 
 
-    public void setIsGroupable(Integer isGroupable) 
+    public void setIsGroupable(Boolean isGroupable) 
     {
         this.isGroupable = isGroupable;
     }
 
-    public Integer getIsGroupable() 
+    public Boolean getIsGroupable() 
     {
         return isGroupable;
     }
 
 
-    public void setIsPolymorphicForeignKey(Integer isPolymorphicForeignKey) 
+    public void setIsPolymorphicForeignKey(Boolean isPolymorphicForeignKey) 
     {
         this.isPolymorphicForeignKey = isPolymorphicForeignKey;
     }
 
-    public Integer getIsPolymorphicForeignKey() 
+    public Boolean getIsPolymorphicForeignKey() 
     {
         return isPolymorphicForeignKey;
     }
 
 
-    public void setIsExternalId(Integer isExternalId) 
+    public void setIsExternalId(Boolean isExternalId) 
     {
         this.isExternalId = isExternalId;
     }
 
-    public Integer getIsExternalId() 
+    public Boolean getIsExternalId() 
     {
         return isExternalId;
     }
 
 
-    public void setIsCustom(Integer isCustom) 
+    public void setIsCustom(Boolean isCustom) 
     {
         this.isCustom = isCustom;
     }
 
-    public Integer getIsCustom() 
+    public Boolean getIsCustom() 
     {
         return isCustom;
     }
 
 
-    public void setIsCalculated(Integer isCalculated) 
+    public void setIsCalculated(Boolean isCalculated) 
     {
         this.isCalculated = isCalculated;
     }
 
-    public Integer getIsCalculated() 
+    public Boolean getIsCalculated() 
     {
         return isCalculated;
     }
 
 
-    public void setIsAutoNumber(Integer isAutoNumber) 
+    public void setIsAutoNumber(Boolean isAutoNumber) 
     {
         this.isAutoNumber = isAutoNumber;
     }
 
-    public Integer getIsAutoNumber() 
+    public Boolean getIsAutoNumber() 
     {
         return isAutoNumber;
     }
 
 
-    public void setIsCaseSensitive(Integer isCaseSensitive) 
+    public void setIsCaseSensitive(Boolean isCaseSensitive) 
     {
         this.isCaseSensitive = isCaseSensitive;
     }
 
-    public Integer getIsCaseSensitive() 
+    public Boolean getIsCaseSensitive() 
     {
         return isCaseSensitive;
     }
 
 
-    public void setIsEncrypted(Integer isEncrypted) 
+    public void setIsEncrypted(Boolean isEncrypted) 
     {
         this.isEncrypted = isEncrypted;
     }
 
-    public Integer getIsEncrypted() 
+    public Boolean getIsEncrypted() 
     {
         return isEncrypted;
     }
 
 
-    public void setIsHtmlFormatted(Integer isHtmlFormatted) 
+    public void setIsHtmlFormatted(Boolean isHtmlFormatted) 
     {
         this.isHtmlFormatted = isHtmlFormatted;
     }
 
-    public Integer getIsHtmlFormatted() 
+    public Boolean getIsHtmlFormatted() 
     {
         return isHtmlFormatted;
     }
 
 
-    public void setIsIdLookup(Integer isIdLookup) 
+    public void setIsIdLookup(Boolean isIdLookup) 
     {
         this.isIdLookup = isIdLookup;
     }
 
-    public Integer getIsIdLookup() 
+    public Boolean getIsIdLookup() 
     {
         return isIdLookup;
     }
 
 
-    public void setIsPermissionable(Integer isPermissionable) 
+    public void setIsPermissionable(Boolean isPermissionable) 
     {
         this.isPermissionable = isPermissionable;
     }
 
-    public Integer getIsPermissionable() 
+    public Boolean getIsPermissionable() 
     {
         return isPermissionable;
     }
 
 
-    public void setIsRestrictedPicklist(Integer isRestrictedPicklist) 
+    public void setIsRestrictedPicklist(Boolean isRestrictedPicklist) 
     {
         this.isRestrictedPicklist = isRestrictedPicklist;
     }
 
-    public Integer getIsRestrictedPicklist() 
+    public Boolean getIsRestrictedPicklist() 
     {
         return isRestrictedPicklist;
     }
 
 
-    public void setIsRestrictedDelete(Integer isRestrictedDelete) 
+    public void setIsRestrictedDelete(Boolean isRestrictedDelete) 
     {
         this.isRestrictedDelete = isRestrictedDelete;
     }
 
-    public Integer getIsRestrictedDelete() 
+    public Boolean getIsRestrictedDelete() 
     {
         return isRestrictedDelete;
     }
 
 
-    public void setIsWriteRequiresMasterRead(Integer isWriteRequiresMasterRead) 
+    public void setIsWriteRequiresMasterRead(Boolean isWriteRequiresMasterRead) 
     {
         this.isWriteRequiresMasterRead = isWriteRequiresMasterRead;
     }
 
-    public Integer getIsWriteRequiresMasterRead() 
+    public Boolean getIsWriteRequiresMasterRead() 
     {
         return isWriteRequiresMasterRead;
     }
 
 
-    public void setQueryByDistance(Integer queryByDistance) 
+    public void setQueryByDistance(Boolean queryByDistance) 
     {
         this.queryByDistance = queryByDistance;
     }
 
-    public Integer getQueryByDistance() 
+    public Boolean getQueryByDistance() 
     {
         return queryByDistance;
     }
 
 
-    public void setSearchPrefilterable(Integer searchPrefilterable) 
+    public void setSearchPrefilterable(Boolean searchPrefilterable) 
     {
         this.searchPrefilterable = searchPrefilterable;
     }
 
-    public Integer getSearchPrefilterable() 
+    public Boolean getSearchPrefilterable() 
     {
         return searchPrefilterable;
     }
@@ -565,45 +575,45 @@ public class DataiIntegrationField extends BaseEntity
     }
 
 
-    public void setFieldLength(Long fieldLength) 
+    public void setFieldLength(Integer fieldLength) 
     {
         this.fieldLength = fieldLength;
     }
 
-    public Long getFieldLength() 
+    public Integer getFieldLength() 
     {
         return fieldLength;
     }
 
 
-    public void setFieldPrecision(Long fieldPrecision) 
+    public void setFieldPrecision(Integer fieldPrecision) 
     {
         this.fieldPrecision = fieldPrecision;
     }
 
-    public Long getFieldPrecision() 
+    public Integer getFieldPrecision() 
     {
         return fieldPrecision;
     }
 
 
-    public void setFieldScale(Long fieldScale) 
+    public void setFieldScale(Integer fieldScale) 
     {
         this.fieldScale = fieldScale;
     }
 
-    public Long getFieldScale() 
+    public Integer getFieldScale() 
     {
         return fieldScale;
     }
 
 
-    public void setFieldByteLength(Long fieldByteLength) 
+    public void setFieldByteLength(Integer fieldByteLength) 
     {
         this.fieldByteLength = fieldByteLength;
     }
 
-    public Long getFieldByteLength() 
+    public Integer getFieldByteLength() 
     {
         return fieldByteLength;
     }
@@ -664,12 +674,12 @@ public class DataiIntegrationField extends BaseEntity
     }
 
 
-    public void setRelationshipOrder(Long relationshipOrder) 
+    public void setRelationshipOrder(Integer relationshipOrder) 
     {
         this.relationshipOrder = relationshipOrder;
     }
 
-    public Long getRelationshipOrder() 
+    public Integer getRelationshipOrder() 
     {
         return relationshipOrder;
     }
@@ -741,22 +751,12 @@ public class DataiIntegrationField extends BaseEntity
     }
 
 
-    public void setTenantId(String tenantId) 
-    {
-        this.tenantId = tenantId;
-    }
-
-    public String getTenantId() 
-    {
-        return tenantId;
-    }
-
-
 
     @Override
     public String toString() {
         return new ToStringBuilder(this,ToStringStyle.MULTI_LINE_STYLE)
             .append("id", getId())
+            .append("deptId", getDeptId())
             .append("api", getApi())
             .append("field", getField())
             .append("label", getLabel())
@@ -801,12 +801,11 @@ public class DataiIntegrationField extends BaseEntity
             .append("mask", getMask())
             .append("maskType", getMaskType())
             .append("picklistValues", getPicklistValues())
+            .append("remark", getRemark())
             .append("createBy", getCreateBy())
             .append("createTime", getCreateTime())
             .append("updateBy", getUpdateBy())
             .append("updateTime", getUpdateTime())
-            .append("remark", getRemark())
-            .append("tenantId", getTenantId())
             .toString();
     }
 }

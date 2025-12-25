@@ -24,7 +24,9 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import com.datai.common.core.domain.model.LoginUser;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Calendar;
@@ -326,14 +328,15 @@ public class SalesforceLoginServiceImpl implements ISalesforceLoginService {
             }
             
             // 3. 清理登录状态
+            String tokenPrefix = accessToken != null ? accessToken.substring(0, Math.min(10, accessToken.length())) : "null";
             if (success) {
-                logger.info("登出操作成功，登录类型: {}, 令牌前缀: {}", loginType, accessToken.substring(0, Math.min(10, accessToken.length())));
+                logger.info("登出操作成功，登录类型: {}, 令牌前缀: {}", loginType, tokenPrefix);
                 cleanupLoginStatus(accessToken);
                 
                 // 4. 更新登录统计（令牌吊销）
                 updateLoginStatisticsForRevoke(loginType);
             } else {
-                logger.warn("登出操作失败，登录类型: {}, 令牌前缀: {}", loginType, accessToken.substring(0, Math.min(10, accessToken.length())));
+                logger.warn("登出操作失败，登录类型: {}, 令牌前缀: {}", loginType, tokenPrefix);
             }
             
             // 5. 记录登出审计日志
@@ -373,7 +376,7 @@ public class SalesforceLoginServiceImpl implements ISalesforceLoginService {
                 DataiSfLoginSession session = sessions.get(0);
                 
                 // 查询对应的令牌信息
-                DataiSfToken token = tokenService.selectDataiSfTokenByTokenId(session.getTokenId());
+                DataiSfToken token = tokenService.selectDataiSfTokenById(session.getTokenId());
                 
                 if (token != null && "ACTIVE".equals(token.getStatus())) {
                     SalesforceLoginResult result = new SalesforceLoginResult();
@@ -539,11 +542,166 @@ public class SalesforceLoginServiceImpl implements ISalesforceLoginService {
             // 3. 保存到Redis缓存
             saveLoginStatus(result);
             
-            logger.info("登录状态保存成功，令牌ID: {}, 会话ID: {}", token.getTokenId(), session.getSessionId());
+            // 4. 保存上一次成功登录的请求参数，用于自动登录
+            saveLastLoginRequest(request);
+            
+            logger.info("登录状态保存成功，令牌ID: {}, 会话ID: {}", token.getId(), session.getSessionId());
         } catch (Exception e) {
             logger.error("保存登录状态到数据库失败，用户: {}", request.getUsername(), e);
             // 抛出自定义异常，让上层处理
             throw new SalesforceAuthException("SAVE_LOGIN_STATUS_FAILED", "保存登录状态失败", e);
+        }
+    }
+    
+    /**
+     * 保存上一次成功登录的请求参数
+     * 
+     * @param request 登录请求
+     */
+    private void saveLastLoginRequest(SalesforceLoginRequest request) {
+        logger.info("保存上一次成功登录的请求参数，登录类型: {}, 用户: {}", request.getLoginType(), request.getUsername());
+        
+        try {
+            long expiresInSeconds = 30 * 24 * 60 * 60; // 30天有效期
+            String cacheName = "salesforce_login_cache";
+            
+            // 保存登录请求的所有必要参数
+            CacheUtils.put(cacheName, "last_login_type", request.getLoginType(), expiresInSeconds, java.util.concurrent.TimeUnit.SECONDS);
+            CacheUtils.put(cacheName, "last_username", request.getUsername(), expiresInSeconds, java.util.concurrent.TimeUnit.SECONDS);
+            
+            // 根据登录类型保存相应的参数
+            if (request.getPassword() != null) {
+                CacheUtils.put(cacheName, "last_password", request.getPassword(), expiresInSeconds, java.util.concurrent.TimeUnit.SECONDS);
+            }
+            if (request.getSecurityToken() != null) {
+                CacheUtils.put(cacheName, "last_security_token", request.getSecurityToken(), expiresInSeconds, java.util.concurrent.TimeUnit.SECONDS);
+            }
+            if (request.getClientId() != null) {
+                CacheUtils.put(cacheName, "last_client_id", request.getClientId(), expiresInSeconds, java.util.concurrent.TimeUnit.SECONDS);
+            }
+            if (request.getClientSecret() != null) {
+                CacheUtils.put(cacheName, "last_client_secret", request.getClientSecret(), expiresInSeconds, java.util.concurrent.TimeUnit.SECONDS);
+            }
+            if (request.getGrantType() != null) {
+                CacheUtils.put(cacheName, "last_grant_type", request.getGrantType(), expiresInSeconds, java.util.concurrent.TimeUnit.SECONDS);
+            }
+            if (request.getOrgAlias() != null) {
+                CacheUtils.put(cacheName, "last_org_alias", request.getOrgAlias(), expiresInSeconds, java.util.concurrent.TimeUnit.SECONDS);
+            }
+            if (request.getSessionId() != null) {
+                CacheUtils.put(cacheName, "last_session_id", request.getSessionId(), expiresInSeconds, java.util.concurrent.TimeUnit.SECONDS);
+            }
+            
+            logger.info("上一次成功登录的请求参数保存成功");
+        } catch (Exception e) {
+            logger.error("保存上一次成功登录的请求参数失败: {}", e.getMessage(), e);
+            // 不抛出异常，因为保存失败不应该影响主要流程
+        }
+    }
+    
+    /**
+     * 获取上一次成功登录的请求参数
+     * 
+     * @return 登录请求参数
+     */
+    private SalesforceLoginRequest getLastLoginRequest() {
+        logger.info("获取上一次成功登录的请求参数");
+        
+        try {
+            String cacheName = "salesforce_login_cache";
+            
+            // 获取登录类型
+            String loginType = CacheUtils.get(cacheName, "last_login_type", String.class);
+            if (loginType == null) {
+                logger.warn("没有找到上一次登录的类型");
+                return null;
+            }
+            
+            // 获取用户名
+            String username = CacheUtils.get(cacheName, "last_username", String.class);
+            if (username == null) {
+                logger.warn("没有找到上一次登录的用户名");
+                return null;
+            }
+            
+            // 创建登录请求对象
+            SalesforceLoginRequest request = new SalesforceLoginRequest();
+            request.setLoginType(loginType);
+            request.setUsername(username);
+            
+            // 根据登录类型获取相应的参数
+            request.setPassword(CacheUtils.get(cacheName, "last_password", String.class));
+            request.setSecurityToken(CacheUtils.get(cacheName, "last_security_token", String.class));
+            request.setClientId(CacheUtils.get(cacheName, "last_client_id", String.class));
+            request.setClientSecret(CacheUtils.get(cacheName, "last_client_secret", String.class));
+            request.setGrantType(CacheUtils.get(cacheName, "last_grant_type", String.class));
+            request.setOrgAlias(CacheUtils.get(cacheName, "last_org_alias", String.class));
+            request.setSessionId(CacheUtils.get(cacheName, "last_session_id", String.class));
+            
+            logger.info("获取上一次成功登录的请求参数成功，登录类型: {}, 用户: {}", loginType, username);
+            return request;
+        } catch (Exception e) {
+            logger.error("获取上一次成功登录的请求参数失败: {}", e.getMessage(), e);
+            return null;
+        }
+    }
+    
+    /**
+     * 自动登录，使用上一次成功登录的参数
+     * 
+     * @return 登录结果
+     */
+    @Override
+    public SalesforceLoginResult autoLogin() {
+        // 添加跟踪ID到日志上下文
+        String traceId = UUID.randomUUID().toString();
+        MDC.put("traceId", traceId);
+        
+        logger.info("执行Salesforce自动登录");
+        
+        long startTime = System.currentTimeMillis();
+        
+        try {
+            // 获取上一次成功登录的请求参数
+            SalesforceLoginRequest request = getLastLoginRequest();
+            
+            if (request == null) {
+                logger.error("自动登录失败：没有找到上一次成功登录的参数");
+                SalesforceLoginResult result = new SalesforceLoginResult();
+                result.setSuccess(false);
+                result.setErrorMessage("No previous successful login found. Please login manually first.");
+                result.setErrorCode("NO_PREVIOUS_LOGIN");
+                
+                // 记录登录审计日志
+                recordLoginAudit(request, result, "FAILED");
+                
+                // 更新登录统计（失败）
+                updateLoginStatistics(request != null ? request.getLoginType() : "unknown", false);
+                
+                return result;
+            }
+            
+            logger.info("使用上一次登录参数进行自动登录，登录类型: {}, 用户名: {}", request.getLoginType(), request.getUsername());
+            
+            // 使用获取到的参数执行登录
+            return login(request);
+        } catch (SalesforceAuthException e) {
+            logger.error("Salesforce认证异常，错误代码: {}, 错误信息: {}", e.getErrorCode(), e.getMessage(), e);
+            SalesforceLoginResult result = new SalesforceLoginResult();
+            result.setSuccess(false);
+            result.setErrorMessage("Authentication failed: " + e.getMessage());
+            result.setErrorCode(e.getErrorCode());
+            return result;
+        } catch (Exception e) {
+            logger.error("自动登录失败: {}", e.getMessage(), e);
+            SalesforceLoginResult result = new SalesforceLoginResult();
+            result.setSuccess(false);
+            result.setErrorMessage("Auto login failed: " + e.getMessage());
+            result.setErrorCode("AUTO_LOGIN_FAILED");
+            return result;
+        } finally {
+            // 清理MDC上下文
+            MDC.remove("traceId");
         }
     }
     
@@ -591,7 +749,7 @@ public class SalesforceLoginServiceImpl implements ISalesforceLoginService {
             
             if (!sessions.isEmpty()) {
                 DataiSfLoginSession session = sessions.get(0);
-                session.setTokenId(newToken.getTokenId());
+                session.setTokenId(newToken.getId());
                 // 更新会话的活动时间
                 LocalDateTime now = LocalDateTime.now();
                 session.setLastActivityTime(now);
@@ -603,7 +761,7 @@ public class SalesforceLoginServiceImpl implements ISalesforceLoginService {
                 loginSessionService.updateDataiSfLoginSession(session);
             }
             
-            logger.info("登录状态更新成功，新令牌ID: {}", newToken.getTokenId());
+            logger.info("登录状态更新成功，新令牌ID: {}", newToken.getId());
         } catch (Exception e) {
             logger.error("更新登录状态失败: {}", e.getMessage(), e);
             // 不抛出异常，因为状态更新失败不应该影响主要流程
@@ -616,7 +774,8 @@ public class SalesforceLoginServiceImpl implements ISalesforceLoginService {
      * @param accessToken 访问令牌
      */
     private void cleanupLoginStatus(String accessToken) {
-        logger.info("清理登录状态，访问令牌: {}", accessToken.substring(0, Math.min(10, accessToken.length())) + "...");
+        String tokenPrefix = accessToken != null ? accessToken.substring(0, Math.min(10, accessToken.length())) : "null";
+        logger.info("清理登录状态，访问令牌: {}", tokenPrefix + "...");
         
         try {
             // 1. 查找令牌信息
@@ -635,7 +794,7 @@ public class SalesforceLoginServiceImpl implements ISalesforceLoginService {
                 
                 // 3. 更新会话状态为已登出
                 DataiSfLoginSession sessionQuery = new DataiSfLoginSession();
-                sessionQuery.setTokenId(token.getTokenId());
+                sessionQuery.setTokenId(token.getId());
                 List<DataiSfLoginSession> sessions = loginSessionService.selectDataiSfLoginSessionList(sessionQuery);
                 
                 for (DataiSfLoginSession session : sessions) {
@@ -670,16 +829,18 @@ public class SalesforceLoginServiceImpl implements ISalesforceLoginService {
     private void recordLoginAudit(SalesforceLoginRequest request, SalesforceLoginResult result, String resultStr) {
         try {
             DataiSfLoginAudit audit = new DataiSfLoginAudit();
-            audit.setUsername(request.getUsername());
+            if (request != null) {
+                audit.setUsername(request.getUsername());
+                audit.setLoginType(request.getLoginType());
+            }
             audit.setOperationType("LOGIN");
             audit.setResult(resultStr);
-            audit.setLoginType(request.getLoginType());
             audit.setErrorMessage(result.getErrorMessage());
             audit.setOperationTime(LocalDateTime.now());
             audit.setCreateTime(new Date());
             loginAuditService.insertDataiSfLoginAudit(audit);
             
-            logger.info("登录审计日志记录成功，用户名: {}, 结果: {}", request.getUsername(), resultStr);
+            logger.info("登录审计日志记录成功，用户名: {}, 结果: {}", request != null ? request.getUsername() : "unknown", resultStr);
         } catch (Exception e) {
             logger.error("记录登录审计日志失败，用户名: {}", request.getUsername(), e);
             // 不抛出异常，因为日志记录失败不应该影响主要流程
@@ -818,10 +979,13 @@ public class SalesforceLoginServiceImpl implements ISalesforceLoginService {
             
             List<DataiSfFailedLogin> failedLogins = failedLoginService.selectDataiSfFailedLoginList(query);
             
-            // 获取今天的失败登录次数（由于failedTime是LocalDate类型，只能精确到日期）
+            // 获取今天的失败登录次数
             LocalDateTime today = LocalDateTime.now();
+            LocalDateTime startOfDay = today.toLocalDate().atStartOfDay();
             long failedCount = failedLogins.stream()
-                    .filter(fl -> fl.getFailedTime() != null && fl.getFailedTime().isEqual(today))
+                    .filter(fl -> fl.getFailedTime() != null && 
+                                  !fl.getFailedTime().isBefore(startOfDay) && 
+                                  fl.getFailedTime().isBefore(startOfDay.plusDays(1)))
                     .count();
             
             logger.debug("最近5分钟内的失败登录次数: {}，用户名: {}", failedCount, username);
@@ -881,7 +1045,7 @@ public class SalesforceLoginServiceImpl implements ISalesforceLoginService {
             List<DataiSfFailedLogin> failedLogins = failedLoginService.selectDataiSfFailedLoginList(query);
             
             for (DataiSfFailedLogin failedLogin : failedLogins) {
-                failedLoginService.deleteDataiSfFailedLoginByFailedId(failedLogin.getFailedId());
+                failedLoginService.deleteDataiSfFailedLoginById(failedLogin.getId());
             }
             
             logger.debug("登录失败记录清除成功，用户名: {}", username);
@@ -902,14 +1066,14 @@ public class SalesforceLoginServiceImpl implements ISalesforceLoginService {
         
         try {
             // 获取当前日期和小时
-            LocalDateTime nowDate = LocalDateTime.now();
+            LocalDate nowDate = LocalDate.now();
             Calendar calendar = Calendar.getInstance();
             int hour = calendar.get(Calendar.HOUR_OF_DAY);
             
             // 查询当前统计记录
             DataiSfLoginStatistics query = new DataiSfLoginStatistics();
             query.setStatDate(nowDate);
-            query.setStatHour((long) hour);
+            query.setStatHour(hour);
             query.setLoginType(loginType);
             
             List<DataiSfLoginStatistics> statisticsList = loginStatisticsService.selectDataiSfLoginStatisticsList(query);
@@ -919,12 +1083,12 @@ public class SalesforceLoginServiceImpl implements ISalesforceLoginService {
                 // 创建新的统计记录
                 statistics = new DataiSfLoginStatistics();
                 statistics.setStatDate(nowDate);
-                statistics.setStatHour((long) hour);
+                statistics.setStatHour(hour);
                 statistics.setLoginType(loginType);
-                statistics.setSuccessCount(0L);
-                statistics.setFailedCount(0L);
-                statistics.setRefreshCount(0L);
-                statistics.setRevokeCount(0L);
+                statistics.setSuccessCount(0);
+                statistics.setFailedCount(0);
+                statistics.setRefreshCount(0);
+                statistics.setRevokeCount(0);
                 statistics.setCreateTime(new Date());
                 statistics.setUpdateTime(new Date());
             } else {
@@ -934,9 +1098,9 @@ public class SalesforceLoginServiceImpl implements ISalesforceLoginService {
             
             // 更新统计数据
             if (isSuccess) {
-                statistics.setSuccessCount(statistics.getSuccessCount() + 1L);
+                statistics.setSuccessCount(statistics.getSuccessCount() + 1);
             } else {
-                statistics.setFailedCount(statistics.getFailedCount() + 1L);
+                statistics.setFailedCount(statistics.getFailedCount() + 1);
             }
             
             statistics.setUpdateTime(new Date());
@@ -965,14 +1129,14 @@ public class SalesforceLoginServiceImpl implements ISalesforceLoginService {
         
         try {
             // 获取当前日期和小时
-            LocalDateTime nowDate = LocalDateTime.now();
+            LocalDate nowDate = LocalDate.now();
             Calendar calendar = Calendar.getInstance();
             int hour = calendar.get(Calendar.HOUR_OF_DAY);
             
             // 查询当前统计记录
             DataiSfLoginStatistics query = new DataiSfLoginStatistics();
             query.setStatDate(nowDate);
-            query.setStatHour((long) hour);
+            query.setStatHour(hour);
             query.setLoginType(loginType);
             
             List<DataiSfLoginStatistics> statisticsList = loginStatisticsService.selectDataiSfLoginStatisticsList(query);
@@ -982,19 +1146,19 @@ public class SalesforceLoginServiceImpl implements ISalesforceLoginService {
                 // 创建新的统计记录
                 statistics = new DataiSfLoginStatistics();
                 statistics.setStatDate(nowDate);
-                statistics.setStatHour((long) hour);
+                statistics.setStatHour(hour);
                 statistics.setLoginType(loginType);
-                statistics.setSuccessCount(0L);
-                statistics.setFailedCount(0L);
-                statistics.setRefreshCount(1L);
-                statistics.setRevokeCount(0L);
+                statistics.setSuccessCount(0);
+                statistics.setFailedCount(0);
+                statistics.setRefreshCount(1);
+                statistics.setRevokeCount(0);
                 statistics.setCreateTime(new Date());
                 statistics.setUpdateTime(new Date());
                 loginStatisticsService.insertDataiSfLoginStatistics(statistics);
             } else {
                 // 更新现有统计记录
                 statistics = statisticsList.get(0);
-                statistics.setRefreshCount(statistics.getRefreshCount() + 1L);
+                statistics.setRefreshCount(statistics.getRefreshCount() + 1);
                 statistics.setUpdateTime(new Date());
                 loginStatisticsService.updateDataiSfLoginStatistics(statistics);
             }
@@ -1016,14 +1180,14 @@ public class SalesforceLoginServiceImpl implements ISalesforceLoginService {
         
         try {
             // 获取当前日期和小时
-            LocalDateTime nowDate = LocalDateTime.now();
+            LocalDate nowDate = LocalDate.now();
             Calendar calendar = Calendar.getInstance();
             int hour = calendar.get(Calendar.HOUR_OF_DAY);
             
             // 查询当前统计记录
             DataiSfLoginStatistics query = new DataiSfLoginStatistics();
             query.setStatDate(nowDate);
-            query.setStatHour((long) hour);
+            query.setStatHour(hour);
             query.setLoginType(loginType);
             
             List<DataiSfLoginStatistics> statisticsList = loginStatisticsService.selectDataiSfLoginStatisticsList(query);
@@ -1033,19 +1197,19 @@ public class SalesforceLoginServiceImpl implements ISalesforceLoginService {
                 // 创建新的统计记录
                 statistics = new DataiSfLoginStatistics();
                 statistics.setStatDate(nowDate);
-                statistics.setStatHour((long) hour);
+                statistics.setStatHour(hour);
                 statistics.setLoginType(loginType);
-                statistics.setSuccessCount(0L);
-                statistics.setFailedCount(0L);
-                statistics.setRefreshCount(0L);
-                statistics.setRevokeCount(1L);
+                statistics.setSuccessCount(0);
+                statistics.setFailedCount(0);
+                statistics.setRefreshCount(0);
+                statistics.setRevokeCount(1);
                 statistics.setCreateTime(new Date());
                 statistics.setUpdateTime(new Date());
                 loginStatisticsService.insertDataiSfLoginStatistics(statistics);
             } else {
                 // 更新现有统计记录
                 statistics = statisticsList.get(0);
-                statistics.setRevokeCount(statistics.getRevokeCount() + 1L);
+                statistics.setRevokeCount(statistics.getRevokeCount() + 1);
                 statistics.setUpdateTime(new Date());
                 loginStatisticsService.updateDataiSfLoginStatistics(statistics);
             }

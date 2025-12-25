@@ -5,8 +5,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 <mapper namespace="com.datai.auth.mapper.DataiSfTokenBindingMapper">
     
     <resultMap type="DataiSfTokenBinding" id="DataiSfTokenBindingResult">
-        <result property="bindingId" column="binding_id" />
-        <result property="tenantId" column="tenant_id" />
+        <result property="id" column="id" />
+        <result property="deptId" column="dept_id" />
         <result property="tokenId" column="token_id" />
         <result property="bindingType" column="binding_type" />
         <result property="deviceId" column="device_id" />
@@ -22,8 +22,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 
     <sql id="selectDataiSfTokenBindingVo">
         select 
-            dstb.binding_id,
-            dstb.tenant_id,
+            dstb.id,
+            dstb.dept_id,
             dstb.token_id,
             dstb.binding_type,
             dstb.device_id,
@@ -41,7 +41,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <select id="selectDataiSfTokenBindingList" parameterType="DataiSfTokenBinding" resultMap="DataiSfTokenBindingResult">
         <include refid="selectDataiSfTokenBindingVo"/>
         <where>
-            <if test="tenantId != null  and tenantId != ''"> and dstb.tenant_id = #{tenantId}</if>
+            <if test="deptId != null "> and dstb.dept_id = #{deptId}</if>
             <if test="tokenId != null "> and dstb.token_id = #{tokenId}</if>
             <if test="bindingType != null  and bindingType != ''"> and dstb.binding_type = #{bindingType}</if>
             <if test="deviceId != null  and deviceId != ''"> and dstb.device_id = #{deviceId}</if>
@@ -52,15 +52,15 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         </where>
     </select>
     
-    <select id="selectDataiSfTokenBindingByBindingId" parameterType="Long" resultMap="DataiSfTokenBindingResult">
+    <select id="selectDataiSfTokenBindingById" parameterType="Long" resultMap="DataiSfTokenBindingResult">
         <include refid="selectDataiSfTokenBindingVo"/>
-        where dstb.binding_id = #{bindingId}
+        where dstb.id = #{id}
     </select>
         
-    <insert id="insertDataiSfTokenBinding" parameterType="DataiSfTokenBinding" useGeneratedKeys="true" keyProperty="bindingId">
+    <insert id="insertDataiSfTokenBinding" parameterType="DataiSfTokenBinding" useGeneratedKeys="true" keyProperty="id">
         insert into datai_sf_token_binding
         <trim prefix="(" suffix=")" suffixOverrides=",">
-            <if test="tenantId != null">tenant_id,</if>
+            <if test="deptId != null">dept_id,</if>
             <if test="tokenId != null">token_id,</if>
             <if test="bindingType != null and bindingType != ''">binding_type,</if>
             <if test="deviceId != null">device_id,</if>
@@ -74,7 +74,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="updateTime != null">update_time,</if>
          </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
-            <if test="tenantId != null">#{tenantId},</if>
+            <if test="deptId != null">#{deptId},</if>
             <if test="tokenId != null">#{tokenId},</if>
             <if test="bindingType != null and bindingType != ''">#{bindingType},</if>
             <if test="deviceId != null">#{deviceId},</if>
@@ -92,7 +92,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <update id="updateDataiSfTokenBinding" parameterType="DataiSfTokenBinding">
         update datai_sf_token_binding
         <trim prefix="SET" suffixOverrides=",">
-            <if test="tenantId != null">tenant_id = #{tenantId},</if>
+            <if test="deptId != null">dept_id = #{deptId},</if>
             <if test="tokenId != null">token_id = #{tokenId},</if>
             <if test="bindingType != null and bindingType != ''">binding_type = #{bindingType},</if>
             <if test="deviceId != null">device_id = #{deviceId},</if>
@@ -105,17 +105,17 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="updateBy != null">update_by = #{updateBy},</if>
             <if test="updateTime != null">update_time = #{updateTime},</if>
         </trim>
-        where datai_sf_token_binding.binding_id = #{bindingId}
+        where datai_sf_token_binding.id = #{id}
     </update>
 
-    <delete id="deleteDataiSfTokenBindingByBindingId" parameterType="Long">
-        delete from datai_sf_token_binding where binding_id = #{bindingId}
+    <delete id="deleteDataiSfTokenBindingById" parameterType="Long">
+        delete from datai_sf_token_binding where id = #{id}
     </delete>
 
-    <delete id="deleteDataiSfTokenBindingByBindingIds" parameterType="String">
-        delete from datai_sf_token_binding where binding_id in 
-        <foreach item="bindingId" collection="array" open="(" separator="," close=")">
-            #{bindingId}
+    <delete id="deleteDataiSfTokenBindingByIds" parameterType="String">
+        delete from datai_sf_token_binding where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
         </foreach>
     </delete>
 </mapper>

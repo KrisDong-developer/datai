@@ -4,58 +4,58 @@ import java.util.List;
 import com.datai.integration.domain.DataiIntegrationObject;
 
 /**
- * 对象信息Mapper接口
+ * 对象同步控制Mapper接口
  * 
  * @author datai
- * @date 2025-12-22
+ * @date 2025-12-24
  */
 public interface DataiIntegrationObjectMapper 
 {
     /**
-     * 查询对象信息
+     * 查询对象同步控制
      * 
-     * @param id 对象信息主键
-     * @return 对象信息
+     * @param id 对象同步控制主键
+     * @return 对象同步控制
      */
-    public DataiIntegrationObject selectDataiIntegrationObjectById(Long id);
+    public DataiIntegrationObject selectDataiIntegrationObjectById(Integer id);
 
     /**
-     * 查询对象信息列表
+     * 查询对象同步控制列表
      * 
-     * @param dataiIntegrationObject 对象信息
-     * @return 对象信息集合
+     * @param dataiIntegrationObject 对象同步控制
+     * @return 对象同步控制集合
      */
     public List<DataiIntegrationObject> selectDataiIntegrationObjectList(DataiIntegrationObject dataiIntegrationObject);
 
     /**
-     * 新增对象信息
+     * 新增对象同步控制
      * 
-     * @param dataiIntegrationObject 对象信息
+     * @param dataiIntegrationObject 对象同步控制
      * @return 结果
      */
     public int insertDataiIntegrationObject(DataiIntegrationObject dataiIntegrationObject);
 
     /**
-     * 修改对象信息
+     * 修改对象同步控制
      * 
-     * @param dataiIntegrationObject 对象信息
+     * @param dataiIntegrationObject 对象同步控制
      * @return 结果
      */
     public int updateDataiIntegrationObject(DataiIntegrationObject dataiIntegrationObject);
 
     /**
-     * 删除对象信息
+     * 删除对象同步控制
      * 
-     * @param id 对象信息主键
+     * @param id 对象同步控制主键
      * @return 结果
      */
-    public int deleteDataiIntegrationObjectById(Long id);
+    public int deleteDataiIntegrationObjectById(Integer id);
 
     /**
-     * 批量删除对象信息
+     * 批量删除对象同步控制
      * 
      * @param ids 需要删除的数据主键集合
      * @return 结果
      */
-    public int deleteDataiIntegrationObjectByIds(Long[] ids);
+    public int deleteDataiIntegrationObjectByIds(Integer[] ids);
 }

@@ -1,6 +1,6 @@
 package com.datai.auth.domain;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -12,7 +12,7 @@ import com.datai.common.core.domain.BaseEntity;
  * 登录统计对象 datai_sf_login_statistics
  * 
  * @author datai
- * @date 2025-12-14
+ * @date 2025-12-24
  */
 @Schema(description = "登录统计对象")
 public class DataiSfLoginStatistics extends BaseEntity
@@ -22,22 +22,21 @@ public class DataiSfLoginStatistics extends BaseEntity
 
     /** 统计ID */
     @Schema(title = "统计ID")
-    private Long statId;
+    private Long id;
 
-    /** 租户编号 */
-    @Schema(title = "租户编号")
-    @Excel(name = "租户编号")
-    private String tenantId;
+    /** 部门ID */
+    @Schema(title = "部门ID")
+    private Long deptId;
 
     /** 统计日期 */
     @Schema(title = "统计日期")
     @Excel(name = "统计日期")
-    private LocalDateTime statDate;
+    private LocalDate statDate;
 
     /** 统计小时 */
     @Schema(title = "统计小时")
     @Excel(name = "统计小时")
-    private Long statHour;
+    private Integer statHour;
 
     /** 登录类型 */
     @Schema(title = "登录类型")
@@ -47,61 +46,61 @@ public class DataiSfLoginStatistics extends BaseEntity
     /** 成功次数 */
     @Schema(title = "成功次数")
     @Excel(name = "成功次数")
-    private Long successCount;
+    private Integer successCount;
 
     /** 失败次数 */
     @Schema(title = "失败次数")
     @Excel(name = "失败次数")
-    private Long failedCount;
+    private Integer failedCount;
 
     /** 刷新次数 */
     @Schema(title = "刷新次数")
     @Excel(name = "刷新次数")
-    private Long refreshCount;
+    private Integer refreshCount;
 
     /** 吊销次数 */
     @Schema(title = "吊销次数")
     @Excel(name = "吊销次数")
-    private Long revokeCount;
-    public void setStatId(Long statId) 
+    private Integer revokeCount;
+    public void setId(Long id) 
     {
-        this.statId = statId;
+        this.id = id;
     }
 
-    public Long getStatId() 
+    public Long getId() 
     {
-        return statId;
-    }
-
-
-    public void setTenantId(String tenantId) 
-    {
-        this.tenantId = tenantId;
-    }
-
-    public String getTenantId() 
-    {
-        return tenantId;
+        return id;
     }
 
 
-    public void setStatDate(LocalDateTime statDate)
+    public void setDeptId(Long deptId) 
+    {
+        this.deptId = deptId;
+    }
+
+    public Long getDeptId() 
+    {
+        return deptId;
+    }
+
+
+    public void setStatDate(LocalDate statDate) 
     {
         this.statDate = statDate;
     }
 
-    public LocalDateTime getStatDate()
+    public LocalDate getStatDate() 
     {
         return statDate;
     }
 
 
-    public void setStatHour(Long statHour) 
+    public void setStatHour(Integer statHour) 
     {
         this.statHour = statHour;
     }
 
-    public Long getStatHour() 
+    public Integer getStatHour() 
     {
         return statHour;
     }
@@ -118,45 +117,45 @@ public class DataiSfLoginStatistics extends BaseEntity
     }
 
 
-    public void setSuccessCount(Long successCount) 
+    public void setSuccessCount(Integer successCount) 
     {
         this.successCount = successCount;
     }
 
-    public Long getSuccessCount() 
+    public Integer getSuccessCount() 
     {
         return successCount;
     }
 
 
-    public void setFailedCount(Long failedCount) 
+    public void setFailedCount(Integer failedCount) 
     {
         this.failedCount = failedCount;
     }
 
-    public Long getFailedCount() 
+    public Integer getFailedCount() 
     {
         return failedCount;
     }
 
 
-    public void setRefreshCount(Long refreshCount) 
+    public void setRefreshCount(Integer refreshCount) 
     {
         this.refreshCount = refreshCount;
     }
 
-    public Long getRefreshCount() 
+    public Integer getRefreshCount() 
     {
         return refreshCount;
     }
 
 
-    public void setRevokeCount(Long revokeCount) 
+    public void setRevokeCount(Integer revokeCount) 
     {
         this.revokeCount = revokeCount;
     }
 
-    public Long getRevokeCount() 
+    public Integer getRevokeCount() 
     {
         return revokeCount;
     }
@@ -166,8 +165,8 @@ public class DataiSfLoginStatistics extends BaseEntity
     @Override
     public String toString() {
         return new ToStringBuilder(this,ToStringStyle.MULTI_LINE_STYLE)
-            .append("statId", getStatId())
-            .append("tenantId", getTenantId())
+            .append("id", getId())
+            .append("deptId", getDeptId())
             .append("statDate", getStatDate())
             .append("statHour", getStatHour())
             .append("loginType", getLoginType())

@@ -27,7 +27,7 @@ import io.swagger.v3.oas.annotations.Operation;
  * 数据批次历史Controller
  * 
  * @author datai
- * @date 2025-12-22
+ * @date 2025-12-24
  */
 @RestController
 @RequestMapping("/integration/history")
@@ -70,7 +70,7 @@ public class DataiIntegrationBatchHistoryController extends BaseController
     @Operation(summary = "获取数据批次历史详细信息")
     @PreAuthorize("@ss.hasPermi('integration:history:query')")
     @GetMapping(value = "/{id}")
-    public AjaxResult getInfo(@PathVariable("id") Long id)
+    public AjaxResult getInfo(@PathVariable("id") Integer id)
     {
         return success(dataiIntegrationBatchHistoryService.selectDataiIntegrationBatchHistoryById(id));
     }
@@ -106,7 +106,7 @@ public class DataiIntegrationBatchHistoryController extends BaseController
     @PreAuthorize("@ss.hasPermi('integration:history:remove')")
     @Log(title = "数据批次历史", businessType = BusinessType.DELETE)
     @DeleteMapping("/{ids}")
-    public AjaxResult remove(@PathVariable( name = "ids" ) Long[] ids) 
+    public AjaxResult remove(@PathVariable( name = "ids" ) Integer[] ids) 
     {
         return toAjax(dataiIntegrationBatchHistoryService.deleteDataiIntegrationBatchHistoryByIds(ids));
     }

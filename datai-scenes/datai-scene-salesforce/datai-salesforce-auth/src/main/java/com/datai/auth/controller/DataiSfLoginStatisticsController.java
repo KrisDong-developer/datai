@@ -27,7 +27,7 @@ import io.swagger.v3.oas.annotations.Operation;
  * 登录统计Controller
  * 
  * @author datai
- * @date 2025-12-14
+ * @date 2025-12-24
  */
 @RestController
 @RequestMapping("/auth/statistics")
@@ -69,10 +69,10 @@ public class DataiSfLoginStatisticsController extends BaseController
      */
     @Operation(summary = "获取登录统计详细信息")
     @PreAuthorize("@ss.hasPermi('auth:statistics:query')")
-    @GetMapping(value = "/{statId}")
-    public AjaxResult getInfo(@PathVariable("statId") Long statId)
+    @GetMapping(value = "/{id}")
+    public AjaxResult getInfo(@PathVariable("id") Long id)
     {
-        return success(dataiSfLoginStatisticsService.selectDataiSfLoginStatisticsByStatId(statId));
+        return success(dataiSfLoginStatisticsService.selectDataiSfLoginStatisticsById(id));
     }
 
     /**
@@ -105,9 +105,9 @@ public class DataiSfLoginStatisticsController extends BaseController
     @Operation(summary = "删除登录统计")
     @PreAuthorize("@ss.hasPermi('auth:statistics:remove')")
     @Log(title = "登录统计", businessType = BusinessType.DELETE)
-    @DeleteMapping("/{statIds}")
-    public AjaxResult remove(@PathVariable( name = "statIds" ) Long[] statIds) 
+    @DeleteMapping("/{ids}")
+    public AjaxResult remove(@PathVariable( name = "ids" ) Long[] ids) 
     {
-        return toAjax(dataiSfLoginStatisticsService.deleteDataiSfLoginStatisticsByStatIds(statIds));
+        return toAjax(dataiSfLoginStatisticsService.deleteDataiSfLoginStatisticsByIds(ids));
     }
 }

@@ -1,22 +1,21 @@
 package com.datai.integration.service.impl;
 
 import java.util.List;
-
-import com.datai.common.core.domain.model.LoginUser;
-import com.datai.common.utils.DateUtils;
+        import com.datai.common.utils.DateUtils;
         import com.datai.common.utils.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.datai.integration.mapper.DataiIntegrationFilterLookupMapper;
 import com.datai.integration.domain.DataiIntegrationFilterLookup;
 import com.datai.integration.service.IDataiIntegrationFilterLookupService;
+import com.datai.common.core.domain.model.LoginUser;
 
 
 /**
  * 字段过滤查找信息Service业务层处理
  *
  * @author datai
- * @date 2025-12-22
+ * @date 2025-12-24
  */
 @Service
 public class DataiIntegrationFilterLookupServiceImpl implements IDataiIntegrationFilterLookupService {
@@ -30,7 +29,7 @@ public class DataiIntegrationFilterLookupServiceImpl implements IDataiIntegratio
      * @return 字段过滤查找信息
      */
     @Override
-    public DataiIntegrationFilterLookup selectDataiIntegrationFilterLookupById(Long id)
+    public DataiIntegrationFilterLookup selectDataiIntegrationFilterLookupById(Integer id)
     {
         return dataiIntegrationFilterLookupMapper.selectDataiIntegrationFilterLookupById(id);
     }
@@ -90,7 +89,7 @@ public class DataiIntegrationFilterLookupServiceImpl implements IDataiIntegratio
      * @return 结果
      */
     @Override
-    public int deleteDataiIntegrationFilterLookupByIds(Long[] ids)
+    public int deleteDataiIntegrationFilterLookupByIds(Integer[] ids)
     {
         return dataiIntegrationFilterLookupMapper.deleteDataiIntegrationFilterLookupByIds(ids);
     }
@@ -102,7 +101,7 @@ public class DataiIntegrationFilterLookupServiceImpl implements IDataiIntegratio
      * @return 结果
      */
     @Override
-    public int deleteDataiIntegrationFilterLookupById(Long id)
+    public int deleteDataiIntegrationFilterLookupById(Integer id)
     {
         return dataiIntegrationFilterLookupMapper.deleteDataiIntegrationFilterLookupById(id);
     }

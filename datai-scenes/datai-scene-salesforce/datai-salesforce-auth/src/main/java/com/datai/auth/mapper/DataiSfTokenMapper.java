@@ -7,17 +7,17 @@ import com.datai.auth.domain.DataiSfToken;
  * 令牌Mapper接口
  * 
  * @author datai
- * @date 2025-12-14
+ * @date 2025-12-24
  */
 public interface DataiSfTokenMapper 
 {
     /**
      * 查询令牌
      * 
-     * @param tokenId 令牌主键
+     * @param id 令牌主键
      * @return 令牌
      */
-    public DataiSfToken selectDataiSfTokenByTokenId(Long tokenId);
+    public DataiSfToken selectDataiSfTokenById(Long id);
 
     /**
      * 查询令牌列表
@@ -46,16 +46,16 @@ public interface DataiSfTokenMapper
     /**
      * 删除令牌
      * 
-     * @param tokenId 令牌主键
+     * @param id 令牌主键
      * @return 结果
      */
-    public int deleteDataiSfTokenByTokenId(Long tokenId);
+    public int deleteDataiSfTokenById(Long id);
 
     /**
      * 批量删除令牌
      * 
-     * @param tokenIds 需要删除的数据主键集合
+     * @param ids 需要删除的数据主键集合
      * @return 结果
      */
-    public int deleteDataiSfTokenByTokenIds(Long[] tokenIds);
+    public int deleteDataiSfTokenByIds(Long[] ids);
 }

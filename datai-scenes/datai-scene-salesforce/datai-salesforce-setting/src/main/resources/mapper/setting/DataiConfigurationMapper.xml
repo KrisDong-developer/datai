@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.datai.setting.mapper.DataiConfigurationMapper">
+    
+    <resultMap type="DataiConfiguration" id="DataiConfigurationResult">
+        <result property="id" column="id" />
+        <result property="deptId" column="dept_id" />
+        <result property="configKey" column="config_key" />
+        <result property="configValue" column="config_value" />
+        <result property="environmentId" column="environment_id" />
+        <result property="isSensitive" column="is_sensitive" />
+        <result property="isEncrypted" column="is_encrypted" />
+        <result property="description" column="description" />
+        <result property="isActive" column="is_active" />
+        <result property="remark" column="remark" />
+        <result property="createBy" column="create_by" />
+        <result property="createTime" column="create_time" />
+        <result property="updateBy" column="update_by" />
+        <result property="updateTime" column="update_time" />
+    </resultMap>
+
+    <sql id="selectDataiConfigurationVo">
+        select 
+            dc.id,
+            dc.dept_id,
+            dc.config_key,
+            dc.config_value,
+            dc.environment_id,
+            dc.is_sensitive,
+            dc.is_encrypted,
+            dc.description,
+            dc.is_active,
+            dc.remark,
+            dc.create_by,
+            dc.create_time,
+            dc.update_by,
+            dc.update_time
+        from datai_configuration dc
+    </sql>
+
+    <select id="selectDataiConfigurationList" parameterType="DataiConfiguration" resultMap="DataiConfigurationResult">
+        <include refid="selectDataiConfigurationVo"/>
+        <where>
+            <if test="deptId != null "> and dc.dept_id = #{deptId}</if>
+            <if test="configKey != null  and configKey != ''"> and dc.config_key = #{configKey}</if>
+            <if test="configValue != null  and configValue != ''"> and dc.config_value = #{configValue}</if>
+            <if test="environmentId != null "> and dc.environment_id = #{environmentId}</if>
+            <if test="isSensitive != null "> and dc.is_sensitive = #{isSensitive}</if>
+            <if test="isEncrypted != null "> and dc.is_encrypted = #{isEncrypted}</if>
+            <if test="description != null  and description != ''"> and dc.description = #{description}</if>
+            <if test="isActive != null "> and dc.is_active = #{isActive}</if>
+        </where>
+    </select>
+    
+    <select id="selectDataiConfigurationById" parameterType="Long" resultMap="DataiConfigurationResult">
+        <include refid="selectDataiConfigurationVo"/>
+        where dc.id = #{id}
+    </select>
+        
+    <insert id="insertDataiConfiguration" parameterType="DataiConfiguration" useGeneratedKeys="true" keyProperty="id">
+        insert into datai_configuration
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="deptId != null">dept_id,</if>
+            <if test="configKey != null and configKey != ''">config_key,</if>
+            <if test="configValue != null">config_value,</if>
+            <if test="environmentId != null">environment_id,</if>
+            <if test="isSensitive != null">is_sensitive,</if>
+            <if test="isEncrypted != null">is_encrypted,</if>
+            <if test="description != null">description,</if>
+            <if test="isActive != null">is_active,</if>
+            <if test="remark != null">remark,</if>
+            <if test="createBy != null and createBy != ''">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null and updateBy != ''">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="deptId != null">#{deptId},</if>
+            <if test="configKey != null and configKey != ''">#{configKey},</if>
+            <if test="configValue != null">#{configValue},</if>
+            <if test="environmentId != null">#{environmentId},</if>
+            <if test="isSensitive != null">#{isSensitive},</if>
+            <if test="isEncrypted != null">#{isEncrypted},</if>
+            <if test="description != null">#{description},</if>
+            <if test="isActive != null">#{isActive},</if>
+            <if test="remark != null">#{remark},</if>
+            <if test="createBy != null and createBy != ''">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null and updateBy != ''">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateDataiConfiguration" parameterType="DataiConfiguration">
+        update datai_configuration
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="deptId != null">dept_id = #{deptId},</if>
+            <if test="configKey != null and configKey != ''">config_key = #{configKey},</if>
+            <if test="configValue != null">config_value = #{configValue},</if>
+            <if test="environmentId != null">environment_id = #{environmentId},</if>
+            <if test="isSensitive != null">is_sensitive = #{isSensitive},</if>
+            <if test="isEncrypted != null">is_encrypted = #{isEncrypted},</if>
+            <if test="description != null">description = #{description},</if>
+            <if test="isActive != null">is_active = #{isActive},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            <if test="createBy != null and createBy != ''">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null and updateBy != ''">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where datai_configuration.id = #{id}
+    </update>
+
+    <delete id="deleteDataiConfigurationById" parameterType="Long">
+        delete from datai_configuration where id = #{id}
+    </delete>
+
+    <delete id="deleteDataiConfigurationByIds" parameterType="String">
+        delete from datai_configuration where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

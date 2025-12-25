@@ -5,8 +5,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 <mapper namespace="com.datai.auth.mapper.DataiSfTokenMapper">
     
     <resultMap type="DataiSfToken" id="DataiSfTokenResult">
-        <result property="tokenId" column="token_id" />
-        <result property="tenantId" column="tenant_id" />
+        <result property="id" column="id" />
+        <result property="deptId" column="dept_id" />
         <result property="username" column="username" />
         <result property="accessToken" column="access_token" />
         <result property="refreshToken" column="refresh_token" />
@@ -28,8 +28,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 
     <sql id="selectDataiSfTokenVo">
         select 
-            dst.token_id,
-            dst.tenant_id,
+            dst.id,
+            dst.dept_id,
             dst.username,
             dst.access_token,
             dst.refresh_token,
@@ -53,7 +53,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <select id="selectDataiSfTokenList" parameterType="DataiSfToken" resultMap="DataiSfTokenResult">
         <include refid="selectDataiSfTokenVo"/>
         <where>
-            <if test="tenantId != null  and tenantId != ''"> and dst.tenant_id = #{tenantId}</if>
+            <if test="deptId != null "> and dst.dept_id = #{deptId}</if>
             <if test="username != null  and username != ''"> and dst.username like concat('%', #{username}, '%')</if>
             <if test="accessToken != null  and accessToken != ''"> and dst.access_token = #{accessToken}</if>
             <if test="refreshToken != null  and refreshToken != ''"> and dst.refresh_token = #{refreshToken}</if>
@@ -70,15 +70,15 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         </where>
     </select>
     
-    <select id="selectDataiSfTokenByTokenId" parameterType="Long" resultMap="DataiSfTokenResult">
+    <select id="selectDataiSfTokenById" parameterType="Long" resultMap="DataiSfTokenResult">
         <include refid="selectDataiSfTokenVo"/>
-        where dst.token_id = #{tokenId}
+        where dst.id = #{id}
     </select>
         
-    <insert id="insertDataiSfToken" parameterType="DataiSfToken" useGeneratedKeys="true" keyProperty="tokenId">
+    <insert id="insertDataiSfToken" parameterType="DataiSfToken" useGeneratedKeys="true" keyProperty="id">
         insert into datai_sf_token
         <trim prefix="(" suffix=")" suffixOverrides=",">
-            <if test="tenantId != null">tenant_id,</if>
+            <if test="deptId != null">dept_id,</if>
             <if test="username != null and username != ''">username,</if>
             <if test="accessToken != null and accessToken != ''">access_token,</if>
             <if test="refreshToken != null">refresh_token,</if>
@@ -98,7 +98,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="updateTime != null">update_time,</if>
          </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
-            <if test="tenantId != null">#{tenantId},</if>
+            <if test="deptId != null">#{deptId},</if>
             <if test="username != null and username != ''">#{username},</if>
             <if test="accessToken != null and accessToken != ''">#{accessToken},</if>
             <if test="refreshToken != null">#{refreshToken},</if>
@@ -122,7 +122,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <update id="updateDataiSfToken" parameterType="DataiSfToken">
         update datai_sf_token
         <trim prefix="SET" suffixOverrides=",">
-            <if test="tenantId != null">tenant_id = #{tenantId},</if>
+            <if test="deptId != null">dept_id = #{deptId},</if>
             <if test="username != null and username != ''">username = #{username},</if>
             <if test="accessToken != null and accessToken != ''">access_token = #{accessToken},</if>
             <if test="refreshToken != null">refresh_token = #{refreshToken},</if>
@@ -141,17 +141,17 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="updateBy != null">update_by = #{updateBy},</if>
             <if test="updateTime != null">update_time = #{updateTime},</if>
         </trim>
-        where datai_sf_token.token_id = #{tokenId}
+        where datai_sf_token.id = #{id}
     </update>
 
-    <delete id="deleteDataiSfTokenByTokenId" parameterType="Long">
-        delete from datai_sf_token where token_id = #{tokenId}
+    <delete id="deleteDataiSfTokenById" parameterType="Long">
+        delete from datai_sf_token where id = #{id}
     </delete>
 
-    <delete id="deleteDataiSfTokenByTokenIds" parameterType="String">
-        delete from datai_sf_token where token_id in 
-        <foreach item="tokenId" collection="array" open="(" separator="," close=")">
-            #{tokenId}
+    <delete id="deleteDataiSfTokenByIds" parameterType="String">
+        delete from datai_sf_token where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
         </foreach>
     </delete>
 </mapper>

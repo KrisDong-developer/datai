@@ -7,7 +7,7 @@ import com.datai.integration.domain.DataiIntegrationField;
  * 对象字段信息Service接口
  * 
  * @author datai
- * @date 2025-12-22
+ * @date 2025-12-24
  */
 public interface IDataiIntegrationFieldService 
 {
@@ -17,7 +17,7 @@ public interface IDataiIntegrationFieldService
      * @param id 对象字段信息主键
      * @return 对象字段信息
      */
-    public DataiIntegrationField selectDataiIntegrationFieldById(Long id);
+    public DataiIntegrationField selectDataiIntegrationFieldById(Integer id);
 
     /**
      * 查询对象字段信息列表
@@ -49,7 +49,7 @@ public interface IDataiIntegrationFieldService
      * @param ids 需要删除的对象字段信息主键集合
      * @return 结果
      */
-    public int deleteDataiIntegrationFieldByIds(Long[] ids);
+    public int deleteDataiIntegrationFieldByIds(Integer[] ids);
 
     /**
      * 删除对象字段信息信息
@@ -57,5 +57,37 @@ public interface IDataiIntegrationFieldService
      * @param id 对象字段信息主键
      * @return 结果
      */
-    public int deleteDataiIntegrationFieldById(Long id);
+    public int deleteDataiIntegrationFieldById(Integer id);
+
+    /**
+     * 根据API名称获取日期字段信息
+     *
+     * @param api API名称
+     * @return 日期字段信息
+     */
+    String getDateField(String api);
+
+    /**
+     * 根据API名称获取更新字段信息
+     *
+     * @param api API名称
+     * @return 日期字段信息
+     */
+    String getUpdateField(String api);
+
+    /**
+     * 根据API名称获取二进制字段信息
+     *
+     * @param api API名称
+     * @return 加粗字段信息
+     */
+    String getBlobField(String api);
+
+    /**
+     * 判断指定API的对象是否存在IsDeleted字段
+     *
+     * @param api API名称
+     * @return 是否存在IsDeleted字段
+     */
+    boolean isDeletedFieldExists(String api);
 }

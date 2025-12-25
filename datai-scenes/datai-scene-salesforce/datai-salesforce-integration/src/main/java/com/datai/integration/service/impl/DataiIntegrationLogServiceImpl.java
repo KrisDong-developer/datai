@@ -1,22 +1,21 @@
 package com.datai.integration.service.impl;
 
 import java.util.List;
-
-import com.datai.common.core.domain.model.LoginUser;
-import com.datai.common.utils.DateUtils;
+        import com.datai.common.utils.DateUtils;
         import com.datai.common.utils.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.datai.integration.mapper.DataiIntegrationLogMapper;
 import com.datai.integration.domain.DataiIntegrationLog;
 import com.datai.integration.service.IDataiIntegrationLogService;
+import com.datai.common.core.domain.model.LoginUser;
 
 
 /**
  * 数据同步日志Service业务层处理
  *
  * @author datai
- * @date 2025-12-22
+ * @date 2025-12-24
  */
 @Service
 public class DataiIntegrationLogServiceImpl implements IDataiIntegrationLogService {
@@ -78,6 +77,8 @@ public class DataiIntegrationLogServiceImpl implements IDataiIntegrationLogServi
         LoginUser loginUser = SecurityUtils.getLoginUser();
         String username = loginUser.getUsername();
 
+                dataiIntegrationLog.setUpdateTime(DateUtils.getNowDate());
+                dataiIntegrationLog.setUpdateBy(username);
         return dataiIntegrationLogMapper.updateDataiIntegrationLog(dataiIntegrationLog);
     }
 

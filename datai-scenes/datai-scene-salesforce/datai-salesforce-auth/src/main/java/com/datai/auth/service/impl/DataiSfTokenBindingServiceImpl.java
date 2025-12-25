@@ -1,22 +1,21 @@
 package com.datai.auth.service.impl;
 
 import java.util.List;
-
-import com.datai.common.core.domain.model.LoginUser;
-import com.datai.common.utils.DateUtils;
+        import com.datai.common.utils.DateUtils;
         import com.datai.common.utils.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.datai.auth.mapper.DataiSfTokenBindingMapper;
 import com.datai.auth.domain.DataiSfTokenBinding;
 import com.datai.auth.service.IDataiSfTokenBindingService;
+import com.datai.common.core.domain.model.LoginUser;
 
 
 /**
  * 令牌绑定Service业务层处理
  *
  * @author datai
- * @date 2025-12-14
+ * @date 2025-12-24
  */
 @Service
 public class DataiSfTokenBindingServiceImpl implements IDataiSfTokenBindingService {
@@ -26,13 +25,13 @@ public class DataiSfTokenBindingServiceImpl implements IDataiSfTokenBindingServi
     /**
      * 查询令牌绑定
      *
-     * @param bindingId 令牌绑定主键
+     * @param id 令牌绑定主键
      * @return 令牌绑定
      */
     @Override
-    public DataiSfTokenBinding selectDataiSfTokenBindingByBindingId(Long bindingId)
+    public DataiSfTokenBinding selectDataiSfTokenBindingById(Long id)
     {
-        return dataiSfTokenBindingMapper.selectDataiSfTokenBindingByBindingId(bindingId);
+        return dataiSfTokenBindingMapper.selectDataiSfTokenBindingById(id);
     }
 
     /**
@@ -86,24 +85,24 @@ public class DataiSfTokenBindingServiceImpl implements IDataiSfTokenBindingServi
     /**
      * 批量删除令牌绑定
      *
-     * @param bindingIds 需要删除的令牌绑定主键
+     * @param ids 需要删除的令牌绑定主键
      * @return 结果
      */
     @Override
-    public int deleteDataiSfTokenBindingByBindingIds(Long[] bindingIds)
+    public int deleteDataiSfTokenBindingByIds(Long[] ids)
     {
-        return dataiSfTokenBindingMapper.deleteDataiSfTokenBindingByBindingIds(bindingIds);
+        return dataiSfTokenBindingMapper.deleteDataiSfTokenBindingByIds(ids);
     }
 
     /**
      * 删除令牌绑定信息
      *
-     * @param bindingId 令牌绑定主键
+     * @param id 令牌绑定主键
      * @return 结果
      */
     @Override
-    public int deleteDataiSfTokenBindingByBindingId(Long bindingId)
+    public int deleteDataiSfTokenBindingById(Long id)
     {
-        return dataiSfTokenBindingMapper.deleteDataiSfTokenBindingByBindingId(bindingId);
+        return dataiSfTokenBindingMapper.deleteDataiSfTokenBindingById(id);
     }
 }

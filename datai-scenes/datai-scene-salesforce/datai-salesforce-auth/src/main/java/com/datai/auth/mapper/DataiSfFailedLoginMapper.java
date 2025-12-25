@@ -7,17 +7,17 @@ import com.datai.auth.domain.DataiSfFailedLogin;
  * 失败登录Mapper接口
  * 
  * @author datai
- * @date 2025-12-14
+ * @date 2025-12-24
  */
 public interface DataiSfFailedLoginMapper 
 {
     /**
      * 查询失败登录
      * 
-     * @param failedId 失败登录主键
+     * @param id 失败登录主键
      * @return 失败登录
      */
-    public DataiSfFailedLogin selectDataiSfFailedLoginByFailedId(Long failedId);
+    public DataiSfFailedLogin selectDataiSfFailedLoginById(Long id);
 
     /**
      * 查询失败登录列表
@@ -46,16 +46,16 @@ public interface DataiSfFailedLoginMapper
     /**
      * 删除失败登录
      * 
-     * @param failedId 失败登录主键
+     * @param id 失败登录主键
      * @return 结果
      */
-    public int deleteDataiSfFailedLoginByFailedId(Long failedId);
+    public int deleteDataiSfFailedLoginById(Long id);
 
     /**
      * 批量删除失败登录
      * 
-     * @param failedIds 需要删除的数据主键集合
+     * @param ids 需要删除的数据主键集合
      * @return 结果
      */
-    public int deleteDataiSfFailedLoginByFailedIds(Long[] failedIds);
+    public int deleteDataiSfFailedLoginByIds(Long[] ids);
 }

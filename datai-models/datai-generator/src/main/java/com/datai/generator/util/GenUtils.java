@@ -68,30 +68,33 @@ public class GenUtils
             column.setJavaType(GenConstants.TYPE_TIME);
             column.setHtmlType(GenConstants.TYPE_TIME);
         }
-        else if (arraysContains(GenConstants.COLUMNTYPE_NUMBER, dataType))
-        {
+        else if (arraysContains(GenConstants.COLUMNTYPE_LONG, dataType)) {
             column.setHtmlType(GenConstants.HTML_INPUT);
-
-            // 如果是浮点型 统一用BigDecimal
-            String[] str = StringUtils.split(StringUtils.substringBetween(column.getColumnType(), "(", ")"), ",");
-            if (str != null && str.length == 2 && Integer.parseInt(str[1]) > 0)
-            {
-                column.setJavaType(GenConstants.TYPE_BIGDECIMAL);
-            }
-            // 如果是整形
-            else if (str != null && str.length == 1 && Integer.parseInt(str[0]) <= 10)
-            {
-                column.setJavaType(GenConstants.TYPE_INTEGER);
-            }
-            // 长整形
-            else
-            {
-                column.setJavaType(GenConstants.TYPE_LONG);
-            }
+            // 数据库的数字字段与java不匹配 且很多数据库的数字字段很模糊 例如oracle只有number没有细分
+            // 所以默认数字类型全为Long可在界面上自行编辑想要的类型 有什么特殊需求也可以在这里特殊处理
+            column.setJavaType(GenConstants.TYPE_LONG);
+        } else if (arraysContains(GenConstants.COLUMNTYPE_NUMBER, dataType)) {
+            column.setHtmlType(GenConstants.HTML_INPUT);
+            // 金额字段设置为BigDecimal
+            column.setJavaType(GenConstants.TYPE_BIGDECIMAL);
+        } else if (arraysContains(GenConstants.COLUMNTYPE_INT, dataType)) {
+            column.setHtmlType(GenConstants.HTML_INPUT);
+            // 整型字段设置为Integer
+            column.setJavaType(GenConstants.TYPE_INTEGER);
+        } else if (arraysContains(GenConstants.COLUMNTYPE_FLOAT, dataType)) {
+            column.setHtmlType(GenConstants.HTML_INPUT);
+            // 浮点型字段设置为Double
+            column.setJavaType(GenConstants.TYPE_DOUBLE);
+        } else if (arraysContains(GenConstants.COLUMNTYPE_BOOLEAN, dataType)) {
+            column.setHtmlType(GenConstants.HTML_INPUT);
+            column.setJavaType(GenConstants.TYPE_BOOLEAN);
         }
 
-        // 插入字段（默认所有字段都需要插入）
-        column.setIsInsert(GenConstants.REQUIRE);
+        // 插入字段
+        if (!arraysContains(GenConstants.COLUMNNAME_NOT_INSERT, columnName) && !column.isPk())
+        {
+            column.setIsInsert(GenConstants.REQUIRE);
+        }
 
         // 编辑字段
         if (!arraysContains(GenConstants.COLUMNNAME_NOT_EDIT, columnName) && !column.isPk())

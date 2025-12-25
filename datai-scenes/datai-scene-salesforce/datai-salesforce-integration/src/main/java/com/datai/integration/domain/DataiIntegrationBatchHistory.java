@@ -12,7 +12,7 @@ import com.datai.common.core.domain.BaseEntity;
  * 数据批次历史对象 datai_integration_batch_history
  * 
  * @author datai
- * @date 2025-12-22
+ * @date 2025-12-24
  */
 @Schema(description = "数据批次历史对象")
 public class DataiIntegrationBatchHistory extends BaseEntity
@@ -22,7 +22,11 @@ public class DataiIntegrationBatchHistory extends BaseEntity
 
     /** 编号ID */
     @Schema(title = "编号ID")
-    private Long id;
+    private Integer id;
+
+    /** 部门ID */
+    @Schema(title = "部门ID")
+    private Long deptId;
 
     /** 对象API */
     @Schema(title = "对象API")
@@ -37,7 +41,7 @@ public class DataiIntegrationBatchHistory extends BaseEntity
     /** 批次ID */
     @Schema(title = "批次ID")
     @Excel(name = "批次ID")
-    private Long batchId;
+    private Integer batchId;
 
     /** 批次字段 */
     @Schema(title = "批次字段")
@@ -47,7 +51,7 @@ public class DataiIntegrationBatchHistory extends BaseEntity
     /** 同步数据量 */
     @Schema(title = "同步数据量")
     @Excel(name = "同步数据量")
-    private Long syncNum;
+    private Integer syncNum;
 
     /** 同步类型 */
     @Schema(title = "同步类型")
@@ -57,7 +61,7 @@ public class DataiIntegrationBatchHistory extends BaseEntity
     /** 同步状态 */
     @Schema(title = "同步状态")
     @Excel(name = "同步状态")
-    private Long syncStatus;
+    private Boolean syncStatus;
 
     /** 开始时间 */
     @Schema(title = "开始时间")
@@ -83,19 +87,25 @@ public class DataiIntegrationBatchHistory extends BaseEntity
     @Schema(title = "结束同步时间")
     @Excel(name = "结束同步时间")
     private LocalDateTime syncEndTime;
-
-    /** 租户编号 */
-    @Schema(title = "租户编号")
-    @Excel(name = "租户编号")
-    private String tenantId;
-    public void setId(Long id) 
+    public void setId(Integer id) 
     {
         this.id = id;
     }
 
-    public Long getId() 
+    public Integer getId() 
     {
         return id;
+    }
+
+
+    public void setDeptId(Long deptId) 
+    {
+        this.deptId = deptId;
+    }
+
+    public Long getDeptId() 
+    {
+        return deptId;
     }
 
 
@@ -121,12 +131,12 @@ public class DataiIntegrationBatchHistory extends BaseEntity
     }
 
 
-    public void setBatchId(Long batchId) 
+    public void setBatchId(Integer batchId) 
     {
         this.batchId = batchId;
     }
 
-    public Long getBatchId() 
+    public Integer getBatchId() 
     {
         return batchId;
     }
@@ -143,12 +153,12 @@ public class DataiIntegrationBatchHistory extends BaseEntity
     }
 
 
-    public void setSyncNum(Long syncNum) 
+    public void setSyncNum(Integer syncNum) 
     {
         this.syncNum = syncNum;
     }
 
-    public Long getSyncNum() 
+    public Integer getSyncNum() 
     {
         return syncNum;
     }
@@ -165,12 +175,12 @@ public class DataiIntegrationBatchHistory extends BaseEntity
     }
 
 
-    public void setSyncStatus(Long syncStatus) 
+    public void setSyncStatus(Boolean syncStatus) 
     {
         this.syncStatus = syncStatus;
     }
 
-    public Long getSyncStatus() 
+    public Boolean getSyncStatus() 
     {
         return syncStatus;
     }
@@ -231,22 +241,12 @@ public class DataiIntegrationBatchHistory extends BaseEntity
     }
 
 
-    public void setTenantId(String tenantId) 
-    {
-        this.tenantId = tenantId;
-    }
-
-    public String getTenantId() 
-    {
-        return tenantId;
-    }
-
-
 
     @Override
     public String toString() {
         return new ToStringBuilder(this,ToStringStyle.MULTI_LINE_STYLE)
             .append("id", getId())
+            .append("deptId", getDeptId())
             .append("api", getApi())
             .append("label", getLabel())
             .append("batchId", getBatchId())
@@ -259,12 +259,11 @@ public class DataiIntegrationBatchHistory extends BaseEntity
             .append("cost", getCost())
             .append("syncStartTime", getSyncStartTime())
             .append("syncEndTime", getSyncEndTime())
-            .append("createTime", getCreateTime())
+            .append("remark", getRemark())
             .append("createBy", getCreateBy())
+            .append("createTime", getCreateTime())
             .append("updateBy", getUpdateBy())
             .append("updateTime", getUpdateTime())
-            .append("remark", getRemark())
-            .append("tenantId", getTenantId())
             .toString();
     }
 }

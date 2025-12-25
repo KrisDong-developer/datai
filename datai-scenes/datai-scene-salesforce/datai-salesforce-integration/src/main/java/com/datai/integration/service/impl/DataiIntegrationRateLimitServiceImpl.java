@@ -1,22 +1,21 @@
 package com.datai.integration.service.impl;
 
 import java.util.List;
-
-import com.datai.common.core.domain.model.LoginUser;
-import com.datai.common.utils.DateUtils;
+        import com.datai.common.utils.DateUtils;
         import com.datai.common.utils.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.datai.integration.mapper.DataiIntegrationRateLimitMapper;
 import com.datai.integration.domain.DataiIntegrationRateLimit;
 import com.datai.integration.service.IDataiIntegrationRateLimitService;
+import com.datai.common.core.domain.model.LoginUser;
 
 
 /**
- * API限流管理Service业务层处理
+ * API限流监控Service业务层处理
  *
  * @author datai
- * @date 2025-12-22
+ * @date 2025-12-24
  */
 @Service
 public class DataiIntegrationRateLimitServiceImpl implements IDataiIntegrationRateLimitService {
@@ -24,10 +23,10 @@ public class DataiIntegrationRateLimitServiceImpl implements IDataiIntegrationRa
     private DataiIntegrationRateLimitMapper dataiIntegrationRateLimitMapper;
 
     /**
-     * 查询API限流管理
+     * 查询API限流监控
      *
-     * @param id API限流管理主键
-     * @return API限流管理
+     * @param id API限流监控主键
+     * @return API限流监控
      */
     @Override
     public DataiIntegrationRateLimit selectDataiIntegrationRateLimitById(Long id)
@@ -36,10 +35,10 @@ public class DataiIntegrationRateLimitServiceImpl implements IDataiIntegrationRa
     }
 
     /**
-     * 查询API限流管理列表
+     * 查询API限流监控列表
      *
-     * @param dataiIntegrationRateLimit API限流管理
-     * @return API限流管理
+     * @param dataiIntegrationRateLimit API限流监控
+     * @return API限流监控
      */
     @Override
     public List<DataiIntegrationRateLimit> selectDataiIntegrationRateLimitList(DataiIntegrationRateLimit dataiIntegrationRateLimit)
@@ -48,9 +47,9 @@ public class DataiIntegrationRateLimitServiceImpl implements IDataiIntegrationRa
     }
 
     /**
-     * 新增API限流管理
+     * 新增API限流监控
      *
-     * @param dataiIntegrationRateLimit API限流管理
+     * @param dataiIntegrationRateLimit API限流监控
      * @return 结果
      */
     @Override
@@ -67,9 +66,9 @@ public class DataiIntegrationRateLimitServiceImpl implements IDataiIntegrationRa
     }
 
     /**
-     * 修改API限流管理
+     * 修改API限流监控
      *
-     * @param dataiIntegrationRateLimit API限流管理
+     * @param dataiIntegrationRateLimit API限流监控
      * @return 结果
      */
     @Override
@@ -84,9 +83,9 @@ public class DataiIntegrationRateLimitServiceImpl implements IDataiIntegrationRa
     }
 
     /**
-     * 批量删除API限流管理
+     * 批量删除API限流监控
      *
-     * @param ids 需要删除的API限流管理主键
+     * @param ids 需要删除的API限流监控主键
      * @return 结果
      */
     @Override
@@ -96,9 +95,9 @@ public class DataiIntegrationRateLimitServiceImpl implements IDataiIntegrationRa
     }
 
     /**
-     * 删除API限流管理信息
+     * 删除API限流监控信息
      *
-     * @param id API限流管理主键
+     * @param id API限流监控主键
      * @return 结果
      */
     @Override

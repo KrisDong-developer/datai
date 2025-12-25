@@ -7,17 +7,17 @@ import com.datai.auth.domain.DataiSfLoginSession;
  * 登录会话Mapper接口
  * 
  * @author datai
- * @date 2025-12-14
+ * @date 2025-12-24
  */
 public interface DataiSfLoginSessionMapper 
 {
     /**
      * 查询登录会话
      * 
-     * @param sessionId 登录会话主键
+     * @param id 登录会话主键
      * @return 登录会话
      */
-    public DataiSfLoginSession selectDataiSfLoginSessionBySessionId(Long sessionId);
+    public DataiSfLoginSession selectDataiSfLoginSessionById(Long id);
 
     /**
      * 查询登录会话列表
@@ -46,16 +46,16 @@ public interface DataiSfLoginSessionMapper
     /**
      * 删除登录会话
      * 
-     * @param sessionId 登录会话主键
+     * @param id 登录会话主键
      * @return 结果
      */
-    public int deleteDataiSfLoginSessionBySessionId(Long sessionId);
+    public int deleteDataiSfLoginSessionById(Long id);
 
     /**
      * 批量删除登录会话
      * 
-     * @param sessionIds 需要删除的数据主键集合
+     * @param ids 需要删除的数据主键集合
      * @return 结果
      */
-    public int deleteDataiSfLoginSessionBySessionIds(Long[] sessionIds);
+    public int deleteDataiSfLoginSessionByIds(Long[] ids);
 }

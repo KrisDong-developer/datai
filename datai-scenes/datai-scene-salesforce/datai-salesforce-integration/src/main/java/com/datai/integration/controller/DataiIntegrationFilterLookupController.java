@@ -27,7 +27,7 @@ import io.swagger.v3.oas.annotations.Operation;
  * 字段过滤查找信息Controller
  * 
  * @author datai
- * @date 2025-12-22
+ * @date 2025-12-24
  */
 @RestController
 @RequestMapping("/integration/lookup")
@@ -70,7 +70,7 @@ public class DataiIntegrationFilterLookupController extends BaseController
     @Operation(summary = "获取字段过滤查找信息详细信息")
     @PreAuthorize("@ss.hasPermi('integration:lookup:query')")
     @GetMapping(value = "/{id}")
-    public AjaxResult getInfo(@PathVariable("id") Long id)
+    public AjaxResult getInfo(@PathVariable("id") Integer id)
     {
         return success(dataiIntegrationFilterLookupService.selectDataiIntegrationFilterLookupById(id));
     }
@@ -106,7 +106,7 @@ public class DataiIntegrationFilterLookupController extends BaseController
     @PreAuthorize("@ss.hasPermi('integration:lookup:remove')")
     @Log(title = "字段过滤查找信息", businessType = BusinessType.DELETE)
     @DeleteMapping("/{ids}")
-    public AjaxResult remove(@PathVariable( name = "ids" ) Long[] ids) 
+    public AjaxResult remove(@PathVariable( name = "ids" ) Integer[] ids) 
     {
         return toAjax(dataiIntegrationFilterLookupService.deleteDataiIntegrationFilterLookupByIds(ids));
     }

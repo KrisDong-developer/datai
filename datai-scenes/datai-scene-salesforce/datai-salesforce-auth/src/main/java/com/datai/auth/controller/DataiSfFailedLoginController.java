@@ -27,7 +27,7 @@ import io.swagger.v3.oas.annotations.Operation;
  * 失败登录Controller
  * 
  * @author datai
- * @date 2025-12-14
+ * @date 2025-12-24
  */
 @RestController
 @RequestMapping("/auth/login")
@@ -69,10 +69,10 @@ public class DataiSfFailedLoginController extends BaseController
      */
     @Operation(summary = "获取失败登录详细信息")
     @PreAuthorize("@ss.hasPermi('auth:login:query')")
-    @GetMapping(value = "/{failedId}")
-    public AjaxResult getInfo(@PathVariable("failedId") Long failedId)
+    @GetMapping(value = "/{id}")
+    public AjaxResult getInfo(@PathVariable("id") Long id)
     {
-        return success(dataiSfFailedLoginService.selectDataiSfFailedLoginByFailedId(failedId));
+        return success(dataiSfFailedLoginService.selectDataiSfFailedLoginById(id));
     }
 
     /**
@@ -105,9 +105,9 @@ public class DataiSfFailedLoginController extends BaseController
     @Operation(summary = "删除失败登录")
     @PreAuthorize("@ss.hasPermi('auth:login:remove')")
     @Log(title = "失败登录", businessType = BusinessType.DELETE)
-    @DeleteMapping("/{failedIds}")
-    public AjaxResult remove(@PathVariable( name = "failedIds" ) Long[] failedIds) 
+    @DeleteMapping("/{ids}")
+    public AjaxResult remove(@PathVariable( name = "ids" ) Long[] ids) 
     {
-        return toAjax(dataiSfFailedLoginService.deleteDataiSfFailedLoginByFailedIds(failedIds));
+        return toAjax(dataiSfFailedLoginService.deleteDataiSfFailedLoginByIds(ids));
     }
 }

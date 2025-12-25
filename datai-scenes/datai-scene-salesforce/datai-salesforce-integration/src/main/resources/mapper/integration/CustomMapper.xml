@@ -1,0 +1,521 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.datai.integration.mapper.CustomMapper">
+
+    <!-- 获取表所有字段 -->
+    <select id="getFields" resultType="String">
+        SELECT COLUMN_NAME
+        FROM information_schema.COLUMNS
+        WHERE table_name = #{tableName}
+          AND TABLE_SCHEMA = (SELECT DATABASE())
+    </select>
+
+    <!-- 检测表是否存在 -->
+    <select id="checkTable" resultType="String">
+        SELECT table_name
+        FROM information_schema.TABLES
+        WHERE table_name = #{tableName}
+            AND TABLE_SCHEMA = (SELECT DATABASE())
+    </select>
+
+    <!-- 创建表 -->
+    <update id="createTable">
+        CREATE TABLE `${tableName}` (
+        <foreach item="map" collection="maps">
+            `${map.name}` ${map.type} comment '${map.comment}',
+        </foreach>
+        <foreach item="map" collection="index">
+            INDEX `${map.name}`(`${map.field}`),
+        </foreach>
+        PRIMARY KEY (`id`)
+        ) COMMENT = '${tableComment}';
+    </update>
+
+    <!-- 创建字段 -->
+    <update id="createField">
+        ALTER TABLE `${tableName}` ADD COLUMN `${fieldName}` varchar(255)
+    </update>
+
+    <!-- 获取存在的ID列表 -->
+    <select id="getIds" resultType="String">
+        SELECT id
+        FROM `${tableName}`
+        WHERE id IN
+        <foreach item="id" collection="ids" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
+    <!-- 根据ID更新记录 -->
+    <update id="updateById">
+        UPDATE `${tableName}`
+        SET
+        <foreach item="map" collection="maps" separator=",">
+            `${map.key}` = #{map.value}
+        </foreach>
+        WHERE id = #{id}
+    </update>
+
+    <!-- 根据条件更新记录 -->
+    <update id="update">
+        UPDATE `${tableName}`
+        SET
+        <foreach item="map" collection="maps" separator=",">
+            `${map.key}` = #{map.value}
+        </foreach>
+        <where>
+            <if test="sql != null and sql != ''">
+                AND ${sql}
+            </if>
+        </where>
+    </update>
+
+    <!-- 根据字段条件更新记录 -->
+    <update id="updateByField">
+        UPDATE `${tableName}`
+        SET new_id = #{newId}
+        <where>
+            <foreach item="map" collection="maps" separator=" AND ">
+                `${map.key}` = #{map.value}
+            </foreach>
+        </where>
+    </update>
+
+    <!-- 插入单条记录 -->
+    <insert id="save">
+        INSERT INTO `${tableName}`
+        <foreach item="map" collection="maps" open="(" separator="," close=")">
+            `${map.key}`
+        </foreach>
+        VALUES
+        <foreach item="map" collection="maps" open="(" separator="," close=")">
+            #{map.value}
+        </foreach>
+    </insert>
+
+    <!-- 批量插入记录 -->
+    <insert id="saveBatch">
+        INSERT INTO `${tableName}`
+        <foreach item="key" collection="keys" open="(" separator="," close=")">
+            `${key}`
+        </foreach>
+        VALUES
+        <foreach item="value" collection="values" separator=",">
+            <foreach item="item" collection="value" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </foreach>
+    </insert>
+
+    <!-- 根据ID更新或插入记录（upsert） -->
+    <insert id="upsert">
+        INSERT INTO `${tableName}`
+        <foreach item="value" index="key" collection="map" open="(" separator="," close=")">
+            `${key}`
+        </foreach>
+        VALUES
+        <foreach item="value" index="key" collection="map" open="(" separator="," close=")">
+            #{value}
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+        <foreach item="value" index="key" collection="map" separator=",">
+            <if test="key != 'Id'">
+                `${key}` = #{value}
+            </if>
+        </foreach>
+    </insert>
+
+    <!-- 统计记录数 -->
+    <select id="count" resultType="int">
+        SELECT COUNT(1)
+        FROM `${param.api}`
+        <where>
+            <if test="param != null">
+                <if test="param.ids != null and param.ids.size() > 0">
+                    AND id IN
+                    <foreach item="id" collection="param.ids" open="(" separator="," close=")">#{id}</foreach>
+                </if>
+                <if test="param.beginModifyDate != null">
+                    AND ${param.updateField} >= #{param.beginModifyDate}
+                </if>
+                <if test="param.endModifyDate != null">
+                    AND ${param.updateField} &lt; #{param.endModifyDate}
+                </if>
+                <if test="param.beginCreateDate != null">
+                    AND CreatedDate >= #{param.beginCreateDate}
+                </if>
+                <if test="param.endCreateDate != null">
+                    AND CreatedDate &lt; #{param.endCreateDate}
+                </if>
+                <if test="param.isDeleted != null">
+                    AND IsDeleted = #{param.isDeleted}
+                </if>
+                <if test="param.hasNewId">
+                    AND new_id IS NOT NULL
+                </if>
+            </if>
+        </where>
+    </select>
+
+    <!-- 通用数据查询 -->
+    <select id="list" resultType="Map">
+        SELECT ${select}
+        FROM `${api}`
+        <where>
+            <if test="sql != null and sql != ''">
+                ${sql}
+            </if>
+        </where>
+    </select>
+
+    <!-- 通用数据查询（返回JSONObject） -->
+    <select id="listJsonObject" resultType="cn.hutool.json.JSONObject">
+        SELECT ${select}
+        FROM `${api}`
+        <where>
+            <if test="sql != null and sql != ''">
+                ${sql}
+            </if>
+        </where>
+    </select>
+
+    <!-- 通用ID数据查询 -->
+    <select id="listById" resultType="String">
+        SELECT ${select}
+        FROM `${api}`
+        <where>
+            <if test="sql != null and sql != ''">
+                ${sql}
+            </if>
+        </where>
+    </select>
+
+    <!-- 根据ID获取记录 -->
+    <select id="getById" resultType="Map">
+        SELECT ${select}
+        FROM `${api}`
+        <where>
+            <if test="id != null and id != ''">
+                Id = #{id}
+            </if>
+        </where>
+    </select>
+
+    <!-- 根据NewId获取记录 -->
+    <select id="getByNewId" resultType="Map">
+        SELECT ${select}
+        FROM `${api}`
+        <where>
+            <if test="id != null and id != ''">
+                new_id = #{id}
+            </if>
+        </where>
+    </select>
+
+    <!-- 根据SQL统计记录数 -->
+    <select id="countBySQL" resultType="int">
+        SELECT COUNT(1)
+        FROM `${api}`
+        <where>
+            <if test="sql != null and sql != ''">
+                ${sql}
+            </if>
+        </where>
+    </select>
+
+    <!-- 根据条件删除记录 -->
+    <delete id="delete">
+        DELETE FROM `${tableName}`
+        <where>
+            <if test="ids != null and ids.size() > 0">
+                id IN
+                <foreach item="id" collection="ids" open="(" separator="," close=")">
+                    #{id}
+                </foreach>
+            </if>
+        </where>
+    </delete>
+
+    <!-- 根据ID删除单条记录 -->
+    <delete id="deleteOne">
+        DELETE FROM `${tableName}` WHERE Id = #{id}
+    </delete>
+
+    <!-- 根据SQL条件删除记录（新增） -->
+    <delete id="deleteBySQL">
+        DELETE FROM `${tableName}`
+        <where>
+            <if test="sql != null and sql != ''">
+                ${sql}
+            </if>
+        </where>
+    </delete>
+
+    <!-- 分页查询数据（新增） -->
+    <select id="listPage" resultType="Map">
+        SELECT ${select}
+        FROM `${api}`
+        <where>
+            <if test="sql != null and sql != ''">
+                ${sql}
+            </if>
+        </where>
+        <![CDATA[
+        LIMIT #{offset}, #{limit}
+        ]]>
+    </select>
+
+    <!-- 执行原生SQL查询（新增） -->
+    <select id="executeQuery" resultType="Map" statementType="STATEMENT">
+        <![CDATA[
+        ${sql}
+        ]]>
+    </select>
+
+    <!-- 执行原生SQL更新（新增） -->
+    <update id="executeUpdate" statementType="STATEMENT">
+        <![CDATA[
+        ${sql}
+        ]]>
+    </update>
+
+    <!-- 获取表记录总数（新增） -->
+    <select id="countAll" resultType="int">
+        SELECT COUNT(1) FROM `${tableName}`
+    </select>
+
+    <!-- 根据多个字段条件查询记录（新增） -->
+    <select id="listByConditions" resultType="Map">
+        SELECT *
+        FROM `${tableName}`
+        <where>
+            <if test="conditions != null and conditions.size() > 0">
+                <foreach item="value" index="key" collection="conditions" separator=" AND ">
+                    `${key}` = #{value}
+                </foreach>
+            </if>
+        </where>
+    </select>
+
+    <!-- 根据多个字段条件查询记录数（新增） -->
+    <select id="countByConditions" resultType="int">
+        SELECT COUNT(1)
+        FROM `${tableName}`
+        <where>
+            <if test="conditions != null and conditions.size() > 0">
+                <foreach item="value" index="key" collection="conditions" separator=" AND ">
+                    `${key}` = #{value}
+                </foreach>
+            </if>
+        </where>
+    </select>
+
+    <!-- 根据多个字段条件更新记录（新增） -->
+    <update id="updateByConditions">
+        UPDATE `${tableName}`
+        SET
+        <foreach item="value" index="key" collection="updateFields" separator=",">
+            `${key}` = #{value}
+        </foreach>
+        <where>
+            <if test="conditions != null and conditions.size() > 0">
+                <foreach item="value" index="key" collection="conditions" separator=" AND ">
+                    `${key}` = #{value}
+                </foreach>
+            </if>
+        </where>
+    </update>
+
+    <!-- ==================== MySQL分区相关SQL ==================== -->
+
+    <!-- 检查表是否已分区 -->
+    <select id="isPartitioned" resultType="Boolean">
+        SELECT CASE
+            WHEN EXISTS (
+                SELECT 1
+                FROM information_schema.PARTITIONS
+                WHERE table_schema = DATABASE()
+                AND table_name = #{tableName}
+                AND partition_name IS NOT NULL
+            ) THEN TRUE
+            ELSE FALSE
+        END AS is_partitioned
+    </select>
+
+    <!-- 创建RANGE分区表 -->
+    <update id="createRangePartitionTable" statementType="STATEMENT">
+        CREATE TABLE `${tableName}` (
+        <foreach item="map" collection="maps">
+            `${map.name}` ${map.type} comment '${map.comment}',
+        </foreach>
+        <foreach item="map" collection="index">
+            INDEX `${map.name}`(`${map.field}`),
+        </foreach>
+        PRIMARY KEY (`id`)
+        ) COMMENT = '${tableComment}'
+        PARTITION BY RANGE COLUMNS(`${partitionKey}`)
+        (
+        <foreach item="partition" collection="partitions" separator=",">
+            PARTITION ${partition.name} VALUES LESS THAN (${partition.value})
+        </foreach>
+        )
+    </update>
+
+    <!-- 创建HASH分区表 -->
+    <update id="createHashPartitionTable" statementType="STATEMENT">
+        CREATE TABLE `${tableName}` (
+        <foreach item="map" collection="maps">
+            `${map.name}` ${map.type} comment '${map.comment}',
+        </foreach>
+        <foreach item="map" collection="index">
+            INDEX `${map.name}`(`${map.field}`),
+        </foreach>
+        PRIMARY KEY (`id`)
+        ) COMMENT = '${tableComment}'
+        PARTITION BY HASH(`${partitionKey}`)
+        PARTITIONS ${partitionNum}
+    </update>
+
+    <!-- 添加RANGE分区 -->
+    <update id="addRangePartition" statementType="STATEMENT">
+        ALTER TABLE `${tableName}`
+        ADD PARTITION (
+            PARTITION ${partitionName} VALUES LESS THAN (${partitionValue})
+        )
+    </update>
+
+    <!-- 删除分区 -->
+    <update id="dropPartition" statementType="STATEMENT">
+        ALTER TABLE `${tableName}`
+        DROP PARTITION ${partitionName}
+    </update>
+
+    <!-- 重建分区 -->
+    <update id="rebuildPartition" statementType="STATEMENT">
+        ALTER TABLE `${tableName}`
+        REBUILD PARTITION ${partitionName}
+    </update>
+
+    <!-- 获取表分区信息 -->
+    <select id="getPartitionInfo" resultType="Map">
+        SELECT
+            partition_name,
+            partition_method,
+            partition_expression,
+            partition_description,
+            table_rows
+        FROM information_schema.PARTITIONS
+        WHERE table_schema = DATABASE()
+        AND table_name = #{tableName}
+        AND partition_name IS NOT NULL
+        ORDER BY partition_ordinal_position
+    </select>
+
+    <!-- 获取分区表记录数 -->
+    <select id="countByPartition" resultType="int">
+        SELECT table_rows
+        FROM information_schema.PARTITIONS
+        WHERE table_schema = DATABASE()
+        AND table_name = #{tableName}
+        AND partition_name = #{partitionName}
+    </select>
+
+    <!-- 在指定分区插入单条记录 -->
+    <insert id="saveToPartition" statementType="STATEMENT">
+        INSERT INTO `${tableName}` PARTITION (${partitionName})
+        <foreach item="map" collection="maps" open="(" separator="," close=")">
+            `${map.key}`
+        </foreach>
+        VALUES
+        <foreach item="map" collection="maps" open="(" separator="," close=")">
+            #{map.value}
+        </foreach>
+    </insert>
+
+    <!-- 在指定分区批量插入记录 -->
+    <insert id="saveBatchToPartition" statementType="STATEMENT">
+        INSERT INTO `${tableName}` PARTITION (${partitionName})
+        <foreach item="key" collection="keys" open="(" separator="," close=")">
+            `${key}`
+        </foreach>
+        VALUES
+        <foreach item="value" collection="values" separator=",">
+            <foreach item="item" collection="value" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </foreach>
+    </insert>
+
+    <!-- 在指定分区根据ID更新或插入记录（upsert） -->
+    <insert id="upsertToPartition" statementType="STATEMENT">
+        INSERT INTO `${tableName}` PARTITION (${partitionName})
+        <foreach item="value" index="key" collection="map" open="(" separator="," close=")">
+            `${key}`
+        </foreach>
+        VALUES
+        <foreach item="value" index="key" collection="map" open="(" separator="," close=")">
+            #{value}
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+        <foreach item="value" index="key" collection="map" separator=",">
+            <if test="key != 'Id'">
+                `${key}` = #{value}
+            </if>
+        </foreach>
+    </insert>
+
+    <!-- 在指定分区查询数据 -->
+    <select id="listFromPartition" statementType="STATEMENT" resultType="Map">
+        SELECT ${select}
+        FROM `${tableName}` PARTITION (${partitionName})
+        <where>
+            <if test="sql != null and sql != ''">
+                ${sql}
+            </if>
+        </where>
+    </select>
+
+    <!-- 在指定分区根据ID获取记录 -->
+    <select id="getByIdFromPartition" statementType="STATEMENT" resultType="Map">
+        SELECT ${select}
+        FROM `${tableName}` PARTITION (${partitionName})
+        <where>
+            <if test="id != null and id != ''">
+                Id = #{id}
+            </if>
+        </where>
+    </select>
+
+    <!-- 在指定分区根据条件删除记录 -->
+    <delete id="deleteFromPartition" statementType="STATEMENT">
+        DELETE FROM `${tableName}` PARTITION (${partitionName})
+        <where>
+            <if test="sql != null and sql != ''">
+                ${sql}
+            </if>
+        </where>
+    </delete>
+
+    <!-- 根据分区键值确定数据应该存储在哪个分区 -->
+    <select id="determinePartition" resultType="String">
+        SELECT partition_name
+        FROM information_schema.PARTITIONS
+        WHERE table_schema = DATABASE()
+        AND table_name = #{tableName}
+        AND partition_name IS NOT NULL
+        AND #{keyValue} &lt; partition_description
+        ORDER BY partition_description
+        LIMIT 1
+    </select>
+
+        <!-- 在指定分区根据ID更新记录 -->
+        <update id="updateByIdFromPartition" statementType="STATEMENT">
+            UPDATE `${tableName}` PARTITION (${partitionName})
+            SET
+            <foreach item="map" collection="maps" separator=",">
+                `${map.key}` = #{map.value}
+            </foreach>
+            WHERE id = #{id}
+        </update>
+
+</mapper>

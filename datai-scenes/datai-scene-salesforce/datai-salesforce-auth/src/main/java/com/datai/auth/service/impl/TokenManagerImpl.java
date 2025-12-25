@@ -64,20 +64,20 @@ public class TokenManagerImpl implements ITokenManager {
         DataiSfToken token = tokens.get(0);
         
         if (!"ACTIVE".equals(token.getStatus())) {
-            logger.warn("令牌状态无效，状态: {}, 令牌ID: {}", token.getStatus(), token.getTokenId());
+            logger.warn("令牌状态无效，状态: {}, 令牌ID: {}", token.getStatus(), token.getId());
             return false;
         }
         
         // 3. 验证令牌是否过期
         if (token.getAccessTokenExpire() != null && new Date().after(Date.from(token.getAccessTokenExpire().atZone(ZoneId.systemDefault()).toInstant()))) {
-            logger.warn("令牌已过期，令牌ID: {}", token.getTokenId());
+            logger.warn("令牌已过期，令牌ID: {}", token.getId());
             // 更新令牌状态为过期
             token.setStatus("EXPIRED");
             tokenService.updateDataiSfToken(token);
             return false;
         }
         
-        logger.info("令牌验证成功，令牌ID: {}", token.getTokenId());
+        logger.info("令牌验证成功，令牌ID: {}", token.getId());
         return true;
     }
     
@@ -114,12 +114,12 @@ public class TokenManagerImpl implements ITokenManager {
         int result = tokenService.updateDataiSfToken(token);
         
         if (result > 0) {
-            logger.info("令牌吊销成功，令牌ID: {}", token.getTokenId());
+            logger.info("令牌吊销成功，令牌ID: {}", token.getId());
             // 3. 更新关联的令牌绑定状态
-            updateTokenBindingStatus(token.getTokenId(), "REVOKED");
+            updateTokenBindingStatus(token.getId(), "REVOKED");
             return true;
         } else {
-            logger.error("令牌吊销失败，令牌ID: {}", token.getTokenId());
+            logger.error("令牌吊销失败，令牌ID: {}", token.getId());
             return false;
         }
     }
@@ -156,7 +156,7 @@ public class TokenManagerImpl implements ITokenManager {
         
         // 2. 创建令牌绑定记录
         DataiSfTokenBinding binding = new DataiSfTokenBinding();
-        binding.setTokenId(token.getTokenId());
+        binding.setTokenId(token.getId());
         
         // 3. 确定绑定类型
         String bindingType;
@@ -186,7 +186,7 @@ public class TokenManagerImpl implements ITokenManager {
         tokenBindingService.insertDataiSfTokenBinding(binding);
         
         logger.info("令牌绑定成功，令牌ID: {}, 绑定ID: {}, 绑定类型: {}", 
-                token.getTokenId(), binding.getBindingId(), bindingType);
+                token.getId(), binding.getId(), bindingType);
     }
     
     /**
@@ -221,14 +221,14 @@ public class TokenManagerImpl implements ITokenManager {
         
         // 3. 根据令牌ID查找绑定记录
         DataiSfTokenBinding query = new DataiSfTokenBinding();
-        query.setTokenId(token.getTokenId());
+        query.setTokenId(token.getId());
         query.setStatus("ACTIVE");
         
         List<DataiSfTokenBinding> bindings = tokenBindingService.selectDataiSfTokenBindingList(query);
         
         // 4. 如果没有绑定记录，默认允许访问
         if (bindings.isEmpty()) {
-            logger.info("没有找到令牌绑定记录，默认允许访问，令牌ID: {}", token.getTokenId());
+            logger.info("没有找到令牌绑定记录，默认允许访问，令牌ID: {}", token.getId());
             return true;
         }
         
@@ -248,14 +248,14 @@ public class TokenManagerImpl implements ITokenManager {
                 match = (ip != null && ip.equals(binding.getBindingIp()));
                 break;
             default:
-                logger.warn("未知的绑定类型: {}, 绑定ID: {}", binding.getBindingType(), binding.getBindingId());
+                logger.warn("未知的绑定类型: {}, 绑定ID: {}", binding.getBindingType(), binding.getId());
                 match = true;
         }
         
         if (match) {
-            logger.info("令牌绑定匹配成功，绑定ID: {}", binding.getBindingId());
+            logger.info("令牌绑定匹配成功，绑定ID: {}", binding.getId());
         } else {
-            logger.warn("令牌绑定匹配失败，绑定ID: {}, 绑定类型: {}", binding.getBindingId(), binding.getBindingType());
+            logger.warn("令牌绑定匹配失败，绑定ID: {}, 绑定类型: {}", binding.getId(), binding.getBindingType());
         }
         
         return match;

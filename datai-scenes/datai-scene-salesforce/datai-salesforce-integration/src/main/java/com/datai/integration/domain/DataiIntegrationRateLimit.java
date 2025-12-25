@@ -9,65 +9,59 @@ import com.datai.common.annotation.Excel;
 import com.datai.common.core.domain.BaseEntity;
 
 /**
- * API限流管理对象 datai_integration_rate_limit
+ * API限流监控对象 datai_integration_rate_limit
  * 
  * @author datai
- * @date 2025-12-22
+ * @date 2025-12-24
  */
-@Schema(description = "API限流管理对象")
+@Schema(description = "API限流监控对象")
 public class DataiIntegrationRateLimit extends BaseEntity
 {
     private static final long serialVersionUID = 1L;
 
 
-    /** 限流记录ID */
-    @Schema(title = "限流记录ID")
+    /** 主键ID */
+    @Schema(title = "主键ID")
     private Long id;
 
-    /** API类型: SOAP/BULK_V1/BULK_V2 */
-    @Schema(title = "API类型: SOAP/BULK_V1/BULK_V2")
-    @Excel(name = "API类型: SOAP/BULK_V1/BULK_V2")
+    /** 部门ID */
+    @Schema(title = "部门ID")
+    private Long deptId;
+
+    /** 接口类型 */
+    @Schema(title = "接口类型")
+    @Excel(name = "接口类型")
     private String apiType;
 
-    /** 时间窗口开始 */
-    @Schema(title = "时间窗口开始")
-    @Excel(name = "时间窗口开始")
-    private LocalDateTime windowStart;
+    /** 限制维度 */
+    @Schema(title = "限制维度")
+    @Excel(name = "限制维度")
+    private String limitType;
 
-    /** 时间窗口结束 */
-    @Schema(title = "时间窗口结束")
-    @Excel(name = "时间窗口结束")
-    private LocalDateTime windowEnd;
+    /** 已用额度 */
+    @Schema(title = "已用额度")
+    @Excel(name = "已用额度")
+    private Integer currentUsage;
 
-    /** 请求计数 */
-    @Schema(title = "请求计数")
-    @Excel(name = "请求计数")
-    private Long requestCount;
+    /** 总额度 */
+    @Schema(title = "总额度")
+    @Excel(name = "总额度")
+    private Integer maxLimit;
 
-    /** 限制阈值 */
-    @Schema(title = "限制阈值")
-    @Excel(name = "限制阈值")
-    private Long limitThreshold;
-
-    /** 剩余请求次数 */
-    @Schema(title = "剩余请求次数")
-    @Excel(name = "剩余请求次数")
-    private Long remainingRequests;
+    /** 剩余额度 */
+    @Schema(title = "剩余额度")
+    @Excel(name = "剩余额度")
+    private Integer remainingVal;
 
     /** 重置时间 */
     @Schema(title = "重置时间")
     @Excel(name = "重置时间")
     private LocalDateTime resetTime;
 
-    /** 是否被限流 */
-    @Schema(title = "是否被限流")
-    @Excel(name = "是否被限流")
-    private Integer isThrottled;
-
-    /** 租户编号 */
-    @Schema(title = "租户编号")
-    @Excel(name = "租户编号")
-    private String tenantId;
+    /** 是否限流 */
+    @Schema(title = "是否限流")
+    @Excel(name = "是否限流")
+    private Boolean isBlocked;
     public void setId(Long id) 
     {
         this.id = id;
@@ -76,6 +70,17 @@ public class DataiIntegrationRateLimit extends BaseEntity
     public Long getId() 
     {
         return id;
+    }
+
+
+    public void setDeptId(Long deptId) 
+    {
+        this.deptId = deptId;
+    }
+
+    public Long getDeptId() 
+    {
+        return deptId;
     }
 
 
@@ -90,58 +95,47 @@ public class DataiIntegrationRateLimit extends BaseEntity
     }
 
 
-    public void setWindowStart(LocalDateTime windowStart) 
+    public void setLimitType(String limitType) 
     {
-        this.windowStart = windowStart;
+        this.limitType = limitType;
     }
 
-    public LocalDateTime getWindowStart() 
+    public String getLimitType() 
     {
-        return windowStart;
-    }
-
-
-    public void setWindowEnd(LocalDateTime windowEnd) 
-    {
-        this.windowEnd = windowEnd;
-    }
-
-    public LocalDateTime getWindowEnd() 
-    {
-        return windowEnd;
+        return limitType;
     }
 
 
-    public void setRequestCount(Long requestCount) 
+    public void setCurrentUsage(Integer currentUsage) 
     {
-        this.requestCount = requestCount;
+        this.currentUsage = currentUsage;
     }
 
-    public Long getRequestCount() 
+    public Integer getCurrentUsage() 
     {
-        return requestCount;
-    }
-
-
-    public void setLimitThreshold(Long limitThreshold) 
-    {
-        this.limitThreshold = limitThreshold;
-    }
-
-    public Long getLimitThreshold() 
-    {
-        return limitThreshold;
+        return currentUsage;
     }
 
 
-    public void setRemainingRequests(Long remainingRequests) 
+    public void setMaxLimit(Integer maxLimit) 
     {
-        this.remainingRequests = remainingRequests;
+        this.maxLimit = maxLimit;
     }
 
-    public Long getRemainingRequests() 
+    public Integer getMaxLimit() 
     {
-        return remainingRequests;
+        return maxLimit;
+    }
+
+
+    public void setRemainingVal(Integer remainingVal) 
+    {
+        this.remainingVal = remainingVal;
+    }
+
+    public Integer getRemainingVal() 
+    {
+        return remainingVal;
     }
 
 
@@ -156,25 +150,14 @@ public class DataiIntegrationRateLimit extends BaseEntity
     }
 
 
-    public void setIsThrottled(Integer isThrottled) 
+    public void setIsBlocked(Boolean isBlocked) 
     {
-        this.isThrottled = isThrottled;
+        this.isBlocked = isBlocked;
     }
 
-    public Integer getIsThrottled() 
+    public Boolean getIsBlocked() 
     {
-        return isThrottled;
-    }
-
-
-    public void setTenantId(String tenantId) 
-    {
-        this.tenantId = tenantId;
-    }
-
-    public String getTenantId() 
-    {
-        return tenantId;
+        return isBlocked;
     }
 
 
@@ -183,17 +166,19 @@ public class DataiIntegrationRateLimit extends BaseEntity
     public String toString() {
         return new ToStringBuilder(this,ToStringStyle.MULTI_LINE_STYLE)
             .append("id", getId())
+            .append("deptId", getDeptId())
             .append("apiType", getApiType())
-            .append("windowStart", getWindowStart())
-            .append("windowEnd", getWindowEnd())
-            .append("requestCount", getRequestCount())
-            .append("limitThreshold", getLimitThreshold())
-            .append("remainingRequests", getRemainingRequests())
+            .append("limitType", getLimitType())
+            .append("currentUsage", getCurrentUsage())
+            .append("maxLimit", getMaxLimit())
+            .append("remainingVal", getRemainingVal())
             .append("resetTime", getResetTime())
-            .append("isThrottled", getIsThrottled())
+            .append("isBlocked", getIsBlocked())
+            .append("remark", getRemark())
+            .append("createBy", getCreateBy())
             .append("createTime", getCreateTime())
+            .append("updateBy", getUpdateBy())
             .append("updateTime", getUpdateTime())
-            .append("tenantId", getTenantId())
             .toString();
     }
 }

@@ -22,6 +22,19 @@
             <groupId>com.datai</groupId>
             <artifactId>datai-salesforce-auth</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>com.datai</groupId>
+            <artifactId>datai-salesforce-common</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>salesforce</groupId>
+            <artifactId>salesforce-partner</artifactId>
+            <version>0.0.1</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/src/main/resources/lib/partner.jar</systemPath>
+        </dependency>
     </dependencies>
 
 </project>

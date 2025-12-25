@@ -12,7 +12,7 @@ import com.datai.common.core.domain.BaseEntity;
  * 失败登录对象 datai_sf_failed_login
  * 
  * @author datai
- * @date 2025-12-14
+ * @date 2025-12-24
  */
 @Schema(description = "失败登录对象")
 public class DataiSfFailedLogin extends BaseEntity
@@ -22,12 +22,11 @@ public class DataiSfFailedLogin extends BaseEntity
 
     /** 记录ID */
     @Schema(title = "记录ID")
-    private Long failedId;
+    private Long id;
 
-    /** 租户编号 */
-    @Schema(title = "租户编号")
-    @Excel(name = "租户编号")
-    private String tenantId;
+    /** 部门ID */
+    @Schema(title = "部门ID")
+    private Long deptId;
 
     /** 用户名 */
     @Schema(title = "用户名")
@@ -78,25 +77,25 @@ public class DataiSfFailedLogin extends BaseEntity
     @Schema(title = "锁定原因")
     @Excel(name = "锁定原因")
     private String lockReason;
-    public void setFailedId(Long failedId) 
+    public void setId(Long id) 
     {
-        this.failedId = failedId;
+        this.id = id;
     }
 
-    public Long getFailedId() 
+    public Long getId() 
     {
-        return failedId;
+        return id;
     }
 
 
-    public void setTenantId(String tenantId) 
+    public void setDeptId(Long deptId) 
     {
-        this.tenantId = tenantId;
+        this.deptId = deptId;
     }
 
-    public String getTenantId() 
+    public Long getDeptId() 
     {
-        return tenantId;
+        return deptId;
     }
 
 
@@ -122,12 +121,12 @@ public class DataiSfFailedLogin extends BaseEntity
     }
 
 
-    public void setFailedTime(LocalDateTime failedTime)
+    public void setFailedTime(LocalDateTime failedTime) 
     {
         this.failedTime = failedTime;
     }
 
-    public LocalDateTime getFailedTime()
+    public LocalDateTime getFailedTime() 
     {
         return failedTime;
     }
@@ -177,23 +176,23 @@ public class DataiSfFailedLogin extends BaseEntity
     }
 
 
-    public void setLockTime(LocalDateTime lockTime)
+    public void setLockTime(LocalDateTime lockTime) 
     {
         this.lockTime = lockTime;
     }
 
-    public LocalDateTime getLockTime()
+    public LocalDateTime getLockTime() 
     {
         return lockTime;
     }
 
 
-    public void setUnlockTime(LocalDateTime unlockTime)
+    public void setUnlockTime(LocalDateTime unlockTime) 
     {
         this.unlockTime = unlockTime;
     }
 
-    public LocalDateTime getUnlockTime()
+    public LocalDateTime getUnlockTime() 
     {
         return unlockTime;
     }
@@ -214,8 +213,8 @@ public class DataiSfFailedLogin extends BaseEntity
     @Override
     public String toString() {
         return new ToStringBuilder(this,ToStringStyle.MULTI_LINE_STYLE)
-            .append("failedId", getFailedId())
-            .append("tenantId", getTenantId())
+            .append("id", getId())
+            .append("deptId", getDeptId())
             .append("username", getUsername())
             .append("loginType", getLoginType())
             .append("failedTime", getFailedTime())
@@ -228,6 +227,8 @@ public class DataiSfFailedLogin extends BaseEntity
             .append("lockReason", getLockReason())
             .append("createBy", getCreateBy())
             .append("createTime", getCreateTime())
+            .append("updateBy", getUpdateBy())
+            .append("updateTime", getUpdateTime())
             .toString();
     }
 }

@@ -1,22 +1,21 @@
 package com.datai.integration.service.impl;
 
 import java.util.List;
-
-import com.datai.common.core.domain.model.LoginUser;
-import com.datai.common.utils.DateUtils;
+        import com.datai.common.utils.DateUtils;
         import com.datai.common.utils.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.datai.integration.mapper.DataiIntegrationPicklistMapper;
 import com.datai.integration.domain.DataiIntegrationPicklist;
 import com.datai.integration.service.IDataiIntegrationPicklistService;
+import com.datai.common.core.domain.model.LoginUser;
 
 
 /**
- * 字段选择列信息Service业务层处理
+ * 字段选择列表信息Service业务层处理
  *
  * @author datai
- * @date 2025-12-22
+ * @date 2025-12-24
  */
 @Service
 public class DataiIntegrationPicklistServiceImpl implements IDataiIntegrationPicklistService {
@@ -24,22 +23,22 @@ public class DataiIntegrationPicklistServiceImpl implements IDataiIntegrationPic
     private DataiIntegrationPicklistMapper dataiIntegrationPicklistMapper;
 
     /**
-     * 查询字段选择列信息
+     * 查询字段选择列表信息
      *
-     * @param id 字段选择列信息主键
-     * @return 字段选择列信息
+     * @param id 字段选择列表信息主键
+     * @return 字段选择列表信息
      */
     @Override
-    public DataiIntegrationPicklist selectDataiIntegrationPicklistById(Long id)
+    public DataiIntegrationPicklist selectDataiIntegrationPicklistById(Integer id)
     {
         return dataiIntegrationPicklistMapper.selectDataiIntegrationPicklistById(id);
     }
 
     /**
-     * 查询字段选择列信息列表
+     * 查询字段选择列表信息列表
      *
-     * @param dataiIntegrationPicklist 字段选择列信息
-     * @return 字段选择列信息
+     * @param dataiIntegrationPicklist 字段选择列表信息
+     * @return 字段选择列表信息
      */
     @Override
     public List<DataiIntegrationPicklist> selectDataiIntegrationPicklistList(DataiIntegrationPicklist dataiIntegrationPicklist)
@@ -48,9 +47,9 @@ public class DataiIntegrationPicklistServiceImpl implements IDataiIntegrationPic
     }
 
     /**
-     * 新增字段选择列信息
+     * 新增字段选择列表信息
      *
-     * @param dataiIntegrationPicklist 字段选择列信息
+     * @param dataiIntegrationPicklist 字段选择列表信息
      * @return 结果
      */
     @Override
@@ -67,9 +66,9 @@ public class DataiIntegrationPicklistServiceImpl implements IDataiIntegrationPic
     }
 
     /**
-     * 修改字段选择列信息
+     * 修改字段选择列表信息
      *
-     * @param dataiIntegrationPicklist 字段选择列信息
+     * @param dataiIntegrationPicklist 字段选择列表信息
      * @return 结果
      */
     @Override
@@ -84,25 +83,25 @@ public class DataiIntegrationPicklistServiceImpl implements IDataiIntegrationPic
     }
 
     /**
-     * 批量删除字段选择列信息
+     * 批量删除字段选择列表信息
      *
-     * @param ids 需要删除的字段选择列信息主键
+     * @param ids 需要删除的字段选择列表信息主键
      * @return 结果
      */
     @Override
-    public int deleteDataiIntegrationPicklistByIds(Long[] ids)
+    public int deleteDataiIntegrationPicklistByIds(Integer[] ids)
     {
         return dataiIntegrationPicklistMapper.deleteDataiIntegrationPicklistByIds(ids);
     }
 
     /**
-     * 删除字段选择列信息信息
+     * 删除字段选择列表信息信息
      *
-     * @param id 字段选择列信息主键
+     * @param id 字段选择列表信息主键
      * @return 结果
      */
     @Override
-    public int deleteDataiIntegrationPicklistById(Long id)
+    public int deleteDataiIntegrationPicklistById(Integer id)
     {
         return dataiIntegrationPicklistMapper.deleteDataiIntegrationPicklistById(id);
     }

@@ -7,17 +7,17 @@ import com.datai.auth.domain.DataiSfTokenBinding;
  * 令牌绑定Service接口
  * 
  * @author datai
- * @date 2025-12-14
+ * @date 2025-12-24
  */
 public interface IDataiSfTokenBindingService 
 {
     /**
      * 查询令牌绑定
      * 
-     * @param bindingId 令牌绑定主键
+     * @param id 令牌绑定主键
      * @return 令牌绑定
      */
-    public DataiSfTokenBinding selectDataiSfTokenBindingByBindingId(Long bindingId);
+    public DataiSfTokenBinding selectDataiSfTokenBindingById(Long id);
 
     /**
      * 查询令牌绑定列表
@@ -46,16 +46,16 @@ public interface IDataiSfTokenBindingService
     /**
      * 批量删除令牌绑定
      * 
-     * @param bindingIds 需要删除的令牌绑定主键集合
+     * @param ids 需要删除的令牌绑定主键集合
      * @return 结果
      */
-    public int deleteDataiSfTokenBindingByBindingIds(Long[] bindingIds);
+    public int deleteDataiSfTokenBindingByIds(Long[] ids);
 
     /**
      * 删除令牌绑定信息
      * 
-     * @param bindingId 令牌绑定主键
+     * @param id 令牌绑定主键
      * @return 结果
      */
-    public int deleteDataiSfTokenBindingByBindingId(Long bindingId);
+    public int deleteDataiSfTokenBindingById(Long id);
 }

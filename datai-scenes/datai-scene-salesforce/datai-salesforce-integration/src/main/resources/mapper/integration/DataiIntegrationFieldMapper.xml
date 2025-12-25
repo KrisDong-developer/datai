@@ -6,6 +6,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     
     <resultMap type="DataiIntegrationField" id="DataiIntegrationFieldResult">
         <result property="id" column="id" />
+        <result property="deptId" column="dept_id" />
         <result property="api" column="api" />
         <result property="field" column="field" />
         <result property="label" column="label" />
@@ -50,17 +51,17 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="mask" column="mask" />
         <result property="maskType" column="mask_type" />
         <result property="picklistValues" column="picklist_values" />
+        <result property="remark" column="remark" />
         <result property="createBy" column="create_by" />
         <result property="createTime" column="create_time" />
         <result property="updateBy" column="update_by" />
         <result property="updateTime" column="update_time" />
-        <result property="remark" column="remark" />
-        <result property="tenantId" column="tenant_id" />
     </resultMap>
 
     <sql id="selectDataiIntegrationFieldVo">
         select 
             dif.id,
+            dif.dept_id,
             dif.api,
             dif.field,
             dif.label,
@@ -105,18 +106,18 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             dif.mask,
             dif.mask_type,
             dif.picklist_values,
+            dif.remark,
             dif.create_by,
             dif.create_time,
             dif.update_by,
-            dif.update_time,
-            dif.remark,
-            dif.tenant_id
+            dif.update_time
         from datai_integration_field dif
     </sql>
 
     <select id="selectDataiIntegrationFieldList" parameterType="DataiIntegrationField" resultMap="DataiIntegrationFieldResult">
         <include refid="selectDataiIntegrationFieldVo"/>
         <where>
+            <if test="deptId != null "> and dif.dept_id = #{deptId}</if>
             <if test="api != null  and api != ''"> and dif.api = #{api}</if>
             <if test="field != null  and field != ''"> and dif.field = #{field}</if>
             <if test="label != null  and label != ''"> and dif.label = #{label}</if>
@@ -161,11 +162,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="mask != null  and mask != ''"> and dif.mask = #{mask}</if>
             <if test="maskType != null  and maskType != ''"> and dif.mask_type = #{maskType}</if>
             <if test="picklistValues != null  and picklistValues != ''"> and dif.picklist_values = #{picklistValues}</if>
-            <if test="tenantId != null  and tenantId != ''"> and dif.tenant_id = #{tenantId}</if>
         </where>
     </select>
     
-    <select id="selectDataiIntegrationFieldById" parameterType="Long" resultMap="DataiIntegrationFieldResult">
+    <select id="selectDataiIntegrationFieldById" parameterType="Integer" resultMap="DataiIntegrationFieldResult">
         <include refid="selectDataiIntegrationFieldVo"/>
         where dif.id = #{id}
     </select>
@@ -173,6 +173,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <insert id="insertDataiIntegrationField" parameterType="DataiIntegrationField" useGeneratedKeys="true" keyProperty="id">
         insert into datai_integration_field
         <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="deptId != null">dept_id,</if>
             <if test="api != null and api != ''">api,</if>
             <if test="field != null and field != ''">field,</if>
             <if test="label != null">label,</if>
@@ -217,14 +218,14 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="mask != null">mask,</if>
             <if test="maskType != null">mask_type,</if>
             <if test="picklistValues != null">picklist_values,</if>
+            <if test="remark != null">remark,</if>
             <if test="createBy != null">create_by,</if>
             <if test="createTime != null">create_time,</if>
             <if test="updateBy != null">update_by,</if>
             <if test="updateTime != null">update_time,</if>
-            <if test="remark != null">remark,</if>
-            <if test="tenantId != null">tenant_id,</if>
          </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="deptId != null">#{deptId},</if>
             <if test="api != null and api != ''">#{api},</if>
             <if test="field != null and field != ''">#{field},</if>
             <if test="label != null">#{label},</if>
@@ -269,18 +270,18 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="mask != null">#{mask},</if>
             <if test="maskType != null">#{maskType},</if>
             <if test="picklistValues != null">#{picklistValues},</if>
+            <if test="remark != null">#{remark},</if>
             <if test="createBy != null">#{createBy},</if>
             <if test="createTime != null">#{createTime},</if>
             <if test="updateBy != null">#{updateBy},</if>
             <if test="updateTime != null">#{updateTime},</if>
-            <if test="remark != null">#{remark},</if>
-            <if test="tenantId != null">#{tenantId},</if>
          </trim>
     </insert>
 
     <update id="updateDataiIntegrationField" parameterType="DataiIntegrationField">
         update datai_integration_field
         <trim prefix="SET" suffixOverrides=",">
+            <if test="deptId != null">dept_id = #{deptId},</if>
             <if test="api != null and api != ''">api = #{api},</if>
             <if test="field != null and field != ''">field = #{field},</if>
             <if test="label != null">label = #{label},</if>
@@ -325,17 +326,16 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="mask != null">mask = #{mask},</if>
             <if test="maskType != null">mask_type = #{maskType},</if>
             <if test="picklistValues != null">picklist_values = #{picklistValues},</if>
+            <if test="remark != null">remark = #{remark},</if>
             <if test="createBy != null">create_by = #{createBy},</if>
             <if test="createTime != null">create_time = #{createTime},</if>
             <if test="updateBy != null">update_by = #{updateBy},</if>
             <if test="updateTime != null">update_time = #{updateTime},</if>
-            <if test="remark != null">remark = #{remark},</if>
-            <if test="tenantId != null">tenant_id = #{tenantId},</if>
         </trim>
         where datai_integration_field.id = #{id}
     </update>
 
-    <delete id="deleteDataiIntegrationFieldById" parameterType="Long">
+    <delete id="deleteDataiIntegrationFieldById" parameterType="Integer">
         delete from datai_integration_field where id = #{id}
     </delete>
 

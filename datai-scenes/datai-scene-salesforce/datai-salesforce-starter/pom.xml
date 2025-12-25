@@ -24,7 +24,7 @@
         </dependency>
         <dependency>
             <groupId>com.datai</groupId>
-            <artifactId>datai-salesforce-config</artifactId>
+            <artifactId>datai-salesforce-setting</artifactId>
         </dependency>
         <dependency>
             <groupId>com.datai</groupId>

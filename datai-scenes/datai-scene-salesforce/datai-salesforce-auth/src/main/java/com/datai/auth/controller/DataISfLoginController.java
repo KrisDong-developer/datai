@@ -341,4 +341,43 @@ public class DataISfLoginController {
             MDC.remove("traceId");
         }
     }
+    
+    /**
+     * 执行Salesforce自动登录
+     * 使用上一次成功登录的参数进行自动登录
+     * 
+     * @return 登录结果
+     */
+    @Operation(summary = "执行自动登录", description = "使用上一次成功登录的参数进行自动登录")
+    @PostMapping("/auto")
+    public AjaxResult autoLogin() {
+        // 添加跟踪ID到日志上下文
+        String traceId = UUID.randomUUID().toString();
+        MDC.put("traceId", traceId);
+        
+        logger.info("执行Salesforce自动登录");
+        try {
+            SalesforceLoginResult result = salesforceLoginService.autoLogin();
+            if (result.isSuccess()) {
+                logger.info("Salesforce自动登录成功，用户: {}, 访问令牌前缀: {}", 
+                    result.getUserId(), 
+                    result.getAccessToken() != null ? result.getAccessToken().substring(0, Math.min(10, result.getAccessToken().length())) : "null");
+                return AjaxResult.success("自动登录成功", result);
+            } else {
+                logger.warn("Salesforce自动登录失败，错误代码: {}, 错误信息: {}", 
+                    result.getErrorCode(), result.getErrorMessage());
+                return AjaxResult.error(result.getErrorMessage());
+            }
+        } catch (SalesforceAuthException e) {
+            logger.error("Salesforce认证异常，错误代码: {}, 错误信息: {}", 
+                e.getErrorCode(), e.getMessage(), e);
+            return AjaxResult.error("认证失败: " + e.getMessage());
+        } catch (Exception e) {
+            logger.error("自动登录失败", e);
+            return AjaxResult.error("自动登录失败: " + e.getMessage());
+        } finally {
+            // 清理MDC上下文
+            MDC.remove("traceId");
+        }
+    }
 }

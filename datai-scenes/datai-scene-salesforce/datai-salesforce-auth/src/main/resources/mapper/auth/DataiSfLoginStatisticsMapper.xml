@@ -5,8 +5,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 <mapper namespace="com.datai.auth.mapper.DataiSfLoginStatisticsMapper">
     
     <resultMap type="DataiSfLoginStatistics" id="DataiSfLoginStatisticsResult">
-        <result property="statId" column="stat_id" />
-        <result property="tenantId" column="tenant_id" />
+        <result property="id" column="id" />
+        <result property="deptId" column="dept_id" />
         <result property="statDate" column="stat_date" />
         <result property="statHour" column="stat_hour" />
         <result property="loginType" column="login_type" />
@@ -22,8 +22,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 
     <sql id="selectDataiSfLoginStatisticsVo">
         select 
-            dsls.stat_id,
-            dsls.tenant_id,
+            dsls.id,
+            dsls.dept_id,
             dsls.stat_date,
             dsls.stat_hour,
             dsls.login_type,
@@ -41,7 +41,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <select id="selectDataiSfLoginStatisticsList" parameterType="DataiSfLoginStatistics" resultMap="DataiSfLoginStatisticsResult">
         <include refid="selectDataiSfLoginStatisticsVo"/>
         <where>
-            <if test="tenantId != null  and tenantId != ''"> and dsls.tenant_id = #{tenantId}</if>
+            <if test="deptId != null "> and dsls.dept_id = #{deptId}</if>
             <if test="statDate != null "> and dsls.stat_date = #{statDate}</if>
             <if test="statHour != null "> and dsls.stat_hour = #{statHour}</if>
             <if test="loginType != null  and loginType != ''"> and dsls.login_type = #{loginType}</if>
@@ -52,15 +52,15 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         </where>
     </select>
     
-    <select id="selectDataiSfLoginStatisticsByStatId" parameterType="Long" resultMap="DataiSfLoginStatisticsResult">
+    <select id="selectDataiSfLoginStatisticsById" parameterType="Long" resultMap="DataiSfLoginStatisticsResult">
         <include refid="selectDataiSfLoginStatisticsVo"/>
-        where dsls.stat_id = #{statId}
+        where dsls.id = #{id}
     </select>
         
-    <insert id="insertDataiSfLoginStatistics" parameterType="DataiSfLoginStatistics" useGeneratedKeys="true" keyProperty="statId">
+    <insert id="insertDataiSfLoginStatistics" parameterType="DataiSfLoginStatistics" useGeneratedKeys="true" keyProperty="id">
         insert into datai_sf_login_statistics
         <trim prefix="(" suffix=")" suffixOverrides=",">
-            <if test="tenantId != null">tenant_id,</if>
+            <if test="deptId != null">dept_id,</if>
             <if test="statDate != null">stat_date,</if>
             <if test="statHour != null">stat_hour,</if>
             <if test="loginType != null and loginType != ''">login_type,</if>
@@ -74,7 +74,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="updateTime != null">update_time,</if>
          </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
-            <if test="tenantId != null">#{tenantId},</if>
+            <if test="deptId != null">#{deptId},</if>
             <if test="statDate != null">#{statDate},</if>
             <if test="statHour != null">#{statHour},</if>
             <if test="loginType != null and loginType != ''">#{loginType},</if>
@@ -92,7 +92,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <update id="updateDataiSfLoginStatistics" parameterType="DataiSfLoginStatistics">
         update datai_sf_login_statistics
         <trim prefix="SET" suffixOverrides=",">
-            <if test="tenantId != null">tenant_id = #{tenantId},</if>
+            <if test="deptId != null">dept_id = #{deptId},</if>
             <if test="statDate != null">stat_date = #{statDate},</if>
             <if test="statHour != null">stat_hour = #{statHour},</if>
             <if test="loginType != null and loginType != ''">login_type = #{loginType},</if>
@@ -105,17 +105,17 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="updateBy != null">update_by = #{updateBy},</if>
             <if test="updateTime != null">update_time = #{updateTime},</if>
         </trim>
-        where datai_sf_login_statistics.stat_id = #{statId}
+        where datai_sf_login_statistics.id = #{id}
     </update>
 
-    <delete id="deleteDataiSfLoginStatisticsByStatId" parameterType="Long">
-        delete from datai_sf_login_statistics where stat_id = #{statId}
+    <delete id="deleteDataiSfLoginStatisticsById" parameterType="Long">
+        delete from datai_sf_login_statistics where id = #{id}
     </delete>
 
-    <delete id="deleteDataiSfLoginStatisticsByStatIds" parameterType="String">
-        delete from datai_sf_login_statistics where stat_id in 
-        <foreach item="statId" collection="array" open="(" separator="," close=")">
-            #{statId}
+    <delete id="deleteDataiSfLoginStatisticsByIds" parameterType="String">
+        delete from datai_sf_login_statistics where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
         </foreach>
     </delete>
 </mapper>

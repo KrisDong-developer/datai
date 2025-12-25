@@ -27,7 +27,7 @@ import io.swagger.v3.oas.annotations.Operation;
  * 令牌Controller
  * 
  * @author datai
- * @date 2025-12-14
+ * @date 2025-12-24
  */
 @RestController
 @RequestMapping("/auth/token")
@@ -69,10 +69,10 @@ public class DataiSfTokenController extends BaseController
      */
     @Operation(summary = "获取令牌详细信息")
     @PreAuthorize("@ss.hasPermi('auth:token:query')")
-    @GetMapping(value = "/{tokenId}")
-    public AjaxResult getInfo(@PathVariable("tokenId") Long tokenId)
+    @GetMapping(value = "/{id}")
+    public AjaxResult getInfo(@PathVariable("id") Long id)
     {
-        return success(dataiSfTokenService.selectDataiSfTokenByTokenId(tokenId));
+        return success(dataiSfTokenService.selectDataiSfTokenById(id));
     }
 
     /**
@@ -105,9 +105,9 @@ public class DataiSfTokenController extends BaseController
     @Operation(summary = "删除令牌")
     @PreAuthorize("@ss.hasPermi('auth:token:remove')")
     @Log(title = "令牌", businessType = BusinessType.DELETE)
-    @DeleteMapping("/{tokenIds}")
-    public AjaxResult remove(@PathVariable( name = "tokenIds" ) Long[] tokenIds) 
+    @DeleteMapping("/{ids}")
+    public AjaxResult remove(@PathVariable( name = "ids" ) Long[] ids) 
     {
-        return toAjax(dataiSfTokenService.deleteDataiSfTokenByTokenIds(tokenIds));
+        return toAjax(dataiSfTokenService.deleteDataiSfTokenByIds(ids));
     }
 }

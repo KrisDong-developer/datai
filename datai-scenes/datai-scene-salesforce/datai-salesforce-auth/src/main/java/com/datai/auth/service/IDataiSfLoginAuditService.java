@@ -7,17 +7,17 @@ import com.datai.auth.domain.DataiSfLoginAudit;
  * 登录审计日志Service接口
  * 
  * @author datai
- * @date 2025-12-14
+ * @date 2025-12-24
  */
 public interface IDataiSfLoginAuditService 
 {
     /**
      * 查询登录审计日志
      * 
-     * @param auditId 登录审计日志主键
+     * @param id 登录审计日志主键
      * @return 登录审计日志
      */
-    public DataiSfLoginAudit selectDataiSfLoginAuditByAuditId(Long auditId);
+    public DataiSfLoginAudit selectDataiSfLoginAuditById(Long id);
 
     /**
      * 查询登录审计日志列表
@@ -46,16 +46,16 @@ public interface IDataiSfLoginAuditService
     /**
      * 批量删除登录审计日志
      * 
-     * @param auditIds 需要删除的登录审计日志主键集合
+     * @param ids 需要删除的登录审计日志主键集合
      * @return 结果
      */
-    public int deleteDataiSfLoginAuditByAuditIds(Long[] auditIds);
+    public int deleteDataiSfLoginAuditByIds(Long[] ids);
 
     /**
      * 删除登录审计日志信息
      * 
-     * @param auditId 登录审计日志主键
+     * @param id 登录审计日志主键
      * @return 结果
      */
-    public int deleteDataiSfLoginAuditByAuditId(Long auditId);
+    public int deleteDataiSfLoginAuditById(Long id);
 }

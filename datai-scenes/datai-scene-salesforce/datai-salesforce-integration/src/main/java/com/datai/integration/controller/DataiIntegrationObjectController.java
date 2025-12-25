@@ -24,23 +24,23 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Operation;
 
 /**
- * 对象信息Controller
+ * 对象同步控制Controller
  * 
  * @author datai
- * @date 2025-12-22
+ * @date 2025-12-24
  */
 @RestController
 @RequestMapping("/integration/object")
-@Tag(name = "【对象信息】管理")
+@Tag(name = "【对象同步控制】管理")
 public class DataiIntegrationObjectController extends BaseController
 {
     @Autowired
     private IDataiIntegrationObjectService dataiIntegrationObjectService;
 
     /**
-     * 查询对象信息列表
+     * 查询对象同步控制列表
      */
-    @Operation(summary = "查询对象信息列表")
+    @Operation(summary = "查询对象同步控制列表")
     @PreAuthorize("@ss.hasPermi('integration:object:list')")
     @GetMapping("/list")
     public TableDataInfo list(DataiIntegrationObject dataiIntegrationObject)
@@ -51,36 +51,36 @@ public class DataiIntegrationObjectController extends BaseController
     }
 
     /**
-     * 导出对象信息列表
+     * 导出对象同步控制列表
      */
-    @Operation(summary = "导出对象信息列表")
+    @Operation(summary = "导出对象同步控制列表")
     @PreAuthorize("@ss.hasPermi('integration:object:export')")
-    @Log(title = "对象信息", businessType = BusinessType.EXPORT)
+    @Log(title = "对象同步控制", businessType = BusinessType.EXPORT)
     @PostMapping("/export")
     public void export(HttpServletResponse response, DataiIntegrationObject dataiIntegrationObject)
     {
         List<DataiIntegrationObject> list = dataiIntegrationObjectService.selectDataiIntegrationObjectList(dataiIntegrationObject);
         ExcelUtil<DataiIntegrationObject> util = new ExcelUtil<DataiIntegrationObject>(DataiIntegrationObject.class);
-        util.exportExcel(response, list, "对象信息数据");
+        util.exportExcel(response, list, "对象同步控制数据");
     }
 
     /**
-     * 获取对象信息详细信息
+     * 获取对象同步控制详细信息
      */
-    @Operation(summary = "获取对象信息详细信息")
+    @Operation(summary = "获取对象同步控制详细信息")
     @PreAuthorize("@ss.hasPermi('integration:object:query')")
     @GetMapping(value = "/{id}")
-    public AjaxResult getInfo(@PathVariable("id") Long id)
+    public AjaxResult getInfo(@PathVariable("id") Integer id)
     {
         return success(dataiIntegrationObjectService.selectDataiIntegrationObjectById(id));
     }
 
     /**
-     * 新增对象信息
+     * 新增对象同步控制
      */
-    @Operation(summary = "新增对象信息")
+    @Operation(summary = "新增对象同步控制")
     @PreAuthorize("@ss.hasPermi('integration:object:add')")
-    @Log(title = "对象信息", businessType = BusinessType.INSERT)
+    @Log(title = "对象同步控制", businessType = BusinessType.INSERT)
     @PostMapping
     public AjaxResult add(@RequestBody DataiIntegrationObject dataiIntegrationObject)
     {
@@ -88,11 +88,11 @@ public class DataiIntegrationObjectController extends BaseController
     }
 
     /**
-     * 修改对象信息
+     * 修改对象同步控制
      */
-    @Operation(summary = "修改对象信息")
+    @Operation(summary = "修改对象同步控制")
     @PreAuthorize("@ss.hasPermi('integration:object:edit')")
-    @Log(title = "对象信息", businessType = BusinessType.UPDATE)
+    @Log(title = "对象同步控制", businessType = BusinessType.UPDATE)
     @PutMapping
     public AjaxResult edit(@RequestBody DataiIntegrationObject dataiIntegrationObject)
     {
@@ -100,13 +100,13 @@ public class DataiIntegrationObjectController extends BaseController
     }
 
     /**
-     * 删除对象信息
+     * 删除对象同步控制
      */
-    @Operation(summary = "删除对象信息")
+    @Operation(summary = "删除对象同步控制")
     @PreAuthorize("@ss.hasPermi('integration:object:remove')")
-    @Log(title = "对象信息", businessType = BusinessType.DELETE)
+    @Log(title = "对象同步控制", businessType = BusinessType.DELETE)
     @DeleteMapping("/{ids}")
-    public AjaxResult remove(@PathVariable( name = "ids" ) Long[] ids) 
+    public AjaxResult remove(@PathVariable( name = "ids" ) Integer[] ids) 
     {
         return toAjax(dataiIntegrationObjectService.deleteDataiIntegrationObjectByIds(ids));
     }

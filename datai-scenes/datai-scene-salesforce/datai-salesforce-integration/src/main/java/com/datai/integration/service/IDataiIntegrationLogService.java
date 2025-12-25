@@ -7,7 +7,7 @@ import com.datai.integration.domain.DataiIntegrationLog;
  * 数据同步日志Service接口
  * 
  * @author datai
- * @date 2025-12-22
+ * @date 2025-12-24
  */
 public interface IDataiIntegrationLogService 
 {

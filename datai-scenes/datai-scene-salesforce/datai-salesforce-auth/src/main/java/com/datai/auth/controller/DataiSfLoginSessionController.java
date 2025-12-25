@@ -27,7 +27,7 @@ import io.swagger.v3.oas.annotations.Operation;
  * 登录会话Controller
  * 
  * @author datai
- * @date 2025-12-14
+ * @date 2025-12-24
  */
 @RestController
 @RequestMapping("/auth/session")
@@ -69,10 +69,10 @@ public class DataiSfLoginSessionController extends BaseController
      */
     @Operation(summary = "获取登录会话详细信息")
     @PreAuthorize("@ss.hasPermi('auth:session:query')")
-    @GetMapping(value = "/{sessionId}")
-    public AjaxResult getInfo(@PathVariable("sessionId") Long sessionId)
+    @GetMapping(value = "/{id}")
+    public AjaxResult getInfo(@PathVariable("id") Long id)
     {
-        return success(dataiSfLoginSessionService.selectDataiSfLoginSessionBySessionId(sessionId));
+        return success(dataiSfLoginSessionService.selectDataiSfLoginSessionById(id));
     }
 
     /**
@@ -105,9 +105,9 @@ public class DataiSfLoginSessionController extends BaseController
     @Operation(summary = "删除登录会话")
     @PreAuthorize("@ss.hasPermi('auth:session:remove')")
     @Log(title = "登录会话", businessType = BusinessType.DELETE)
-    @DeleteMapping("/{sessionIds}")
-    public AjaxResult remove(@PathVariable( name = "sessionIds" ) Long[] sessionIds) 
+    @DeleteMapping("/{ids}")
+    public AjaxResult remove(@PathVariable( name = "ids" ) Long[] ids) 
     {
-        return toAjax(dataiSfLoginSessionService.deleteDataiSfLoginSessionBySessionIds(sessionIds));
+        return toAjax(dataiSfLoginSessionService.deleteDataiSfLoginSessionByIds(ids));
     }
 }

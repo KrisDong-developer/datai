@@ -24,23 +24,23 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Operation;
 
 /**
- * 字段选择列信息Controller
+ * 字段选择列表信息Controller
  * 
  * @author datai
- * @date 2025-12-22
+ * @date 2025-12-24
  */
 @RestController
 @RequestMapping("/integration/picklist")
-@Tag(name = "【字段选择列信息】管理")
+@Tag(name = "【字段选择列表信息】管理")
 public class DataiIntegrationPicklistController extends BaseController
 {
     @Autowired
     private IDataiIntegrationPicklistService dataiIntegrationPicklistService;
 
     /**
-     * 查询字段选择列信息列表
+     * 查询字段选择列表信息列表
      */
-    @Operation(summary = "查询字段选择列信息列表")
+    @Operation(summary = "查询字段选择列表信息列表")
     @PreAuthorize("@ss.hasPermi('integration:picklist:list')")
     @GetMapping("/list")
     public TableDataInfo list(DataiIntegrationPicklist dataiIntegrationPicklist)
@@ -51,36 +51,36 @@ public class DataiIntegrationPicklistController extends BaseController
     }
 
     /**
-     * 导出字段选择列信息列表
+     * 导出字段选择列表信息列表
      */
-    @Operation(summary = "导出字段选择列信息列表")
+    @Operation(summary = "导出字段选择列表信息列表")
     @PreAuthorize("@ss.hasPermi('integration:picklist:export')")
-    @Log(title = "字段选择列信息", businessType = BusinessType.EXPORT)
+    @Log(title = "字段选择列表信息", businessType = BusinessType.EXPORT)
     @PostMapping("/export")
     public void export(HttpServletResponse response, DataiIntegrationPicklist dataiIntegrationPicklist)
     {
         List<DataiIntegrationPicklist> list = dataiIntegrationPicklistService.selectDataiIntegrationPicklistList(dataiIntegrationPicklist);
         ExcelUtil<DataiIntegrationPicklist> util = new ExcelUtil<DataiIntegrationPicklist>(DataiIntegrationPicklist.class);
-        util.exportExcel(response, list, "字段选择列信息数据");
+        util.exportExcel(response, list, "字段选择列表信息数据");
     }
 
     /**
-     * 获取字段选择列信息详细信息
+     * 获取字段选择列表信息详细信息
      */
-    @Operation(summary = "获取字段选择列信息详细信息")
+    @Operation(summary = "获取字段选择列表信息详细信息")
     @PreAuthorize("@ss.hasPermi('integration:picklist:query')")
     @GetMapping(value = "/{id}")
-    public AjaxResult getInfo(@PathVariable("id") Long id)
+    public AjaxResult getInfo(@PathVariable("id") Integer id)
     {
         return success(dataiIntegrationPicklistService.selectDataiIntegrationPicklistById(id));
     }
 
     /**
-     * 新增字段选择列信息
+     * 新增字段选择列表信息
      */
-    @Operation(summary = "新增字段选择列信息")
+    @Operation(summary = "新增字段选择列表信息")
     @PreAuthorize("@ss.hasPermi('integration:picklist:add')")
-    @Log(title = "字段选择列信息", businessType = BusinessType.INSERT)
+    @Log(title = "字段选择列表信息", businessType = BusinessType.INSERT)
     @PostMapping
     public AjaxResult add(@RequestBody DataiIntegrationPicklist dataiIntegrationPicklist)
     {
@@ -88,11 +88,11 @@ public class DataiIntegrationPicklistController extends BaseController
     }
 
     /**
-     * 修改字段选择列信息
+     * 修改字段选择列表信息
      */
-    @Operation(summary = "修改字段选择列信息")
+    @Operation(summary = "修改字段选择列表信息")
     @PreAuthorize("@ss.hasPermi('integration:picklist:edit')")
-    @Log(title = "字段选择列信息", businessType = BusinessType.UPDATE)
+    @Log(title = "字段选择列表信息", businessType = BusinessType.UPDATE)
     @PutMapping
     public AjaxResult edit(@RequestBody DataiIntegrationPicklist dataiIntegrationPicklist)
     {
@@ -100,13 +100,13 @@ public class DataiIntegrationPicklistController extends BaseController
     }
 
     /**
-     * 删除字段选择列信息
+     * 删除字段选择列表信息
      */
-    @Operation(summary = "删除字段选择列信息")
+    @Operation(summary = "删除字段选择列表信息")
     @PreAuthorize("@ss.hasPermi('integration:picklist:remove')")
-    @Log(title = "字段选择列信息", businessType = BusinessType.DELETE)
+    @Log(title = "字段选择列表信息", businessType = BusinessType.DELETE)
     @DeleteMapping("/{ids}")
-    public AjaxResult remove(@PathVariable( name = "ids" ) Long[] ids) 
+    public AjaxResult remove(@PathVariable( name = "ids" ) Integer[] ids) 
     {
         return toAjax(dataiIntegrationPicklistService.deleteDataiIntegrationPicklistByIds(ids));
     }

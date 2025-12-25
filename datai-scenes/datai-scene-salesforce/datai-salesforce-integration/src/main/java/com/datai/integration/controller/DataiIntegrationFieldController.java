@@ -27,7 +27,7 @@ import io.swagger.v3.oas.annotations.Operation;
  * 对象字段信息Controller
  * 
  * @author datai
- * @date 2025-12-22
+ * @date 2025-12-24
  */
 @RestController
 @RequestMapping("/integration/field")
@@ -70,7 +70,7 @@ public class DataiIntegrationFieldController extends BaseController
     @Operation(summary = "获取对象字段信息详细信息")
     @PreAuthorize("@ss.hasPermi('integration:field:query')")
     @GetMapping(value = "/{id}")
-    public AjaxResult getInfo(@PathVariable("id") Long id)
+    public AjaxResult getInfo(@PathVariable("id") Integer id)
     {
         return success(dataiIntegrationFieldService.selectDataiIntegrationFieldById(id));
     }
@@ -106,7 +106,7 @@ public class DataiIntegrationFieldController extends BaseController
     @PreAuthorize("@ss.hasPermi('integration:field:remove')")
     @Log(title = "对象字段信息", businessType = BusinessType.DELETE)
     @DeleteMapping("/{ids}")
-    public AjaxResult remove(@PathVariable( name = "ids" ) Long[] ids) 
+    public AjaxResult remove(@PathVariable( name = "ids" ) Integer[] ids) 
     {
         return toAjax(dataiIntegrationFieldService.deleteDataiIntegrationFieldByIds(ids));
     }

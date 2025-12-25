@@ -1,22 +1,21 @@
 package com.datai.auth.service.impl;
 
 import java.util.List;
-
-import com.datai.common.core.domain.model.LoginUser;
-import com.datai.common.utils.DateUtils;
+        import com.datai.common.utils.DateUtils;
         import com.datai.common.utils.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.datai.auth.mapper.DataiSfTokenMapper;
 import com.datai.auth.domain.DataiSfToken;
 import com.datai.auth.service.IDataiSfTokenService;
+import com.datai.common.core.domain.model.LoginUser;
 
 
 /**
  * 令牌Service业务层处理
  *
  * @author datai
- * @date 2025-12-14
+ * @date 2025-12-24
  */
 @Service
 public class DataiSfTokenServiceImpl implements IDataiSfTokenService {
@@ -26,13 +25,13 @@ public class DataiSfTokenServiceImpl implements IDataiSfTokenService {
     /**
      * 查询令牌
      *
-     * @param tokenId 令牌主键
+     * @param id 令牌主键
      * @return 令牌
      */
     @Override
-    public DataiSfToken selectDataiSfTokenByTokenId(Long tokenId)
+    public DataiSfToken selectDataiSfTokenById(Long id)
     {
-        return dataiSfTokenMapper.selectDataiSfTokenByTokenId(tokenId);
+        return dataiSfTokenMapper.selectDataiSfTokenById(id);
     }
 
     /**
@@ -86,24 +85,24 @@ public class DataiSfTokenServiceImpl implements IDataiSfTokenService {
     /**
      * 批量删除令牌
      *
-     * @param tokenIds 需要删除的令牌主键
+     * @param ids 需要删除的令牌主键
      * @return 结果
      */
     @Override
-    public int deleteDataiSfTokenByTokenIds(Long[] tokenIds)
+    public int deleteDataiSfTokenByIds(Long[] ids)
     {
-        return dataiSfTokenMapper.deleteDataiSfTokenByTokenIds(tokenIds);
+        return dataiSfTokenMapper.deleteDataiSfTokenByIds(ids);
     }
 
     /**
      * 删除令牌信息
      *
-     * @param tokenId 令牌主键
+     * @param id 令牌主键
      * @return 结果
      */
     @Override
-    public int deleteDataiSfTokenByTokenId(Long tokenId)
+    public int deleteDataiSfTokenById(Long id)
     {
-        return dataiSfTokenMapper.deleteDataiSfTokenByTokenId(tokenId);
+        return dataiSfTokenMapper.deleteDataiSfTokenById(id);
     }
 }

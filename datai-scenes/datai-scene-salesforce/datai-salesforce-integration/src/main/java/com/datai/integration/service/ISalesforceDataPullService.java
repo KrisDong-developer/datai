@@ -14,88 +14,36 @@ import java.util.Map;
 public interface ISalesforceDataPullService {
 
     /**
-     * 拉取单个Salesforce对象的数据
+     * 同步Salesforce对象的表结构
      * 
-     * @param objectName Salesforce对象名称
-     * @param fields 需要拉取的字段列表
-     * @param filter 过滤条件
-     * @return 拉取的数据列表
+     * @param objectApis Salesforce对象API列表
+     * @return 同步结果，键为对象API，值为同步结果
      */
-    List<Map<String, Object>> pullSingleObject(String objectName, List<String> fields, String filter);
+    Map<String, Boolean> syncMultipleObjectStructures(List<String> objectApis);
 
     /**
-     * 拉取多个Salesforce对象的数据
+     * 同步多个Salesforce对象的数据
      * 
-     * @param objectNames Salesforce对象名称列表
-     * @return 拉取的数据，键为对象名称，值为该对象的数据列表
+     * @param objectApis Salesforce对象API列表
+     * @return 同步结果，键为对象API，值为同步结果
      */
-    Map<String, List<Map<String, Object>>> pullMultipleObjects(List<String> objectNames);
+    Map<String, Boolean> syncObjectsData(List<String> objectApis);
 
     /**
-     * 增量拉取Salesforce对象的数据
+     * 同步单个Salesforce对象的数据
      * 
-     * @param objectName Salesforce对象名称
-     * @param fields 需要拉取的字段列表
-     * @param lastModifiedField 最后修改时间字段
-     * @param startTime 开始时间
-     * @param endTime 结束时间
-     * @return 拉取的数据列表
+     * @param objectApi Salesforce对象API
+     * @return 同步结果
      */
-    List<Map<String, Object>> pullIncrementalData(String objectName, List<String> fields, String lastModifiedField, String startTime, String endTime);
+    boolean syncObjectsData(String objectApi);
 
     /**
-     * 使用Bulk API拉取大量数据
+     * 同步Salesforce对象的指定批次数据
      * 
-     * @param objectName Salesforce对象名称
-     * @param fields 需要拉取的字段列表
-     * @param filter 过滤条件
-     * @return 拉取的数据列表
+     * @param objectApi Salesforce对象API
+     * @param batchId 批次ID
+     * @return 同步结果
      */
-    List<Map<String, Object>> pullBulkData(String objectName, List<String> fields, String filter);
+    boolean syncObjectDataByBatch(String objectApi, String batchId);
 
-    /**
-     * 拉取Salesforce对象的元数据
-     * 
-     * @param objectName Salesforce对象名称
-     * @return 对象元数据信息
-     */
-    Map<String, Object> pullObjectMetadata(String objectName);
-
-    /**
-     * 拉取Salesforce对象的字段信息
-     * 
-     * @param objectName Salesforce对象名称
-     * @return 字段信息列表
-     */
-    List<Map<String, Object>> pullObjectFields(String objectName);
-
-    /**
-     * 验证Salesforce连接是否可用
-     * 
-     * @return 连接是否可用
-     */
-    boolean validateConnection();
-
-    /**
-     * 获取Salesforce API版本信息
-     * 
-     * @return API版本信息
-     */
-    String getApiVersion();
-
-    /**
-     * 获取Salesforce组织信息
-     * 
-     * @return 组织信息
-     */
-    Map<String, Object> getOrganizationInfo();
-
-    /**
-     * 拉取Salesforce对象的记录总数
-     * 
-     * @param objectName Salesforce对象名称
-     * @param filter 过滤条件
-     * @return 记录总数
-     */
-    long getRecordCount(String objectName, String filter);
 }

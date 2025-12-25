@@ -58,4 +58,11 @@ public interface ISalesforceLoginService {
      * @return 当前登录会话
      */
     DataiSfLoginSession getCurrentLoginSession();
+    
+    /**
+     * 自动登录，使用上一次成功登录的参数
+     * 
+     * @return 登录结果
+     */
+    SalesforceLoginResult autoLogin();
 }

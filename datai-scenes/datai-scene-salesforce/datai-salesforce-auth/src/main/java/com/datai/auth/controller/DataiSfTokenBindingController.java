@@ -27,7 +27,7 @@ import io.swagger.v3.oas.annotations.Operation;
  * 令牌绑定Controller
  * 
  * @author datai
- * @date 2025-12-14
+ * @date 2025-12-24
  */
 @RestController
 @RequestMapping("/auth/binding")
@@ -69,10 +69,10 @@ public class DataiSfTokenBindingController extends BaseController
      */
     @Operation(summary = "获取令牌绑定详细信息")
     @PreAuthorize("@ss.hasPermi('auth:binding:query')")
-    @GetMapping(value = "/{bindingId}")
-    public AjaxResult getInfo(@PathVariable("bindingId") Long bindingId)
+    @GetMapping(value = "/{id}")
+    public AjaxResult getInfo(@PathVariable("id") Long id)
     {
-        return success(dataiSfTokenBindingService.selectDataiSfTokenBindingByBindingId(bindingId));
+        return success(dataiSfTokenBindingService.selectDataiSfTokenBindingById(id));
     }
 
     /**
@@ -105,9 +105,9 @@ public class DataiSfTokenBindingController extends BaseController
     @Operation(summary = "删除令牌绑定")
     @PreAuthorize("@ss.hasPermi('auth:binding:remove')")
     @Log(title = "令牌绑定", businessType = BusinessType.DELETE)
-    @DeleteMapping("/{bindingIds}")
-    public AjaxResult remove(@PathVariable( name = "bindingIds" ) Long[] bindingIds) 
+    @DeleteMapping("/{ids}")
+    public AjaxResult remove(@PathVariable( name = "ids" ) Long[] ids) 
     {
-        return toAjax(dataiSfTokenBindingService.deleteDataiSfTokenBindingByBindingIds(bindingIds));
+        return toAjax(dataiSfTokenBindingService.deleteDataiSfTokenBindingByIds(ids));
     }
 }

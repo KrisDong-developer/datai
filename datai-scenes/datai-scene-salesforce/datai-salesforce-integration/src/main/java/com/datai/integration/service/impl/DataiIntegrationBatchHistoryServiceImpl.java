@@ -16,7 +16,7 @@ import com.datai.integration.service.IDataiIntegrationBatchHistoryService;
  * 数据批次历史Service业务层处理
  *
  * @author datai
- * @date 2025-12-22
+ * @date 2025-12-24
  */
 @Service
 public class DataiIntegrationBatchHistoryServiceImpl implements IDataiIntegrationBatchHistoryService {
@@ -30,7 +30,7 @@ public class DataiIntegrationBatchHistoryServiceImpl implements IDataiIntegratio
      * @return 数据批次历史
      */
     @Override
-    public DataiIntegrationBatchHistory selectDataiIntegrationBatchHistoryById(Long id)
+    public DataiIntegrationBatchHistory selectDataiIntegrationBatchHistoryById(Integer id)
     {
         return dataiIntegrationBatchHistoryMapper.selectDataiIntegrationBatchHistoryById(id);
     }
@@ -90,7 +90,7 @@ public class DataiIntegrationBatchHistoryServiceImpl implements IDataiIntegratio
      * @return 结果
      */
     @Override
-    public int deleteDataiIntegrationBatchHistoryByIds(Long[] ids)
+    public int deleteDataiIntegrationBatchHistoryByIds(Integer[] ids)
     {
         return dataiIntegrationBatchHistoryMapper.deleteDataiIntegrationBatchHistoryByIds(ids);
     }
@@ -102,7 +102,7 @@ public class DataiIntegrationBatchHistoryServiceImpl implements IDataiIntegratio
      * @return 结果
      */
     @Override
-    public int deleteDataiIntegrationBatchHistoryById(Long id)
+    public int deleteDataiIntegrationBatchHistoryById(Integer id)
     {
         return dataiIntegrationBatchHistoryMapper.deleteDataiIntegrationBatchHistoryById(id);
     }

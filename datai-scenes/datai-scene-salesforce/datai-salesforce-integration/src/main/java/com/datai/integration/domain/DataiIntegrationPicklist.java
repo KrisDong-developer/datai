@@ -7,12 +7,12 @@ import com.datai.common.annotation.Excel;
 import com.datai.common.core.domain.BaseEntity;
 
 /**
- * 字段选择列信息对象 datai_integration_picklist
+ * 字段选择列表信息对象 datai_integration_picklist
  * 
  * @author datai
- * @date 2025-12-22
+ * @date 2025-12-24
  */
-@Schema(description = "字段选择列信息对象")
+@Schema(description = "字段选择列表信息对象")
 public class DataiIntegrationPicklist extends BaseEntity
 {
     private static final long serialVersionUID = 1L;
@@ -20,7 +20,11 @@ public class DataiIntegrationPicklist extends BaseEntity
 
     /** 主键ID */
     @Schema(title = "主键ID")
-    private Long id;
+    private Integer id;
+
+    /** 部门ID */
+    @Schema(title = "部门ID")
+    private Long deptId;
 
     /** 对象API */
     @Schema(title = "对象API")
@@ -45,35 +49,41 @@ public class DataiIntegrationPicklist extends BaseEntity
     /** 排序 */
     @Schema(title = "排序")
     @Excel(name = "排序")
-    private Long picklistIndex;
+    private Integer picklistIndex;
 
     /** 是否激活 */
     @Schema(title = "是否激活")
     @Excel(name = "是否激活")
-    private Integer isActive;
+    private Boolean isActive;
 
     /** 是否默认值 */
     @Schema(title = "是否默认值")
     @Excel(name = "是否默认值")
-    private Integer isDefault;
+    private Boolean isDefault;
 
     /** 有效性 */
     @Schema(title = "有效性")
     @Excel(name = "有效性")
     private String validFor;
-
-    /** 租户编号 */
-    @Schema(title = "租户编号")
-    @Excel(name = "租户编号")
-    private String tenantId;
-    public void setId(Long id) 
+    public void setId(Integer id) 
     {
         this.id = id;
     }
 
-    public Long getId() 
+    public Integer getId() 
     {
         return id;
+    }
+
+
+    public void setDeptId(Long deptId) 
+    {
+        this.deptId = deptId;
+    }
+
+    public Long getDeptId() 
+    {
+        return deptId;
     }
 
 
@@ -121,34 +131,34 @@ public class DataiIntegrationPicklist extends BaseEntity
     }
 
 
-    public void setPicklistIndex(Long picklistIndex) 
+    public void setPicklistIndex(Integer picklistIndex) 
     {
         this.picklistIndex = picklistIndex;
     }
 
-    public Long getPicklistIndex() 
+    public Integer getPicklistIndex() 
     {
         return picklistIndex;
     }
 
 
-    public void setIsActive(Integer isActive) 
+    public void setIsActive(Boolean isActive) 
     {
         this.isActive = isActive;
     }
 
-    public Integer getIsActive() 
+    public Boolean getIsActive() 
     {
         return isActive;
     }
 
 
-    public void setIsDefault(Integer isDefault) 
+    public void setIsDefault(Boolean isDefault) 
     {
         this.isDefault = isDefault;
     }
 
-    public Integer getIsDefault() 
+    public Boolean getIsDefault() 
     {
         return isDefault;
     }
@@ -165,22 +175,12 @@ public class DataiIntegrationPicklist extends BaseEntity
     }
 
 
-    public void setTenantId(String tenantId) 
-    {
-        this.tenantId = tenantId;
-    }
-
-    public String getTenantId() 
-    {
-        return tenantId;
-    }
-
-
 
     @Override
     public String toString() {
         return new ToStringBuilder(this,ToStringStyle.MULTI_LINE_STYLE)
             .append("id", getId())
+            .append("deptId", getDeptId())
             .append("api", getApi())
             .append("field", getField())
             .append("picklistValue", getPicklistValue())
@@ -189,12 +189,11 @@ public class DataiIntegrationPicklist extends BaseEntity
             .append("isActive", getIsActive())
             .append("isDefault", getIsDefault())
             .append("validFor", getValidFor())
+            .append("remark", getRemark())
             .append("createBy", getCreateBy())
             .append("createTime", getCreateTime())
             .append("updateBy", getUpdateBy())
             .append("updateTime", getUpdateTime())
-            .append("remark", getRemark())
-            .append("tenantId", getTenantId())
             .toString();
     }
 }

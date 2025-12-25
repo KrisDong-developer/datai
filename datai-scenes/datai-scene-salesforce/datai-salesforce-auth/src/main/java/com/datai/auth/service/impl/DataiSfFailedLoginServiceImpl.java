@@ -16,7 +16,7 @@ import com.datai.auth.service.IDataiSfFailedLoginService;
  * 失败登录Service业务层处理
  *
  * @author datai
- * @date 2025-12-14
+ * @date 2025-12-24
  */
 @Service
 public class DataiSfFailedLoginServiceImpl implements IDataiSfFailedLoginService {
@@ -26,13 +26,13 @@ public class DataiSfFailedLoginServiceImpl implements IDataiSfFailedLoginService
     /**
      * 查询失败登录
      *
-     * @param failedId 失败登录主键
+     * @param id 失败登录主键
      * @return 失败登录
      */
     @Override
-    public DataiSfFailedLogin selectDataiSfFailedLoginByFailedId(Long failedId)
+    public DataiSfFailedLogin selectDataiSfFailedLoginById(Long id)
     {
-        return dataiSfFailedLoginMapper.selectDataiSfFailedLoginByFailedId(failedId);
+        return dataiSfFailedLoginMapper.selectDataiSfFailedLoginById(id);
     }
 
     /**
@@ -78,30 +78,32 @@ public class DataiSfFailedLoginServiceImpl implements IDataiSfFailedLoginService
         LoginUser loginUser = SecurityUtils.getLoginUser();
         String username = loginUser.getUsername();
 
+                dataiSfFailedLogin.setUpdateTime(DateUtils.getNowDate());
+                dataiSfFailedLogin.setUpdateBy(username);
         return dataiSfFailedLoginMapper.updateDataiSfFailedLogin(dataiSfFailedLogin);
     }
 
     /**
      * 批量删除失败登录
      *
-     * @param failedIds 需要删除的失败登录主键
+     * @param ids 需要删除的失败登录主键
      * @return 结果
      */
     @Override
-    public int deleteDataiSfFailedLoginByFailedIds(Long[] failedIds)
+    public int deleteDataiSfFailedLoginByIds(Long[] ids)
     {
-        return dataiSfFailedLoginMapper.deleteDataiSfFailedLoginByFailedIds(failedIds);
+        return dataiSfFailedLoginMapper.deleteDataiSfFailedLoginByIds(ids);
     }
 
     /**
      * 删除失败登录信息
      *
-     * @param failedId 失败登录主键
+     * @param id 失败登录主键
      * @return 结果
      */
     @Override
-    public int deleteDataiSfFailedLoginByFailedId(Long failedId)
+    public int deleteDataiSfFailedLoginById(Long id)
     {
-        return dataiSfFailedLoginMapper.deleteDataiSfFailedLoginByFailedId(failedId);
+        return dataiSfFailedLoginMapper.deleteDataiSfFailedLoginById(id);
     }
 }

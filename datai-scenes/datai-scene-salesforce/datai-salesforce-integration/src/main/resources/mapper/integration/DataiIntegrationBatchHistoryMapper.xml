@@ -6,6 +6,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     
     <resultMap type="DataiIntegrationBatchHistory" id="DataiIntegrationBatchHistoryResult">
         <result property="id" column="id" />
+        <result property="deptId" column="dept_id" />
         <result property="api" column="api" />
         <result property="label" column="label" />
         <result property="batchId" column="batch_id" />
@@ -18,17 +19,17 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="cost" column="cost" />
         <result property="syncStartTime" column="sync_start_time" />
         <result property="syncEndTime" column="sync_end_time" />
-        <result property="createTime" column="create_time" />
+        <result property="remark" column="remark" />
         <result property="createBy" column="create_by" />
+        <result property="createTime" column="create_time" />
         <result property="updateBy" column="update_by" />
         <result property="updateTime" column="update_time" />
-        <result property="remark" column="remark" />
-        <result property="tenantId" column="tenant_id" />
     </resultMap>
 
     <sql id="selectDataiIntegrationBatchHistoryVo">
         select 
             dibh.id,
+            dibh.dept_id,
             dibh.api,
             dibh.label,
             dibh.batch_id,
@@ -41,18 +42,18 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             dibh.cost,
             dibh.sync_start_time,
             dibh.sync_end_time,
-            dibh.create_time,
-            dibh.create_by,
-            dibh.update_by,
-            dibh.update_time,
             dibh.remark,
-            dibh.tenant_id
+            dibh.create_by,
+            dibh.create_time,
+            dibh.update_by,
+            dibh.update_time
         from datai_integration_batch_history dibh
     </sql>
 
     <select id="selectDataiIntegrationBatchHistoryList" parameterType="DataiIntegrationBatchHistory" resultMap="DataiIntegrationBatchHistoryResult">
         <include refid="selectDataiIntegrationBatchHistoryVo"/>
         <where>
+            <if test="deptId != null "> and dibh.dept_id = #{deptId}</if>
             <if test="api != null  and api != ''"> and dibh.api = #{api}</if>
             <if test="label != null  and label != ''"> and dibh.label = #{label}</if>
             <if test="batchId != null "> and dibh.batch_id = #{batchId}</if>
@@ -65,11 +66,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="cost != null "> and dibh.cost = #{cost}</if>
             <if test="syncStartTime != null "> and dibh.sync_start_time = #{syncStartTime}</if>
             <if test="syncEndTime != null "> and dibh.sync_end_time = #{syncEndTime}</if>
-            <if test="tenantId != null  and tenantId != ''"> and dibh.tenant_id = #{tenantId}</if>
         </where>
     </select>
     
-    <select id="selectDataiIntegrationBatchHistoryById" parameterType="Long" resultMap="DataiIntegrationBatchHistoryResult">
+    <select id="selectDataiIntegrationBatchHistoryById" parameterType="Integer" resultMap="DataiIntegrationBatchHistoryResult">
         <include refid="selectDataiIntegrationBatchHistoryVo"/>
         where dibh.id = #{id}
     </select>
@@ -77,6 +77,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <insert id="insertDataiIntegrationBatchHistory" parameterType="DataiIntegrationBatchHistory" useGeneratedKeys="true" keyProperty="id">
         insert into datai_integration_batch_history
         <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="deptId != null">dept_id,</if>
             <if test="api != null and api != ''">api,</if>
             <if test="label != null and label != ''">label,</if>
             <if test="batchId != null">batch_id,</if>
@@ -89,14 +90,14 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="cost != null">cost,</if>
             <if test="syncStartTime != null">sync_start_time,</if>
             <if test="syncEndTime != null">sync_end_time,</if>
-            <if test="createTime != null">create_time,</if>
+            <if test="remark != null">remark,</if>
             <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
             <if test="updateBy != null">update_by,</if>
             <if test="updateTime != null">update_time,</if>
-            <if test="remark != null">remark,</if>
-            <if test="tenantId != null">tenant_id,</if>
          </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="deptId != null">#{deptId},</if>
             <if test="api != null and api != ''">#{api},</if>
             <if test="label != null and label != ''">#{label},</if>
             <if test="batchId != null">#{batchId},</if>
@@ -109,18 +110,18 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="cost != null">#{cost},</if>
             <if test="syncStartTime != null">#{syncStartTime},</if>
             <if test="syncEndTime != null">#{syncEndTime},</if>
-            <if test="createTime != null">#{createTime},</if>
+            <if test="remark != null">#{remark},</if>
             <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
             <if test="updateBy != null">#{updateBy},</if>
             <if test="updateTime != null">#{updateTime},</if>
-            <if test="remark != null">#{remark},</if>
-            <if test="tenantId != null">#{tenantId},</if>
          </trim>
     </insert>
 
     <update id="updateDataiIntegrationBatchHistory" parameterType="DataiIntegrationBatchHistory">
         update datai_integration_batch_history
         <trim prefix="SET" suffixOverrides=",">
+            <if test="deptId != null">dept_id = #{deptId},</if>
             <if test="api != null and api != ''">api = #{api},</if>
             <if test="label != null and label != ''">label = #{label},</if>
             <if test="batchId != null">batch_id = #{batchId},</if>
@@ -133,17 +134,16 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="cost != null">cost = #{cost},</if>
             <if test="syncStartTime != null">sync_start_time = #{syncStartTime},</if>
             <if test="syncEndTime != null">sync_end_time = #{syncEndTime},</if>
-            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="remark != null">remark = #{remark},</if>
             <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
             <if test="updateBy != null">update_by = #{updateBy},</if>
             <if test="updateTime != null">update_time = #{updateTime},</if>
-            <if test="remark != null">remark = #{remark},</if>
-            <if test="tenantId != null">tenant_id = #{tenantId},</if>
         </trim>
         where datai_integration_batch_history.id = #{id}
     </update>
 
-    <delete id="deleteDataiIntegrationBatchHistoryById" parameterType="Long">
+    <delete id="deleteDataiIntegrationBatchHistoryById" parameterType="Integer">
         delete from datai_integration_batch_history where id = #{id}
     </delete>
 

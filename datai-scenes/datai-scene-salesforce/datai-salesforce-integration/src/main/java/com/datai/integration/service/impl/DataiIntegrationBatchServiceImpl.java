@@ -1,22 +1,21 @@
 package com.datai.integration.service.impl;
 
 import java.util.List;
-
-import com.datai.common.core.domain.model.LoginUser;
-import com.datai.common.utils.DateUtils;
+        import com.datai.common.utils.DateUtils;
         import com.datai.common.utils.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.datai.integration.mapper.DataiIntegrationBatchMapper;
 import com.datai.integration.domain.DataiIntegrationBatch;
 import com.datai.integration.service.IDataiIntegrationBatchService;
+import com.datai.common.core.domain.model.LoginUser;
 
 
 /**
  * 数据批次Service业务层处理
  *
  * @author datai
- * @date 2025-12-22
+ * @date 2025-12-24
  */
 @Service
 public class DataiIntegrationBatchServiceImpl implements IDataiIntegrationBatchService {
@@ -30,7 +29,7 @@ public class DataiIntegrationBatchServiceImpl implements IDataiIntegrationBatchS
      * @return 数据批次
      */
     @Override
-    public DataiIntegrationBatch selectDataiIntegrationBatchById(Long id)
+    public DataiIntegrationBatch selectDataiIntegrationBatchById(Integer id)
     {
         return dataiIntegrationBatchMapper.selectDataiIntegrationBatchById(id);
     }
@@ -90,7 +89,7 @@ public class DataiIntegrationBatchServiceImpl implements IDataiIntegrationBatchS
      * @return 结果
      */
     @Override
-    public int deleteDataiIntegrationBatchByIds(Long[] ids)
+    public int deleteDataiIntegrationBatchByIds(Integer[] ids)
     {
         return dataiIntegrationBatchMapper.deleteDataiIntegrationBatchByIds(ids);
     }
@@ -102,7 +101,7 @@ public class DataiIntegrationBatchServiceImpl implements IDataiIntegrationBatchS
      * @return 结果
      */
     @Override
-    public int deleteDataiIntegrationBatchById(Long id)
+    public int deleteDataiIntegrationBatchById(Integer id)
     {
         return dataiIntegrationBatchMapper.deleteDataiIntegrationBatchById(id);
     }

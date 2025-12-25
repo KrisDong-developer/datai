@@ -24,23 +24,23 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Operation;
 
 /**
- * API限流管理Controller
+ * API限流监控Controller
  * 
  * @author datai
- * @date 2025-12-22
+ * @date 2025-12-24
  */
 @RestController
 @RequestMapping("/integration/limit")
-@Tag(name = "【API限流管理】管理")
+@Tag(name = "【API限流监控】管理")
 public class DataiIntegrationRateLimitController extends BaseController
 {
     @Autowired
     private IDataiIntegrationRateLimitService dataiIntegrationRateLimitService;
 
     /**
-     * 查询API限流管理列表
+     * 查询API限流监控列表
      */
-    @Operation(summary = "查询API限流管理列表")
+    @Operation(summary = "查询API限流监控列表")
     @PreAuthorize("@ss.hasPermi('integration:limit:list')")
     @GetMapping("/list")
     public TableDataInfo list(DataiIntegrationRateLimit dataiIntegrationRateLimit)
@@ -51,23 +51,23 @@ public class DataiIntegrationRateLimitController extends BaseController
     }
 
     /**
-     * 导出API限流管理列表
+     * 导出API限流监控列表
      */
-    @Operation(summary = "导出API限流管理列表")
+    @Operation(summary = "导出API限流监控列表")
     @PreAuthorize("@ss.hasPermi('integration:limit:export')")
-    @Log(title = "API限流管理", businessType = BusinessType.EXPORT)
+    @Log(title = "API限流监控", businessType = BusinessType.EXPORT)
     @PostMapping("/export")
     public void export(HttpServletResponse response, DataiIntegrationRateLimit dataiIntegrationRateLimit)
     {
         List<DataiIntegrationRateLimit> list = dataiIntegrationRateLimitService.selectDataiIntegrationRateLimitList(dataiIntegrationRateLimit);
         ExcelUtil<DataiIntegrationRateLimit> util = new ExcelUtil<DataiIntegrationRateLimit>(DataiIntegrationRateLimit.class);
-        util.exportExcel(response, list, "API限流管理数据");
+        util.exportExcel(response, list, "API限流监控数据");
     }
 
     /**
-     * 获取API限流管理详细信息
+     * 获取API限流监控详细信息
      */
-    @Operation(summary = "获取API限流管理详细信息")
+    @Operation(summary = "获取API限流监控详细信息")
     @PreAuthorize("@ss.hasPermi('integration:limit:query')")
     @GetMapping(value = "/{id}")
     public AjaxResult getInfo(@PathVariable("id") Long id)
@@ -76,11 +76,11 @@ public class DataiIntegrationRateLimitController extends BaseController
     }
 
     /**
-     * 新增API限流管理
+     * 新增API限流监控
      */
-    @Operation(summary = "新增API限流管理")
+    @Operation(summary = "新增API限流监控")
     @PreAuthorize("@ss.hasPermi('integration:limit:add')")
-    @Log(title = "API限流管理", businessType = BusinessType.INSERT)
+    @Log(title = "API限流监控", businessType = BusinessType.INSERT)
     @PostMapping
     public AjaxResult add(@RequestBody DataiIntegrationRateLimit dataiIntegrationRateLimit)
     {
@@ -88,11 +88,11 @@ public class DataiIntegrationRateLimitController extends BaseController
     }
 
     /**
-     * 修改API限流管理
+     * 修改API限流监控
      */
-    @Operation(summary = "修改API限流管理")
+    @Operation(summary = "修改API限流监控")
     @PreAuthorize("@ss.hasPermi('integration:limit:edit')")
-    @Log(title = "API限流管理", businessType = BusinessType.UPDATE)
+    @Log(title = "API限流监控", businessType = BusinessType.UPDATE)
     @PutMapping
     public AjaxResult edit(@RequestBody DataiIntegrationRateLimit dataiIntegrationRateLimit)
     {
@@ -100,11 +100,11 @@ public class DataiIntegrationRateLimitController extends BaseController
     }
 
     /**
-     * 删除API限流管理
+     * 删除API限流监控
      */
-    @Operation(summary = "删除API限流管理")
+    @Operation(summary = "删除API限流监控")
     @PreAuthorize("@ss.hasPermi('integration:limit:remove')")
-    @Log(title = "API限流管理", businessType = BusinessType.DELETE)
+    @Log(title = "API限流监控", businessType = BusinessType.DELETE)
     @DeleteMapping("/{ids}")
     public AjaxResult remove(@PathVariable( name = "ids" ) Long[] ids) 
     {

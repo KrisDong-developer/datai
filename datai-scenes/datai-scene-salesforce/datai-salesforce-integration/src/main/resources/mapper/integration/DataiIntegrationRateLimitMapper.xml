@@ -6,48 +6,51 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     
     <resultMap type="DataiIntegrationRateLimit" id="DataiIntegrationRateLimitResult">
         <result property="id" column="id" />
+        <result property="deptId" column="dept_id" />
         <result property="apiType" column="api_type" />
-        <result property="windowStart" column="window_start" />
-        <result property="windowEnd" column="window_end" />
-        <result property="requestCount" column="request_count" />
-        <result property="limitThreshold" column="limit_threshold" />
-        <result property="remainingRequests" column="remaining_requests" />
+        <result property="limitType" column="limit_type" />
+        <result property="currentUsage" column="current_usage" />
+        <result property="maxLimit" column="max_limit" />
+        <result property="remainingVal" column="remaining_val" />
         <result property="resetTime" column="reset_time" />
-        <result property="isThrottled" column="is_throttled" />
+        <result property="isBlocked" column="is_blocked" />
+        <result property="remark" column="remark" />
+        <result property="createBy" column="create_by" />
         <result property="createTime" column="create_time" />
+        <result property="updateBy" column="update_by" />
         <result property="updateTime" column="update_time" />
-        <result property="tenantId" column="tenant_id" />
     </resultMap>
 
     <sql id="selectDataiIntegrationRateLimitVo">
         select 
             dirl.id,
+            dirl.dept_id,
             dirl.api_type,
-            dirl.window_start,
-            dirl.window_end,
-            dirl.request_count,
-            dirl.limit_threshold,
-            dirl.remaining_requests,
+            dirl.limit_type,
+            dirl.current_usage,
+            dirl.max_limit,
+            dirl.remaining_val,
             dirl.reset_time,
-            dirl.is_throttled,
+            dirl.is_blocked,
+            dirl.remark,
+            dirl.create_by,
             dirl.create_time,
-            dirl.update_time,
-            dirl.tenant_id
+            dirl.update_by,
+            dirl.update_time
         from datai_integration_rate_limit dirl
     </sql>
 
     <select id="selectDataiIntegrationRateLimitList" parameterType="DataiIntegrationRateLimit" resultMap="DataiIntegrationRateLimitResult">
         <include refid="selectDataiIntegrationRateLimitVo"/>
         <where>
+            <if test="deptId != null "> and dirl.dept_id = #{deptId}</if>
             <if test="apiType != null  and apiType != ''"> and dirl.api_type = #{apiType}</if>
-            <if test="windowStart != null "> and dirl.window_start = #{windowStart}</if>
-            <if test="windowEnd != null "> and dirl.window_end = #{windowEnd}</if>
-            <if test="requestCount != null "> and dirl.request_count = #{requestCount}</if>
-            <if test="limitThreshold != null "> and dirl.limit_threshold = #{limitThreshold}</if>
-            <if test="remainingRequests != null "> and dirl.remaining_requests = #{remainingRequests}</if>
+            <if test="limitType != null  and limitType != ''"> and dirl.limit_type = #{limitType}</if>
+            <if test="currentUsage != null "> and dirl.current_usage = #{currentUsage}</if>
+            <if test="maxLimit != null "> and dirl.max_limit = #{maxLimit}</if>
+            <if test="remainingVal != null "> and dirl.remaining_val = #{remainingVal}</if>
             <if test="resetTime != null "> and dirl.reset_time = #{resetTime}</if>
-            <if test="isThrottled != null "> and dirl.is_throttled = #{isThrottled}</if>
-            <if test="tenantId != null  and tenantId != ''"> and dirl.tenant_id = #{tenantId}</if>
+            <if test="isBlocked != null "> and dirl.is_blocked = #{isBlocked}</if>
         </where>
     </select>
     
@@ -59,47 +62,53 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <insert id="insertDataiIntegrationRateLimit" parameterType="DataiIntegrationRateLimit" useGeneratedKeys="true" keyProperty="id">
         insert into datai_integration_rate_limit
         <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="deptId != null">dept_id,</if>
             <if test="apiType != null and apiType != ''">api_type,</if>
-            <if test="windowStart != null">window_start,</if>
-            <if test="windowEnd != null">window_end,</if>
-            <if test="requestCount != null">request_count,</if>
-            <if test="limitThreshold != null">limit_threshold,</if>
-            <if test="remainingRequests != null">remaining_requests,</if>
+            <if test="limitType != null and limitType != ''">limit_type,</if>
+            <if test="currentUsage != null">current_usage,</if>
+            <if test="maxLimit != null">max_limit,</if>
+            <if test="remainingVal != null">remaining_val,</if>
             <if test="resetTime != null">reset_time,</if>
-            <if test="isThrottled != null">is_throttled,</if>
+            <if test="isBlocked != null">is_blocked,</if>
+            <if test="remark != null">remark,</if>
+            <if test="createBy != null">create_by,</if>
             <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
             <if test="updateTime != null">update_time,</if>
-            <if test="tenantId != null and tenantId != ''">tenant_id,</if>
          </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="deptId != null">#{deptId},</if>
             <if test="apiType != null and apiType != ''">#{apiType},</if>
-            <if test="windowStart != null">#{windowStart},</if>
-            <if test="windowEnd != null">#{windowEnd},</if>
-            <if test="requestCount != null">#{requestCount},</if>
-            <if test="limitThreshold != null">#{limitThreshold},</if>
-            <if test="remainingRequests != null">#{remainingRequests},</if>
+            <if test="limitType != null and limitType != ''">#{limitType},</if>
+            <if test="currentUsage != null">#{currentUsage},</if>
+            <if test="maxLimit != null">#{maxLimit},</if>
+            <if test="remainingVal != null">#{remainingVal},</if>
             <if test="resetTime != null">#{resetTime},</if>
-            <if test="isThrottled != null">#{isThrottled},</if>
+            <if test="isBlocked != null">#{isBlocked},</if>
+            <if test="remark != null">#{remark},</if>
+            <if test="createBy != null">#{createBy},</if>
             <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
             <if test="updateTime != null">#{updateTime},</if>
-            <if test="tenantId != null and tenantId != ''">#{tenantId},</if>
          </trim>
     </insert>
 
     <update id="updateDataiIntegrationRateLimit" parameterType="DataiIntegrationRateLimit">
         update datai_integration_rate_limit
         <trim prefix="SET" suffixOverrides=",">
+            <if test="deptId != null">dept_id = #{deptId},</if>
             <if test="apiType != null and apiType != ''">api_type = #{apiType},</if>
-            <if test="windowStart != null">window_start = #{windowStart},</if>
-            <if test="windowEnd != null">window_end = #{windowEnd},</if>
-            <if test="requestCount != null">request_count = #{requestCount},</if>
-            <if test="limitThreshold != null">limit_threshold = #{limitThreshold},</if>
-            <if test="remainingRequests != null">remaining_requests = #{remainingRequests},</if>
+            <if test="limitType != null and limitType != ''">limit_type = #{limitType},</if>
+            <if test="currentUsage != null">current_usage = #{currentUsage},</if>
+            <if test="maxLimit != null">max_limit = #{maxLimit},</if>
+            <if test="remainingVal != null">remaining_val = #{remainingVal},</if>
             <if test="resetTime != null">reset_time = #{resetTime},</if>
-            <if test="isThrottled != null">is_throttled = #{isThrottled},</if>
+            <if test="isBlocked != null">is_blocked = #{isBlocked},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
             <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
             <if test="updateTime != null">update_time = #{updateTime},</if>
-            <if test="tenantId != null and tenantId != ''">tenant_id = #{tenantId},</if>
         </trim>
         where datai_integration_rate_limit.id = #{id}
     </update>
