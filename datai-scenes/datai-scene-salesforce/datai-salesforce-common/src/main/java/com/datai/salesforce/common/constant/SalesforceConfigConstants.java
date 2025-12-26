@@ -1,4 +1,4 @@
-package com.datai.auth.constant;
+package com.datai.salesforce.common.constant;
 
 /**
  * Salesforce配置常量类

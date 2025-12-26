@@ -1,4 +1,4 @@
-package com.datai.integration.constant;
+package com.datai.salesforce.common.constant;
 
 /**
  * Salesforce常量类 - 统一管理Salesforce相关常量

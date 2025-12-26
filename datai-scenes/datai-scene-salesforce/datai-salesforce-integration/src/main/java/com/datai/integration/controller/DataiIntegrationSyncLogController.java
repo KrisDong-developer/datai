@@ -16,8 +16,8 @@ import com.datai.common.annotation.Log;
 import com.datai.common.core.controller.BaseController;
 import com.datai.common.core.domain.AjaxResult;
 import com.datai.common.enums.BusinessType;
-import com.datai.integration.domain.DataiIntegrationLog;
-import com.datai.integration.service.IDataiIntegrationLogService;
+import com.datai.integration.domain.DataiIntegrationSyncLog;
+import com.datai.integration.service.IDataiIntegrationSyncLogService;
 import com.datai.common.utils.poi.ExcelUtil;
 import com.datai.common.core.page.TableDataInfo;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -27,26 +27,26 @@ import io.swagger.v3.oas.annotations.Operation;
  * 数据同步日志Controller
  * 
  * @author datai
- * @date 2025-12-24
+ * @date 2025-12-26
  */
 @RestController
-@RequestMapping("/integration/log")
+@RequestMapping("/integration/synclog")
 @Tag(name = "【数据同步日志】管理")
-public class DataiIntegrationLogController extends BaseController
+public class DataiIntegrationSyncLogController extends BaseController
 {
     @Autowired
-    private IDataiIntegrationLogService dataiIntegrationLogService;
+    private IDataiIntegrationSyncLogService dataiIntegrationSyncLogService;
 
     /**
      * 查询数据同步日志列表
      */
     @Operation(summary = "查询数据同步日志列表")
-    @PreAuthorize("@ss.hasPermi('integration:log:list')")
+    @PreAuthorize("@ss.hasPermi('integration:synclog:list')")
     @GetMapping("/list")
-    public TableDataInfo list(DataiIntegrationLog dataiIntegrationLog)
+    public TableDataInfo list(DataiIntegrationSyncLog dataiIntegrationSyncLog)
     {
         startPage();
-        List<DataiIntegrationLog> list = dataiIntegrationLogService.selectDataiIntegrationLogList(dataiIntegrationLog);
+        List<DataiIntegrationSyncLog> list = dataiIntegrationSyncLogService.selectDataiIntegrationSyncLogList(dataiIntegrationSyncLog);
         return getDataTable(list);
     }
 
@@ -54,13 +54,13 @@ public class DataiIntegrationLogController extends BaseController
      * 导出数据同步日志列表
      */
     @Operation(summary = "导出数据同步日志列表")
-    @PreAuthorize("@ss.hasPermi('integration:log:export')")
+    @PreAuthorize("@ss.hasPermi('integration:synclog:export')")
     @Log(title = "数据同步日志", businessType = BusinessType.EXPORT)
     @PostMapping("/export")
-    public void export(HttpServletResponse response, DataiIntegrationLog dataiIntegrationLog)
+    public void export(HttpServletResponse response, DataiIntegrationSyncLog dataiIntegrationSyncLog)
     {
-        List<DataiIntegrationLog> list = dataiIntegrationLogService.selectDataiIntegrationLogList(dataiIntegrationLog);
-        ExcelUtil<DataiIntegrationLog> util = new ExcelUtil<DataiIntegrationLog>(DataiIntegrationLog.class);
+        List<DataiIntegrationSyncLog> list = dataiIntegrationSyncLogService.selectDataiIntegrationSyncLogList(dataiIntegrationSyncLog);
+        ExcelUtil<DataiIntegrationSyncLog> util = new ExcelUtil<DataiIntegrationSyncLog>(DataiIntegrationSyncLog.class);
         util.exportExcel(response, list, "数据同步日志数据");
     }
 
@@ -68,46 +68,46 @@ public class DataiIntegrationLogController extends BaseController
      * 获取数据同步日志详细信息
      */
     @Operation(summary = "获取数据同步日志详细信息")
-    @PreAuthorize("@ss.hasPermi('integration:log:query')")
+    @PreAuthorize("@ss.hasPermi('integration:synclog:query')")
     @GetMapping(value = "/{id}")
     public AjaxResult getInfo(@PathVariable("id") Long id)
     {
-        return success(dataiIntegrationLogService.selectDataiIntegrationLogById(id));
+        return success(dataiIntegrationSyncLogService.selectDataiIntegrationSyncLogById(id));
     }
 
     /**
      * 新增数据同步日志
      */
     @Operation(summary = "新增数据同步日志")
-    @PreAuthorize("@ss.hasPermi('integration:log:add')")
+    @PreAuthorize("@ss.hasPermi('integration:synclog:add')")
     @Log(title = "数据同步日志", businessType = BusinessType.INSERT)
     @PostMapping
-    public AjaxResult add(@RequestBody DataiIntegrationLog dataiIntegrationLog)
+    public AjaxResult add(@RequestBody DataiIntegrationSyncLog dataiIntegrationSyncLog)
     {
-        return toAjax(dataiIntegrationLogService.insertDataiIntegrationLog(dataiIntegrationLog));
+        return toAjax(dataiIntegrationSyncLogService.insertDataiIntegrationSyncLog(dataiIntegrationSyncLog));
     }
 
     /**
      * 修改数据同步日志
      */
     @Operation(summary = "修改数据同步日志")
-    @PreAuthorize("@ss.hasPermi('integration:log:edit')")
+    @PreAuthorize("@ss.hasPermi('integration:synclog:edit')")
     @Log(title = "数据同步日志", businessType = BusinessType.UPDATE)
     @PutMapping
-    public AjaxResult edit(@RequestBody DataiIntegrationLog dataiIntegrationLog)
+    public AjaxResult edit(@RequestBody DataiIntegrationSyncLog dataiIntegrationSyncLog)
     {
-        return toAjax(dataiIntegrationLogService.updateDataiIntegrationLog(dataiIntegrationLog));
+        return toAjax(dataiIntegrationSyncLogService.updateDataiIntegrationSyncLog(dataiIntegrationSyncLog));
     }
 
     /**
      * 删除数据同步日志
      */
     @Operation(summary = "删除数据同步日志")
-    @PreAuthorize("@ss.hasPermi('integration:log:remove')")
+    @PreAuthorize("@ss.hasPermi('integration:synclog:remove')")
     @Log(title = "数据同步日志", businessType = BusinessType.DELETE)
     @DeleteMapping("/{ids}")
     public AjaxResult remove(@PathVariable( name = "ids" ) Long[] ids) 
     {
-        return toAjax(dataiIntegrationLogService.deleteDataiIntegrationLogByIds(ids));
+        return toAjax(dataiIntegrationSyncLogService.deleteDataiIntegrationSyncLogByIds(ids));
     }
 }

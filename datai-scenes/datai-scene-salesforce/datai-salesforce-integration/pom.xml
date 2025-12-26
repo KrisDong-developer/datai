@@ -24,11 +24,6 @@
         </dependency>
 
         <dependency>
-            <groupId>com.datai</groupId>
-            <artifactId>datai-salesforce-common</artifactId>
-        </dependency>
-
-        <dependency>
             <groupId>salesforce</groupId>
             <artifactId>salesforce-partner</artifactId>
             <version>0.0.1</version>

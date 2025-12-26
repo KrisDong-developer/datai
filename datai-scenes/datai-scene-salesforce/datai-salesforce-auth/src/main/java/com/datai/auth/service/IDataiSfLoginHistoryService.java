@@ -58,4 +58,11 @@ public interface IDataiSfLoginHistoryService
      * @return 结果
      */
     public int deleteDataiSfLoginHistoryById(Long id);
+
+    /**
+     * 查询最近一条登录成功的历史记录
+     * 
+     * @return 登录历史信息
+     */
+    public DataiSfLoginHistory selectLatestSuccessLoginHistory();
 }

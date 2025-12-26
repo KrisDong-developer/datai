@@ -1,13 +1,15 @@
 package com.datai.auth.strategy.impl;
 
+import com.datai.setting.config.SalesforceConfigCacheManager;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.datai.auth.domain.SalesforceLoginResult;
 import com.datai.auth.domain.SalesforceLoginRequest;
 import com.datai.auth.strategy.LoginStrategy;
 import com.datai.common.utils.CacheUtils;
-import com.datai.auth.constant.SalesforceConfigConstants;
+import com.datai.salesforce.common.constant.SalesforceConfigConstants;
 import com.datai.salesforce.common.exception.SalesforceOAuthException;
+import jakarta.annotation.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.Cache;
@@ -35,6 +37,8 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 @Component
 public class OAuth2LoginStrategy implements LoginStrategy {
+    @Resource
+    private SalesforceConfigCacheManager salesforceConfigCacheManager;
     
     private static final Logger logger = LoggerFactory.getLogger(OAuth2LoginStrategy.class);
     
@@ -226,12 +230,12 @@ public class OAuth2LoginStrategy implements LoginStrategy {
             throw new SalesforceOAuthException("OAUTH2_CONFIG_ERROR", "Salesforce config cache not found");
         }
         
-        String apiVersion = CacheUtils.get(SalesforceConfigConstants.SALESFORCE_CONFIG_CACHE_KEY, "salesforce.api.version", String.class);
-        String environmentType = CacheUtils.get(SalesforceConfigConstants.SALESFORCE_CONFIG_CACHE_KEY, "salesforce.environment.type", String.class);
+        String apiVersion = CacheUtils.get(salesforceConfigCacheManager.getEnvironmentCacheKey(), "salesforce.api.version", String.class);
+        String environmentType = CacheUtils.get(salesforceConfigCacheManager.getEnvironmentCacheKey(), "salesforce.environment.type", String.class);
         String loginUrl = getLoginUrl(environmentType);
-        String clientId = CacheUtils.get(SalesforceConfigConstants.SALESFORCE_CONFIG_CACHE_KEY, "salesforce.oauth.client.id", String.class);
-        String clientSecret = CacheUtils.get(SalesforceConfigConstants.SALESFORCE_CONFIG_CACHE_KEY, "salesforce.oauth.client.secret", String.class);
-        String redirectUri = CacheUtils.get(SalesforceConfigConstants.SALESFORCE_CONFIG_CACHE_KEY, "salesforce.oauth.redirect.uri", String.class);
+        String clientId = CacheUtils.get(salesforceConfigCacheManager.getEnvironmentCacheKey(), "salesforce.oauth.client.id", String.class);
+        String clientSecret = CacheUtils.get(salesforceConfigCacheManager.getEnvironmentCacheKey(), "salesforce.oauth.client.secret", String.class);
+        String redirectUri = CacheUtils.get(salesforceConfigCacheManager.getEnvironmentCacheKey(), "salesforce.oauth.redirect.uri", String.class);
         
         // 验证必要配置
         if (clientId == null || clientId.trim().isEmpty()) {
@@ -266,7 +270,7 @@ public class OAuth2LoginStrategy implements LoginStrategy {
                 if (cache == null) {
                     throw new SalesforceOAuthException("OAUTH2_CONFIG_ERROR", "Salesforce config cache not found");
                 }
-                String customEndpoint = CacheUtils.get(SalesforceConfigConstants.SALESFORCE_CONFIG_CACHE_KEY, "salesforce.api.endpoint.custom", String.class);
+                String customEndpoint = CacheUtils.get(salesforceConfigCacheManager.getEnvironmentCacheKey(), "salesforce.api.endpoint.custom", String.class);
                 if (customEndpoint == null || customEndpoint.trim().isEmpty()) {
                     throw new SalesforceOAuthException("OAUTH2_INVALID_CUSTOM_ENDPOINT", "Custom endpoint is required for custom environment type");
                 }

@@ -1,4 +1,7 @@
-package com.datai.integration.constant;
+package com.datai.salesforce.common.constant;
+
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Salesforce连接相关常量类 - 管理连接管理类相关的常量
@@ -228,4 +231,10 @@ public final class SalesforceConnectionConstants {
      * 默认的连接池大小
      */
     public static final int DEFAULT_POOL_SIZE = 10;
+
+    /**
+     * 表索引常量
+     */
+    public static final List<String> TABLE_INDEX = Arrays.asList("Id", "CreatedDate", "LastModifiedDate", "SystemModstamp");
+
 }

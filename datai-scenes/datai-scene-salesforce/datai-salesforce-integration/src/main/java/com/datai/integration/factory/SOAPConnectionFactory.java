@@ -1,6 +1,6 @@
 package com.datai.integration.factory;
 
-import com.datai.integration.constant.SalesforceConstants;
+import com.datai.salesforce.common.constant.SalesforceConstants;
 import com.sforce.soap.partner.PartnerConnection;
 import com.sforce.ws.ConnectorConfig;
 import lombok.extern.slf4j.Slf4j;
@@ -55,7 +55,7 @@ public class SOAPConnectionFactory {
     private static PartnerConnection createSOAPConnection() {
         try {
             ConnectorConfig config = new ConnectorConfig();
-            config.setSessionId(com.datai.integration.util.SessionUtil.getAccessToken());
+            config.setSessionId(com.datai.integration.util.SessionUtil.getCurrentSession());
             config.setServiceEndpoint(com.datai.integration.util.SessionUtil.getInstanceUrl() + "/services/Soap/u/59.0");
             return new PartnerConnection(config);
         } catch (Exception e) {

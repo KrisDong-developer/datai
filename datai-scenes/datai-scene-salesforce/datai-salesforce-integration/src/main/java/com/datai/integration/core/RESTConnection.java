@@ -1,8 +1,7 @@
 package com.datai.integration.core;
 
-import com.datai.integration.constant.SalesforceConstants;
-import com.datai.integration.constant.SalesforceConnectionConstants;
-import com.fasterxml.jackson.core.JsonProcessingException;
+import com.datai.salesforce.common.constant.SalesforceConstants;
+import com.datai.salesforce.common.constant.SalesforceConnectionConstants;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sforce.async.AsyncApiException;

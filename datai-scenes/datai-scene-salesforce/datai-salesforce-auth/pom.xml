@@ -20,7 +20,7 @@
     <dependencies>
         <dependency>
             <groupId>com.datai</groupId>
-            <artifactId>datai-salesforce-common</artifactId>
+            <artifactId>datai-salesforce-setting</artifactId>
         </dependency>
 
         <dependency>

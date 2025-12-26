@@ -1,6 +1,6 @@
 package com.datai.integration.factory;
 
-import com.datai.integration.constant.SalesforceConstants;
+import com.datai.salesforce.common.constant.SalesforceConstants;
 import com.sforce.ws.ConnectorConfig;
 import lombok.extern.slf4j.Slf4j;
 
@@ -53,7 +53,7 @@ public class RESTConnectionFactory {
      */
     private static ConnectorConfig createRESTConnection() {
         ConnectorConfig config = new ConnectorConfig();
-        config.setSessionId(com.datai.integration.util.SessionUtil.getAccessToken());
+        config.setSessionId(com.datai.integration.util.SessionUtil.getCurrentSession());
         config.setRestEndpoint(com.datai.integration.util.SessionUtil.getInstanceUrl() + "/services/data/v59.0/");
         return config;
     }

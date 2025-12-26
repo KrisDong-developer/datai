@@ -27,10 +27,10 @@ import io.swagger.v3.oas.annotations.Operation;
  * 数据批次历史Controller
  * 
  * @author datai
- * @date 2025-12-24
+ * @date 2025-12-26
  */
 @RestController
-@RequestMapping("/integration/history")
+@RequestMapping("/integration/batchhistory")
 @Tag(name = "【数据批次历史】管理")
 public class DataiIntegrationBatchHistoryController extends BaseController
 {
@@ -41,7 +41,7 @@ public class DataiIntegrationBatchHistoryController extends BaseController
      * 查询数据批次历史列表
      */
     @Operation(summary = "查询数据批次历史列表")
-    @PreAuthorize("@ss.hasPermi('integration:history:list')")
+    @PreAuthorize("@ss.hasPermi('integration:batchhistory:list')")
     @GetMapping("/list")
     public TableDataInfo list(DataiIntegrationBatchHistory dataiIntegrationBatchHistory)
     {
@@ -54,7 +54,7 @@ public class DataiIntegrationBatchHistoryController extends BaseController
      * 导出数据批次历史列表
      */
     @Operation(summary = "导出数据批次历史列表")
-    @PreAuthorize("@ss.hasPermi('integration:history:export')")
+    @PreAuthorize("@ss.hasPermi('integration:batchhistory:export')")
     @Log(title = "数据批次历史", businessType = BusinessType.EXPORT)
     @PostMapping("/export")
     public void export(HttpServletResponse response, DataiIntegrationBatchHistory dataiIntegrationBatchHistory)
@@ -68,7 +68,7 @@ public class DataiIntegrationBatchHistoryController extends BaseController
      * 获取数据批次历史详细信息
      */
     @Operation(summary = "获取数据批次历史详细信息")
-    @PreAuthorize("@ss.hasPermi('integration:history:query')")
+    @PreAuthorize("@ss.hasPermi('integration:batchhistory:query')")
     @GetMapping(value = "/{id}")
     public AjaxResult getInfo(@PathVariable("id") Integer id)
     {
@@ -79,7 +79,7 @@ public class DataiIntegrationBatchHistoryController extends BaseController
      * 新增数据批次历史
      */
     @Operation(summary = "新增数据批次历史")
-    @PreAuthorize("@ss.hasPermi('integration:history:add')")
+    @PreAuthorize("@ss.hasPermi('integration:batchhistory:add')")
     @Log(title = "数据批次历史", businessType = BusinessType.INSERT)
     @PostMapping
     public AjaxResult add(@RequestBody DataiIntegrationBatchHistory dataiIntegrationBatchHistory)
@@ -91,7 +91,7 @@ public class DataiIntegrationBatchHistoryController extends BaseController
      * 修改数据批次历史
      */
     @Operation(summary = "修改数据批次历史")
-    @PreAuthorize("@ss.hasPermi('integration:history:edit')")
+    @PreAuthorize("@ss.hasPermi('integration:batchhistory:edit')")
     @Log(title = "数据批次历史", businessType = BusinessType.UPDATE)
     @PutMapping
     public AjaxResult edit(@RequestBody DataiIntegrationBatchHistory dataiIntegrationBatchHistory)
@@ -103,7 +103,7 @@ public class DataiIntegrationBatchHistoryController extends BaseController
      * 删除数据批次历史
      */
     @Operation(summary = "删除数据批次历史")
-    @PreAuthorize("@ss.hasPermi('integration:history:remove')")
+    @PreAuthorize("@ss.hasPermi('integration:batchhistory:remove')")
     @Log(title = "数据批次历史", businessType = BusinessType.DELETE)
     @DeleteMapping("/{ids}")
     public AjaxResult remove(@PathVariable( name = "ids" ) Integer[] ids) 

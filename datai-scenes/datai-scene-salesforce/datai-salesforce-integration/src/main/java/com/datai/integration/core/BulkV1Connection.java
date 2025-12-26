@@ -1,6 +1,6 @@
 package com.datai.integration.core;
 
-import com.datai.integration.constant.SalesforceConstants;
+import com.datai.salesforce.common.constant.SalesforceConstants;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sforce.async.*;
 import com.sforce.ws.ConnectorConfig;
@@ -23,8 +23,6 @@ import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Bulk V1 连接类

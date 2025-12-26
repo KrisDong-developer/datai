@@ -7,7 +7,7 @@ import com.datai.setting.domain.DataiConfigSnapshot;
  * 配置快照Mapper接口
  * 
  * @author datai
- * @date 2025-12-24
+ * @date 2025-12-26
  */
 public interface DataiConfigSnapshotMapper 
 {

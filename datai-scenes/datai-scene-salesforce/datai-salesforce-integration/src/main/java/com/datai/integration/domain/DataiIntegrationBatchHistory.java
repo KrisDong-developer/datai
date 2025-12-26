@@ -12,7 +12,7 @@ import com.datai.common.core.domain.BaseEntity;
  * 数据批次历史对象 datai_integration_batch_history
  * 
  * @author datai
- * @date 2025-12-24
+ * @date 2025-12-26
  */
 @Schema(description = "数据批次历史对象")
 public class DataiIntegrationBatchHistory extends BaseEntity

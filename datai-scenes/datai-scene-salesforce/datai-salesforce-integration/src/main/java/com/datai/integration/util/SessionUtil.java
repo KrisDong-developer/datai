@@ -1,9 +1,9 @@
 package com.datai.integration.util;
 
+import com.datai.salesforce.common.constant.SalesforceConfigConstants;
 import com.datai.auth.domain.SalesforceLoginResult;
-import com.datai.auth.service.ISalesforceLoginService;
+import com.datai.common.utils.CacheUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 /**
@@ -16,17 +16,6 @@ import org.springframework.stereotype.Component;
 @Component
 public class SessionUtil {
 
-    private static ISalesforceLoginService salesforceLoginService;
-
-    /**
-     * 通过Spring注入设置salesforceLoginService实例
-     *
-     * @param service ISalesforceLoginService实例
-     */
-    @Autowired
-    public void setSalesforceLoginService(ISalesforceLoginService service) {
-        SessionUtil.salesforceLoginService = service;
-    }
 
     /**
      * 获取当前Salesforce会话信息
@@ -34,15 +23,16 @@ public class SessionUtil {
      * @return SalesforceLoginResult 会话信息
      * @throws RuntimeException 如果获取会话信息失败
      */
-    public static SalesforceLoginResult getCurrentSession() {
+    public static SalesforceLoginResult getCurrentLoginResult() {
         log.info("获取当前Salesforce会话信息");
 
         try {
-            // 直接调用auth模块的方法获取当前登录状态
-            SalesforceLoginResult loginResult = salesforceLoginService.getCurrentLoginStatus();
+            // 尝试从缓存获取登录结果
+            SalesforceLoginResult loginResult = (SalesforceLoginResult) CacheUtils.get(SalesforceConfigConstants.CACHE_NAME, SalesforceConfigConstants.CURRENT_RESULT);
+
             if (loginResult != null && loginResult.isSuccess()) {
                 log.info("获取会话信息成功，访问令牌前缀: {}", 
-                        loginResult.getAccessToken() != null ? loginResult.getAccessToken().substring(0, Math.min(10, loginResult.getAccessToken().length())) : "null");
+                        loginResult.getSessionId() != null ? loginResult.getSessionId() : "null");
                 return loginResult;
             } else {
                 String errorMsg = loginResult != null ? loginResult.getErrorMessage() : "未知错误";
@@ -56,17 +46,17 @@ public class SessionUtil {
     }
 
     /**
-     * 获取访问令牌
+     * 获取SessionId
      *
      * @return 访问令牌
-     * @throws RuntimeException 如果获取访问令牌失败
+     * @throws RuntimeException 如果获取访问SessionId
      */
-    public static String getAccessToken() {
-        SalesforceLoginResult result = getCurrentSession();
-        if (result == null || result.getAccessToken() == null) {
+    public static String getCurrentSession() {
+        SalesforceLoginResult result = getCurrentLoginResult();
+        if (result == null || result.getSessionId() == null) {
             throw new RuntimeException("获取访问令牌失败: 没有有效的会话信息");
         }
-        return result.getAccessToken();
+        return result.getSessionId();
     }
 
     /**
@@ -76,7 +66,7 @@ public class SessionUtil {
      * @throws RuntimeException 如果获取实例URL失败
      */
     public static String getInstanceUrl() {
-        SalesforceLoginResult result = getCurrentSession();
+        SalesforceLoginResult result = getCurrentLoginResult();
         if (result == null || result.getInstanceUrl() == null) {
             throw new RuntimeException("获取实例URL失败: 没有有效的会话信息");
         }

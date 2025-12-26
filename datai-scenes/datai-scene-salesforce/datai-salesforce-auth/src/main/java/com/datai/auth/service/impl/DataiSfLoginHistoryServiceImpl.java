@@ -104,4 +104,15 @@ public class DataiSfLoginHistoryServiceImpl implements IDataiSfLoginHistoryServi
     {
         return dataiSfLoginHistoryMapper.deleteDataiSfLoginHistoryById(id);
     }
+
+    /**
+     * 查询最近一条登录成功的历史记录
+     *
+     * @return 登录历史信息
+     */
+    @Override
+    public DataiSfLoginHistory selectLatestSuccessLoginHistory()
+    {
+        return dataiSfLoginHistoryMapper.selectLatestSuccessLoginHistory();
+    }
 }

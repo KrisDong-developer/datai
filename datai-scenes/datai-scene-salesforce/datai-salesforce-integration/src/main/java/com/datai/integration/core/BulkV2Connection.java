@@ -1,6 +1,6 @@
 package com.datai.integration.core;
 
-import com.datai.integration.constant.SalesforceConstants;
+import com.datai.salesforce.common.constant.SalesforceConstants;
 import com.sforce.async.*;
 import com.sforce.ws.ConnectionException;
 import com.sforce.ws.ConnectorConfig;

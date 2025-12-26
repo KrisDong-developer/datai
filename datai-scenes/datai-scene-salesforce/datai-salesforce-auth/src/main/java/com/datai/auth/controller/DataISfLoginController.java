@@ -1,8 +1,9 @@
 package com.datai.auth.controller;
 
-import com.datai.auth.domain.DataiSfLoginSession;
+import com.datai.auth.domain.DataiSfLoginHistory;
 import com.datai.auth.domain.SalesforceLoginRequest;
 import com.datai.auth.domain.SalesforceLoginResult;
+import com.datai.auth.service.IDataiSfLoginHistoryService;
 import com.datai.auth.service.ISalesforceLoginService;
 import com.datai.common.core.controller.BaseController;
 import com.datai.common.core.domain.AjaxResult;
@@ -29,6 +30,9 @@ public class DataISfLoginController extends BaseController {
 
     @Autowired
     private ISalesforceLoginService salesforceLoginService;
+
+    @Autowired
+    private IDataiSfLoginHistoryService loginHistoryService;
 
     /**
      * 执行登录操作
@@ -57,10 +61,22 @@ public class DataISfLoginController extends BaseController {
      */
     @Operation(summary = "执行Salesforce登出操作")
     @PostMapping("/logout")
-    public AjaxResult logout(@RequestParam String sessionId, @RequestParam String loginType) {
-        logger.info("接收到登出请求，Session ID: {}, 登录类型: {}", sessionId, loginType);
+    public AjaxResult logout() {
+        logger.info("接收到登出请求");
         
         try {
+            DataiSfLoginHistory latestLoginHistory = loginHistoryService.selectLatestSuccessLoginHistory();
+            
+            if (latestLoginHistory == null) {
+                logger.warn("未找到登录历史记录");
+                return AjaxResult.error("未找到登录历史记录");
+            }
+            
+            String sessionId = latestLoginHistory.getSessionIdResult();
+            String loginType = latestLoginHistory.getLoginType();
+            
+            logger.info("从登录历史中获取到Session ID: {}, 登录类型: {}", sessionId, loginType);
+            
             boolean success = salesforceLoginService.logout(sessionId, loginType);
             
             if (success) {
@@ -79,14 +95,14 @@ public class DataISfLoginController extends BaseController {
      */
     @Operation(summary = "获取当前登录信息")
     @GetMapping("/current")
-    public AjaxResult getCurrentLoginInfo(@RequestParam String sessionId) {
-        logger.info("接收到获取登录信息请求，Session ID: {}", sessionId);
+    public AjaxResult getCurrentLoginInfo() {
+        logger.info("接收到获取登录信息请求");
         
         try {
-            DataiSfLoginSession session = salesforceLoginService.getCurrentLoginInfo(sessionId);
+            SalesforceLoginResult result = salesforceLoginService.getCurrentLoginResult();
             
-            if (session != null) {
-                return AjaxResult.success("获取登录信息成功", session);
+            if (result != null) {
+                return AjaxResult.success("获取登录信息成功", result);
             } else {
                 return AjaxResult.error("未找到登录信息");
             }
@@ -101,10 +117,20 @@ public class DataISfLoginController extends BaseController {
      */
     @Operation(summary = "自动登录")
     @PostMapping("/autoLogin")
-    public AjaxResult autoLogin(@RequestParam Long historyId) {
-        logger.info("接收到自动登录请求，历史ID: {}", historyId);
+    public AjaxResult autoLogin() {
+        logger.info("接收到自动登录请求");
         
         try {
+            DataiSfLoginHistory latestLoginHistory = loginHistoryService.selectLatestSuccessLoginHistory();
+            
+            if (latestLoginHistory == null) {
+                logger.warn("未找到登录历史记录");
+                return AjaxResult.error("未找到登录历史记录");
+            }
+            
+            Long historyId = latestLoginHistory.getId();
+            logger.info("从登录历史中获取到历史ID: {}", historyId);
+            
             SalesforceLoginResult result = salesforceLoginService.autoLogin(historyId);
             
             if (result.isSuccess()) {

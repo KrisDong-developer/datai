@@ -279,4 +279,11 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             #{id}
         </foreach>
     </delete>
+
+    <select id="selectLatestSuccessLoginHistory" resultMap="DataiSfLoginHistoryResult">
+        <include refid="selectDataiSfLoginHistoryVo"/>
+        where dslh.login_status = 'success'
+        order by dslh.create_time desc
+        limit 1
+    </select>
 </mapper>

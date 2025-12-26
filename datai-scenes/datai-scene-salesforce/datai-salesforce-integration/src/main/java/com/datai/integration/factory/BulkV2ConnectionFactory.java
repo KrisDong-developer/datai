@@ -1,6 +1,6 @@
 package com.datai.integration.factory;
 
-import com.datai.integration.constant.SalesforceConstants;
+import com.datai.salesforce.common.constant.SalesforceConstants;
 import com.datai.integration.core.BulkV2Connection;
 import com.sforce.ws.ConnectorConfig;
 import lombok.extern.slf4j.Slf4j;
@@ -55,7 +55,7 @@ public class BulkV2ConnectionFactory {
     private static BulkV2Connection createBulkV2Connection() {
         try {
             ConnectorConfig config = new ConnectorConfig();
-            config.setSessionId(com.datai.integration.util.SessionUtil.getAccessToken());
+            config.setSessionId(com.datai.integration.util.SessionUtil.getCurrentSession());
             config.setServiceEndpoint(com.datai.integration.util.SessionUtil.getInstanceUrl() + "/services/data/v59.0/jobs/");
             return new BulkV2Connection(config);
         } catch (Exception e) {

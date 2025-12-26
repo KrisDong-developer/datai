@@ -191,7 +191,7 @@ public class SalesforceConfigCacheManager {
      * 获取带环境标识的缓存键
      * @return 带环境标识的缓存键
      */
-    private String getEnvironmentCacheKey() {
+    public String getEnvironmentCacheKey() {
         return SalesforceConfigConstants.SALESFORCE_CONFIG_CACHE_KEY + ":" + currentEnvironmentCode;
     }
 

@@ -7,7 +7,7 @@ import com.datai.integration.domain.DataiIntegrationBatchHistory;
  * 数据批次历史Service接口
  * 
  * @author datai
- * @date 2025-12-24
+ * @date 2025-12-26
  */
 public interface IDataiIntegrationBatchHistoryService 
 {

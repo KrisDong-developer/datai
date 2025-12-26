@@ -106,8 +106,60 @@ public class DataiConfigSnapshotController extends BaseController
     @PreAuthorize("@ss.hasPermi('setting:snapshot:remove')")
     @Log(title = "配置快照", businessType = BusinessType.DELETE)
     @DeleteMapping("/{ids}")
-    public AjaxResult remove(@PathVariable( name = "ids" ) String[] ids) 
+    public AjaxResult remove(@PathVariable( name = "ids" ) String[] ids)
     {
         return toAjax(dataiConfigSnapshotService.deleteDataiConfigSnapshotByIds(ids));
+    }
+    /**
+     * 从当前配置生成快照
+     */
+    @Operation(summary = "从当前配置生成快照")
+    @PreAuthorize("@ss.hasPermi('setting:snapshot:create')")
+    @Log(title = "配置快照", businessType = BusinessType.INSERT)
+    @PostMapping("/create")
+    public AjaxResult createSnapshot(@RequestBody DataiConfigSnapshot dataiConfigSnapshot)
+    {
+        DataiConfigSnapshot snapshot = dataiConfigSnapshotService.createSnapshot(
+            dataiConfigSnapshot.getSnapshotNumber(),
+            dataiConfigSnapshot.getEnvironmentId(),
+            dataiConfigSnapshot.getRemark()
+        );
+        return success(snapshot);
+    }
+
+    /**
+     * 恢复快照
+     */
+    @Operation(summary = "恢复快照")
+    @PreAuthorize("@ss.hasPermi('setting:snapshot:restore')")
+    @Log(title = "配置快照", businessType = BusinessType.UPDATE)
+    @PostMapping("/{snapshotId}/restore")
+    public AjaxResult restoreSnapshot(@PathVariable("snapshotId") String snapshotId, @RequestBody DataiConfigSnapshot dataiConfigSnapshot)
+    {
+        return toAjax(dataiConfigSnapshotService.restoreSnapshot(snapshotId, dataiConfigSnapshot.getRemark()));
+    }
+
+    /**
+     * 获取快照详细信息（包含配置内容）
+     */
+    @Operation(summary = "获取快照详细信息（包含配置内容）")
+    @PreAuthorize("@ss.hasPermi('setting:snapshot:query')")
+    @GetMapping("/{snapshotId}/detail")
+    public AjaxResult getSnapshotDetail(@PathVariable("snapshotId") String snapshotId)
+    {
+        DataiConfigSnapshot snapshot = dataiConfigSnapshotService.getSnapshotDetail(snapshotId);
+        return success(snapshot);
+    }
+
+    /**
+     * 比较两个快照的差异
+     */
+    @Operation(summary = "比较两个快照的差异")
+    @PreAuthorize("@ss.hasPermi('setting:snapshot:query')")
+    @GetMapping("/{snapshotId1}/compare/{snapshotId2}")
+    public AjaxResult compareSnapshots(@PathVariable("snapshotId1") String snapshotId1, @PathVariable("snapshotId2") String snapshotId2)
+    {
+        String differences = dataiConfigSnapshotService.compareSnapshots(snapshotId1, snapshotId2);
+        return success(differences);
     }
 }

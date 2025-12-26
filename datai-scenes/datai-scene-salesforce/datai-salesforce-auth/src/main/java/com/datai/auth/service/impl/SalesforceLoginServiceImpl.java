@@ -1,6 +1,6 @@
 package com.datai.auth.service.impl;
 
-import com.datai.auth.constant.SalesforceConfigConstants;
+import com.datai.salesforce.common.constant.SalesforceConfigConstants;
 import com.datai.auth.domain.SalesforceLoginResult;
 import com.datai.auth.domain.SalesforceLoginRequest;
 import com.datai.auth.service.IDataiSfLoginHistoryService;
@@ -285,6 +285,31 @@ public class SalesforceLoginServiceImpl implements ISalesforceLoginService {
             }
         } catch (Exception e) {
             logger.error("获取登录信息系统异常: {}", e.getMessage(), e);
+            return null;
+        } finally {
+            MDC.remove("traceId");
+        }
+    }
+
+    @Override
+    public SalesforceLoginResult getCurrentLoginResult() {
+        String traceId = UUID.randomUUID().toString();
+        MDC.put("traceId", traceId);
+        
+        logger.info("从缓存中获取当前登录结果");
+        
+        try {
+            SalesforceLoginResult result = (SalesforceLoginResult)CacheUtils.get(SalesforceConfigConstants.CACHE_NAME, SalesforceConfigConstants.CURRENT_RESULT);
+            
+            if (result != null) {
+                logger.info("从缓存中获取登录结果成功，Session ID: {}, 用户ID: {}", result.getSessionId(), result.getUserId());
+            } else {
+                logger.warn("缓存中未找到登录结果");
+            }
+            
+            return result;
+        } catch (Exception e) {
+            logger.error("从缓存获取登录结果失败: {}", e.getMessage(), e);
             return null;
         } finally {
             MDC.remove("traceId");

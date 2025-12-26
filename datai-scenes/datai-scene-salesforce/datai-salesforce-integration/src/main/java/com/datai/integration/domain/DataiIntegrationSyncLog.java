@@ -8,13 +8,13 @@ import com.datai.common.annotation.Excel;
 import com.datai.common.core.domain.BaseEntity;
 
 /**
- * 数据同步日志对象 datai_integration_log
+ * 数据同步日志对象 datai_integration_sync_log
  * 
  * @author datai
- * @date 2025-12-24
+ * @date 2025-12-26
  */
 @Schema(description = "数据同步日志对象")
-public class DataiIntegrationLog extends BaseEntity
+public class DataiIntegrationSyncLog extends BaseEntity
 {
     private static final long serialVersionUID = 1L;
 
@@ -22,10 +22,6 @@ public class DataiIntegrationLog extends BaseEntity
     /** 日志ID */
     @Schema(title = "日志ID")
     private Long id;
-
-    /** 部门ID */
-    @Schema(title = "部门ID")
-    private Long deptId;
 
     /** 关联批次ID */
     @Schema(title = "关联批次ID")
@@ -61,6 +57,10 @@ public class DataiIntegrationLog extends BaseEntity
     @Schema(title = "执行时间(秒)")
     @Excel(name = "执行时间(秒)")
     private BigDecimal executionTime;
+
+    /** 部门ID */
+    @Schema(title = "部门ID")
+    private Long deptId;
     public void setId(Long id) 
     {
         this.id = id;
@@ -69,17 +69,6 @@ public class DataiIntegrationLog extends BaseEntity
     public Long getId() 
     {
         return id;
-    }
-
-
-    public void setDeptId(Long deptId) 
-    {
-        this.deptId = deptId;
-    }
-
-    public Long getDeptId() 
-    {
-        return deptId;
     }
 
 
@@ -160,12 +149,22 @@ public class DataiIntegrationLog extends BaseEntity
     }
 
 
+    public void setDeptId(Long deptId) 
+    {
+        this.deptId = deptId;
+    }
+
+    public Long getDeptId() 
+    {
+        return deptId;
+    }
+
+
 
     @Override
     public String toString() {
         return new ToStringBuilder(this,ToStringStyle.MULTI_LINE_STYLE)
             .append("id", getId())
-            .append("deptId", getDeptId())
             .append("batchId", getBatchId())
             .append("objectApi", getObjectApi())
             .append("recordId", getRecordId())
@@ -173,6 +172,7 @@ public class DataiIntegrationLog extends BaseEntity
             .append("operationStatus", getOperationStatus())
             .append("errorMessage", getErrorMessage())
             .append("executionTime", getExecutionTime())
+            .append("deptId", getDeptId())
             .append("createBy", getCreateBy())
             .append("createTime", getCreateTime())
             .append("updateBy", getUpdateBy())

@@ -6,12 +6,14 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     
     <resultMap type="DataiConfigSnapshot" id="DataiConfigSnapshotResult">
         <result property="id" column="id" />
-        <result property="deptId" column="dept_id" />
-        <result property="versionId" column="version_id" />
-        <result property="snapshotTime" column="snapshot_time" />
+        <result property="snapshotNumber" column="snapshot_number" />
+        <result property="environmentId" column="environment_id" />
+        <result property="snapshotDesc" column="snapshot_desc" />
         <result property="snapshotContent" column="snapshot_content" />
         <result property="configCount" column="config_count" />
+        <result property="status" column="status" />
         <result property="remark" column="remark" />
+        <result property="deptId" column="dept_id" />
         <result property="createBy" column="create_by" />
         <result property="createTime" column="create_time" />
         <result property="updateBy" column="update_by" />
@@ -21,12 +23,14 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <sql id="selectDataiConfigSnapshotVo">
         select 
             dcs.id,
-            dcs.dept_id,
-            dcs.version_id,
-            dcs.snapshot_time,
+            dcs.snapshot_number,
+            dcs.environment_id,
+            dcs.snapshot_desc,
             dcs.snapshot_content,
             dcs.config_count,
+            dcs.status,
             dcs.remark,
+            dcs.dept_id,
             dcs.create_by,
             dcs.create_time,
             dcs.update_by,
@@ -37,15 +41,17 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <select id="selectDataiConfigSnapshotList" parameterType="DataiConfigSnapshot" resultMap="DataiConfigSnapshotResult">
         <include refid="selectDataiConfigSnapshotVo"/>
         <where>
-            <if test="deptId != null "> and dcs.dept_id = #{deptId}</if>
-            <if test="versionId != null "> and dcs.version_id = #{versionId}</if>
-            <if test="snapshotTime != null "> and dcs.snapshot_time = #{snapshotTime}</if>
+            <if test="snapshotNumber != null  and snapshotNumber != ''"> and dcs.snapshot_number = #{snapshotNumber}</if>
+            <if test="environmentId != null "> and dcs.environment_id = #{environmentId}</if>
+            <if test="snapshotDesc != null  and snapshotDesc != ''"> and dcs.snapshot_desc = #{snapshotDesc}</if>
             <if test="snapshotContent != null  and snapshotContent != ''"> and dcs.snapshot_content = #{snapshotContent}</if>
             <if test="configCount != null "> and dcs.config_count = #{configCount}</if>
+            <if test="status != null  and status != ''"> and dcs.status = #{status}</if>
+            <if test="deptId != null "> and dcs.dept_id = #{deptId}</if>
         </where>
     </select>
     
-    <select id="selectDataiConfigSnapshotById" parameterType="String" resultMap="DataiConfigSnapshotResult">
+    <select id="selectDataiConfigSnapshotById" parameterType="Long" resultMap="DataiConfigSnapshotResult">
         <include refid="selectDataiConfigSnapshotVo"/>
         where dcs.id = #{id}
     </select>
@@ -54,28 +60,32 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         insert into datai_config_snapshot
         <trim prefix="(" suffix=")" suffixOverrides=",">
             <if test="id != null">id,</if>
-            <if test="deptId != null">dept_id,</if>
-            <if test="versionId != null">version_id,</if>
-            <if test="snapshotTime != null">snapshot_time,</if>
-            <if test="snapshotContent != null and snapshotContent != ''">snapshot_content,</if>
+            <if test="snapshotNumber != null and snapshotNumber != ''">snapshot_number,</if>
+            <if test="environmentId != null">environment_id,</if>
+            <if test="snapshotDesc != null and snapshotDesc != ''">snapshot_desc,</if>
+            <if test="snapshotContent != null">snapshot_content,</if>
             <if test="configCount != null">config_count,</if>
+            <if test="status != null">status,</if>
             <if test="remark != null">remark,</if>
-            <if test="createBy != null and createBy != ''">create_by,</if>
+            <if test="deptId != null">dept_id,</if>
+            <if test="createBy != null">create_by,</if>
             <if test="createTime != null">create_time,</if>
-            <if test="updateBy != null and updateBy != ''">update_by,</if>
+            <if test="updateBy != null">update_by,</if>
             <if test="updateTime != null">update_time,</if>
          </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
             <if test="id != null">#{id},</if>
-            <if test="deptId != null">#{deptId},</if>
-            <if test="versionId != null">#{versionId},</if>
-            <if test="snapshotTime != null">#{snapshotTime},</if>
-            <if test="snapshotContent != null and snapshotContent != ''">#{snapshotContent},</if>
+            <if test="snapshotNumber != null and snapshotNumber != ''">#{snapshotNumber},</if>
+            <if test="environmentId != null">#{environmentId},</if>
+            <if test="snapshotDesc != null and snapshotDesc != ''">#{snapshotDesc},</if>
+            <if test="snapshotContent != null">#{snapshotContent},</if>
             <if test="configCount != null">#{configCount},</if>
+            <if test="status != null">#{status},</if>
             <if test="remark != null">#{remark},</if>
-            <if test="createBy != null and createBy != ''">#{createBy},</if>
+            <if test="deptId != null">#{deptId},</if>
+            <if test="createBy != null">#{createBy},</if>
             <if test="createTime != null">#{createTime},</if>
-            <if test="updateBy != null and updateBy != ''">#{updateBy},</if>
+            <if test="updateBy != null">#{updateBy},</if>
             <if test="updateTime != null">#{updateTime},</if>
          </trim>
     </insert>
@@ -83,21 +93,23 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <update id="updateDataiConfigSnapshot" parameterType="DataiConfigSnapshot">
         update datai_config_snapshot
         <trim prefix="SET" suffixOverrides=",">
-            <if test="deptId != null">dept_id = #{deptId},</if>
-            <if test="versionId != null">version_id = #{versionId},</if>
-            <if test="snapshotTime != null">snapshot_time = #{snapshotTime},</if>
-            <if test="snapshotContent != null and snapshotContent != ''">snapshot_content = #{snapshotContent},</if>
+            <if test="snapshotNumber != null and snapshotNumber != ''">snapshot_number = #{snapshotNumber},</if>
+            <if test="environmentId != null">environment_id = #{environmentId},</if>
+            <if test="snapshotDesc != null and snapshotDesc != ''">snapshot_desc = #{snapshotDesc},</if>
+            <if test="snapshotContent != null">snapshot_content = #{snapshotContent},</if>
             <if test="configCount != null">config_count = #{configCount},</if>
+            <if test="status != null">status = #{status},</if>
             <if test="remark != null">remark = #{remark},</if>
-            <if test="createBy != null and createBy != ''">create_by = #{createBy},</if>
+            <if test="deptId != null">dept_id = #{deptId},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
             <if test="createTime != null">create_time = #{createTime},</if>
-            <if test="updateBy != null and updateBy != ''">update_by = #{updateBy},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
             <if test="updateTime != null">update_time = #{updateTime},</if>
         </trim>
         where datai_config_snapshot.id = #{id}
     </update>
 
-    <delete id="deleteDataiConfigSnapshotById" parameterType="String">
+    <delete id="deleteDataiConfigSnapshotById" parameterType="Long">
         delete from datai_config_snapshot where id = #{id}
     </delete>
 

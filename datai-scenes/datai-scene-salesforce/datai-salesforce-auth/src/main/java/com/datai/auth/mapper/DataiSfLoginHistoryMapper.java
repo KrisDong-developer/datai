@@ -58,4 +58,11 @@ public interface DataiSfLoginHistoryMapper
      * @return 结果
      */
     public int deleteDataiSfLoginHistoryByIds(Long[] ids);
+
+    /**
+     * 查询最近一条登录成功的历史记录
+     * 
+     * @return 登录历史信息
+     */
+    public DataiSfLoginHistory selectLatestSuccessLoginHistory();
 }

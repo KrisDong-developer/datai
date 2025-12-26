@@ -4,8 +4,9 @@ import com.datai.auth.domain.SalesforceLoginResult;
 import com.datai.auth.domain.SalesforceLoginRequest;
 import com.datai.auth.strategy.LoginStrategy;
 import com.datai.common.utils.CacheUtils;
-import com.datai.auth.constant.SalesforceConfigConstants;
+import com.datai.salesforce.common.constant.SalesforceConfigConstants;
 import com.datai.salesforce.common.exception.SalesforceLegacyCredentialLoginException;
+import jakarta.annotation.Resource;
 import jakarta.xml.soap.*;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -13,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.Cache;
 import org.springframework.stereotype.Component;
+import com.datai.setting.config.SalesforceConfigCacheManager;
 
 import java.io.*;
 import java.net.HttpURLConnection;
@@ -33,6 +35,9 @@ import java.util.Optional;
  */
 @Component
 public class LegacyCredentialLoginStrategy implements LoginStrategy {
+    
+    @Resource
+    private SalesforceConfigCacheManager salesforceConfigCacheManager;
     
     private static final Logger logger = LoggerFactory.getLogger(LegacyCredentialLoginStrategy.class);
 
@@ -148,13 +153,13 @@ public class LegacyCredentialLoginStrategy implements LoginStrategy {
             throw new SalesforceLegacyCredentialLoginException("CONFIG_NOT_FOUND", "Salesforce config cache not found");
         }
         
-        String apiVersion = CacheUtils.get(SalesforceConfigConstants.SALESFORCE_CONFIG_CACHE_KEY, "salesforce.api.version", String.class);
-        String environmentType = CacheUtils.get(SalesforceConfigConstants.SALESFORCE_CONFIG_CACHE_KEY, "salesforce.environment.type", String.class);
+        String apiVersion = CacheUtils.get(salesforceConfigCacheManager.getEnvironmentCacheKey(), "salesforce.api.version", String.class);
+        String environmentType = CacheUtils.get(salesforceConfigCacheManager.getEnvironmentCacheKey(), "salesforce.environment.type", String.class);
         String endpointUrl = getEndpointUrl(environmentType);
-        String namespace = CacheUtils.get(SalesforceConfigConstants.SALESFORCE_CONFIG_CACHE_KEY, "salesforce.api.namespace", String.class);
-        String bindingName = CacheUtils.get(SalesforceConfigConstants.SALESFORCE_CONFIG_CACHE_KEY, "salesforce.api.binding", String.class);
-        String portType = CacheUtils.get(SalesforceConfigConstants.SALESFORCE_CONFIG_CACHE_KEY, "salesforce.api.port_type", String.class);
-        String serviceName = CacheUtils.get(SalesforceConfigConstants.SALESFORCE_CONFIG_CACHE_KEY, "salesforce.api.service_name", String.class);
+        String namespace = CacheUtils.get(salesforceConfigCacheManager.getEnvironmentCacheKey(), "salesforce.api.namespace", String.class);
+        String bindingName = CacheUtils.get(salesforceConfigCacheManager.getEnvironmentCacheKey(), "salesforce.api.binding", String.class);
+        String portType = CacheUtils.get(salesforceConfigCacheManager.getEnvironmentCacheKey(), "salesforce.api.port_type", String.class);
+        String serviceName = CacheUtils.get(salesforceConfigCacheManager.getEnvironmentCacheKey(), "salesforce.api.service_name", String.class);
         
         // 验证必要配置
         if (apiVersion == null) {
@@ -191,16 +196,16 @@ public class LegacyCredentialLoginStrategy implements LoginStrategy {
         }
         
         if (environmentType == null) {
-            return CacheUtils.get(SalesforceConfigConstants.SALESFORCE_CONFIG_CACHE_KEY, "salesforce.api.endpoint.production", String.class);
+            return CacheUtils.get(salesforceConfigCacheManager.getEnvironmentCacheKey(), "salesforce.api.endpoint.production", String.class);
         }
         
         switch (environmentType) {
             case "sandbox":
-                return CacheUtils.get(SalesforceConfigConstants.SALESFORCE_CONFIG_CACHE_KEY, "salesforce.api.endpoint.sandbox", String.class);
+                return CacheUtils.get(salesforceConfigCacheManager.getEnvironmentCacheKey(), "salesforce.api.endpoint.sandbox", String.class);
             case "custom":
-                return CacheUtils.get(SalesforceConfigConstants.SALESFORCE_CONFIG_CACHE_KEY, "salesforce.api.endpoint.custom", String.class);
+                return CacheUtils.get(salesforceConfigCacheManager.getEnvironmentCacheKey(), "salesforce.api.endpoint.custom", String.class);
             default:
-                return CacheUtils.get(SalesforceConfigConstants.SALESFORCE_CONFIG_CACHE_KEY, "salesforce.api.endpoint.production", String.class);
+                return CacheUtils.get(salesforceConfigCacheManager.getEnvironmentCacheKey(), "salesforce.api.endpoint.production", String.class);
         }
     }
 
@@ -528,7 +533,7 @@ public class LegacyCredentialLoginStrategy implements LoginStrategy {
                 // 假设 CacheUtils.get 返回的是 Object 或者可能为 null
                 // 使用 Optional 避免深层 if-else
                 expiresIn = Optional.ofNullable(CacheUtils.getCache(SalesforceConfigConstants.SALESFORCE_CONFIG_CACHE_KEY))
-                        .map(c -> CacheUtils.get(SalesforceConfigConstants.SALESFORCE_CONFIG_CACHE_KEY, "salesforce.session.timeout", String.class))
+                        .map(c -> CacheUtils.get(salesforceConfigCacheManager.getEnvironmentCacheKey(), "salesforce.session.timeout", String.class))
                         .filter(StringUtils::isNumeric) // 确保是数字
                         .map(Long::parseLong)
                         .orElse(7200L);

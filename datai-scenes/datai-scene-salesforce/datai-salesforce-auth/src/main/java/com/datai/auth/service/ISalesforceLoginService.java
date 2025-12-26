@@ -39,6 +39,13 @@ public interface ISalesforceLoginService {
     DataiSfLoginSession getCurrentLoginInfo(String sessionId);
 
     /**
+     * 获取当前登录结果（从缓存中获取）
+     * 
+     * @return 登录结果
+     */
+    SalesforceLoginResult getCurrentLoginResult();
+
+    /**
      * 自动登录
      * 
      * @param historyId 登录历史ID

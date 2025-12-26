@@ -57,20 +57,12 @@ public class SalesforceDataPullServiceImpl implements ISalesforceDataPullService
     @Autowired
     private IDataiIntegrationFilterLookupService integrationFilterLookupService;
 
-    /**
-     * 表索引常量
-     */
-    private static final List<String> TABLE_INDEX = Arrays.asList("Id", "CreatedDate", "LastModifiedDate", "SystemModstamp");
 
-    /**
-     * 默认分区年份数量
-     */
-    private static final int DEFAULT_PARTITION_YEARS = 5;
 
     /**
      * 大数据量对象阈值（100万）
      */
-    private static final int LARGE_OBJECT_THRESHOLD = 1000000;
+    private static final int LARGE_OBJECT_THRESHOLD = 5000000;
 
     /**
      * 同步多个Salesforce对象的表结构

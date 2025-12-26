@@ -2,11 +2,10 @@
 <!DOCTYPE mapper
 PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.datai.integration.mapper.DataiIntegrationLogMapper">
+<mapper namespace="com.datai.integration.mapper.DataiIntegrationSyncLogMapper">
     
-    <resultMap type="DataiIntegrationLog" id="DataiIntegrationLogResult">
+    <resultMap type="DataiIntegrationSyncLog" id="DataiIntegrationSyncLogResult">
         <result property="id" column="id" />
-        <result property="deptId" column="dept_id" />
         <result property="batchId" column="batch_id" />
         <result property="objectApi" column="object_api" />
         <result property="recordId" column="record_id" />
@@ -14,53 +13,53 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="operationStatus" column="operation_status" />
         <result property="errorMessage" column="error_message" />
         <result property="executionTime" column="execution_time" />
+        <result property="deptId" column="dept_id" />
         <result property="createBy" column="create_by" />
         <result property="createTime" column="create_time" />
         <result property="updateBy" column="update_by" />
         <result property="updateTime" column="update_time" />
     </resultMap>
 
-    <sql id="selectDataiIntegrationLogVo">
+    <sql id="selectDataiIntegrationSyncLogVo">
         select 
-            dil.id,
-            dil.dept_id,
-            dil.batch_id,
-            dil.object_api,
-            dil.record_id,
-            dil.operation_type,
-            dil.operation_status,
-            dil.error_message,
-            dil.execution_time,
-            dil.create_by,
-            dil.create_time,
-            dil.update_by,
-            dil.update_time
-        from datai_integration_log dil
+            disl.id,
+            disl.batch_id,
+            disl.object_api,
+            disl.record_id,
+            disl.operation_type,
+            disl.operation_status,
+            disl.error_message,
+            disl.execution_time,
+            disl.dept_id,
+            disl.create_by,
+            disl.create_time,
+            disl.update_by,
+            disl.update_time
+        from datai_integration_sync_log disl
     </sql>
 
-    <select id="selectDataiIntegrationLogList" parameterType="DataiIntegrationLog" resultMap="DataiIntegrationLogResult">
-        <include refid="selectDataiIntegrationLogVo"/>
+    <select id="selectDataiIntegrationSyncLogList" parameterType="DataiIntegrationSyncLog" resultMap="DataiIntegrationSyncLogResult">
+        <include refid="selectDataiIntegrationSyncLogVo"/>
         <where>
-            <if test="deptId != null "> and dil.dept_id = #{deptId}</if>
-            <if test="batchId != null "> and dil.batch_id = #{batchId}</if>
-            <if test="objectApi != null  and objectApi != ''"> and dil.object_api = #{objectApi}</if>
-            <if test="recordId != null  and recordId != ''"> and dil.record_id = #{recordId}</if>
-            <if test="operationType != null  and operationType != ''"> and dil.operation_type = #{operationType}</if>
-            <if test="operationStatus != null  and operationStatus != ''"> and dil.operation_status = #{operationStatus}</if>
-            <if test="errorMessage != null  and errorMessage != ''"> and dil.error_message = #{errorMessage}</if>
-            <if test="executionTime != null "> and dil.execution_time = #{executionTime}</if>
+            <if test="batchId != null "> and disl.batch_id = #{batchId}</if>
+            <if test="objectApi != null  and objectApi != ''"> and disl.object_api = #{objectApi}</if>
+            <if test="recordId != null  and recordId != ''"> and disl.record_id = #{recordId}</if>
+            <if test="operationType != null  and operationType != ''"> and disl.operation_type = #{operationType}</if>
+            <if test="operationStatus != null  and operationStatus != ''"> and disl.operation_status = #{operationStatus}</if>
+            <if test="errorMessage != null  and errorMessage != ''"> and disl.error_message = #{errorMessage}</if>
+            <if test="executionTime != null "> and disl.execution_time = #{executionTime}</if>
+            <if test="deptId != null "> and disl.dept_id = #{deptId}</if>
         </where>
     </select>
     
-    <select id="selectDataiIntegrationLogById" parameterType="Long" resultMap="DataiIntegrationLogResult">
-        <include refid="selectDataiIntegrationLogVo"/>
-        where dil.id = #{id}
+    <select id="selectDataiIntegrationSyncLogById" parameterType="Long" resultMap="DataiIntegrationSyncLogResult">
+        <include refid="selectDataiIntegrationSyncLogVo"/>
+        where disl.id = #{id}
     </select>
         
-    <insert id="insertDataiIntegrationLog" parameterType="DataiIntegrationLog" useGeneratedKeys="true" keyProperty="id">
-        insert into datai_integration_log
+    <insert id="insertDataiIntegrationSyncLog" parameterType="DataiIntegrationSyncLog" useGeneratedKeys="true" keyProperty="id">
+        insert into datai_integration_sync_log
         <trim prefix="(" suffix=")" suffixOverrides=",">
-            <if test="deptId != null">dept_id,</if>
             <if test="batchId != null">batch_id,</if>
             <if test="objectApi != null and objectApi != ''">object_api,</if>
             <if test="recordId != null">record_id,</if>
@@ -68,13 +67,13 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="operationStatus != null and operationStatus != ''">operation_status,</if>
             <if test="errorMessage != null">error_message,</if>
             <if test="executionTime != null">execution_time,</if>
+            <if test="deptId != null">dept_id,</if>
             <if test="createBy != null">create_by,</if>
             <if test="createTime != null">create_time,</if>
             <if test="updateBy != null">update_by,</if>
             <if test="updateTime != null">update_time,</if>
          </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
-            <if test="deptId != null">#{deptId},</if>
             <if test="batchId != null">#{batchId},</if>
             <if test="objectApi != null and objectApi != ''">#{objectApi},</if>
             <if test="recordId != null">#{recordId},</if>
@@ -82,6 +81,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="operationStatus != null and operationStatus != ''">#{operationStatus},</if>
             <if test="errorMessage != null">#{errorMessage},</if>
             <if test="executionTime != null">#{executionTime},</if>
+            <if test="deptId != null">#{deptId},</if>
             <if test="createBy != null">#{createBy},</if>
             <if test="createTime != null">#{createTime},</if>
             <if test="updateBy != null">#{updateBy},</if>
@@ -89,10 +89,9 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
          </trim>
     </insert>
 
-    <update id="updateDataiIntegrationLog" parameterType="DataiIntegrationLog">
-        update datai_integration_log
+    <update id="updateDataiIntegrationSyncLog" parameterType="DataiIntegrationSyncLog">
+        update datai_integration_sync_log
         <trim prefix="SET" suffixOverrides=",">
-            <if test="deptId != null">dept_id = #{deptId},</if>
             <if test="batchId != null">batch_id = #{batchId},</if>
             <if test="objectApi != null and objectApi != ''">object_api = #{objectApi},</if>
             <if test="recordId != null">record_id = #{recordId},</if>
@@ -100,20 +99,21 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="operationStatus != null and operationStatus != ''">operation_status = #{operationStatus},</if>
             <if test="errorMessage != null">error_message = #{errorMessage},</if>
             <if test="executionTime != null">execution_time = #{executionTime},</if>
+            <if test="deptId != null">dept_id = #{deptId},</if>
             <if test="createBy != null">create_by = #{createBy},</if>
             <if test="createTime != null">create_time = #{createTime},</if>
             <if test="updateBy != null">update_by = #{updateBy},</if>
             <if test="updateTime != null">update_time = #{updateTime},</if>
         </trim>
-        where datai_integration_log.id = #{id}
+        where datai_integration_sync_log.id = #{id}
     </update>
 
-    <delete id="deleteDataiIntegrationLogById" parameterType="Long">
-        delete from datai_integration_log where id = #{id}
+    <delete id="deleteDataiIntegrationSyncLogById" parameterType="Long">
+        delete from datai_integration_sync_log where id = #{id}
     </delete>
 
-    <delete id="deleteDataiIntegrationLogByIds" parameterType="String">
-        delete from datai_integration_log where id in 
+    <delete id="deleteDataiIntegrationSyncLogByIds" parameterType="String">
+        delete from datai_integration_sync_log where id in 
         <foreach item="id" collection="array" open="(" separator="," close=")">
             #{id}
         </foreach>
