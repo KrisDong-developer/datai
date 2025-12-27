@@ -62,7 +62,7 @@ public class SessionIdLoginStrategy implements LoginStrategy {
             }
             
             // 获取Salesforce配置
-            Map<String, String> config = getSalesforceConfig();
+            Map<String, String> config = getSalesforceConfig(request.getLoginUrl());
             
             // 构建Identity API URL
             String identityUrl = buildIdentityApiUrl(config);
@@ -115,7 +115,7 @@ public class SessionIdLoginStrategy implements LoginStrategy {
         
         try {
             // 获取Salesforce配置
-            Map<String, String> config = getSalesforceConfig();
+            Map<String, String> config = getSalesforceConfig(null);
             
             // 调用Salesforce登出API
             boolean logoutSuccess = executeLogout(sessionId, config);
@@ -136,10 +136,11 @@ public class SessionIdLoginStrategy implements LoginStrategy {
     /**
      * 获取Salesforce配置信息
      * 
+     * @param customLoginUrl 自定义登录URL，可为null
      * @return 配置信息Map
      * @throws SalesforceSessionIdLoginException 配置获取失败时抛出
      */
-    private Map<String, String> getSalesforceConfig() throws SalesforceSessionIdLoginException {
+    private Map<String, String> getSalesforceConfig(String customLoginUrl) throws SalesforceSessionIdLoginException {
         Cache cache = CacheUtils.getCache(SalesforceConfigConstants.SALESFORCE_CONFIG_CACHE_KEY);
         if (cache == null) {
             throw new SalesforceSessionIdLoginException("CONFIG_NOT_FOUND", "Salesforce config cache not found");
@@ -147,7 +148,15 @@ public class SessionIdLoginStrategy implements LoginStrategy {
         
         String apiVersion = CacheUtils.get(salesforceConfigCacheManager.getEnvironmentCacheKey(), "salesforce.api.version", String.class);
         String environmentType = CacheUtils.get(salesforceConfigCacheManager.getEnvironmentCacheKey(), "salesforce.environment.type", String.class);
-        String endpointUrl = getEndpointUrl(environmentType);
+        String endpointUrl;
+        
+        if (customLoginUrl != null && !customLoginUrl.trim().isEmpty()) {
+            endpointUrl = customLoginUrl;
+            logger.info("使用自定义登录地址: {}", endpointUrl);
+        } else {
+            endpointUrl = getEndpointUrl(environmentType);
+        }
+        
         String namespace = CacheUtils.get(salesforceConfigCacheManager.getEnvironmentCacheKey(), "salesforce.api.namespace", String.class);
         
         // 验证必要配置

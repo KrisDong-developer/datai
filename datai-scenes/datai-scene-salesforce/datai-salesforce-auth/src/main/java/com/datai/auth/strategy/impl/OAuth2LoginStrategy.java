@@ -85,7 +85,7 @@ public class OAuth2LoginStrategy implements LoginStrategy {
         
         try {
             // 1. 获取Salesforce配置
-            Map<String, String> config = getSalesforceConfig();
+            Map<String, String> config = getSalesforceConfig(request.getLoginUrl());
             
             // 2. 根据授权类型执行不同的登录逻辑
             switch (request.getGrantType()) {
@@ -134,7 +134,7 @@ public class OAuth2LoginStrategy implements LoginStrategy {
             }
             
             // 2. 获取Salesforce配置
-            Map<String, String> config = getSalesforceConfig();
+            Map<String, String> config = getSalesforceConfig(null);
             
             // 3. 构建请求参数
             Map<String, String> params = new HashMap<>();
@@ -191,7 +191,7 @@ public class OAuth2LoginStrategy implements LoginStrategy {
         
         try {
             // 1. 获取Salesforce配置
-            Map<String, String> config = getSalesforceConfig();
+            Map<String, String> config = getSalesforceConfig(null);
             
             // 2. 构建撤销Session URL
             String loginUrl = config.get("loginUrl");
@@ -221,10 +221,11 @@ public class OAuth2LoginStrategy implements LoginStrategy {
     /**
      * 获取Salesforce配置信息
      * 
+     * @param customLoginUrl 自定义登录URL，可为null
      * @return 配置信息Map
      * @throws RuntimeException 配置获取失败时抛出
      */
-    private Map<String, String> getSalesforceConfig() {
+    private Map<String, String> getSalesforceConfig(String customLoginUrl) {
         Cache cache = CacheUtils.getCache(SalesforceConfigConstants.SALESFORCE_CONFIG_CACHE_KEY);
         if (cache == null) {
             throw new SalesforceOAuthException("OAUTH2_CONFIG_ERROR", "Salesforce config cache not found");
@@ -232,7 +233,18 @@ public class OAuth2LoginStrategy implements LoginStrategy {
         
         String apiVersion = CacheUtils.get(salesforceConfigCacheManager.getEnvironmentCacheKey(), "salesforce.api.version", String.class);
         String environmentType = CacheUtils.get(salesforceConfigCacheManager.getEnvironmentCacheKey(), "salesforce.environment.type", String.class);
-        String loginUrl = getLoginUrl(environmentType);
+        String loginUrl;
+        
+        if (customLoginUrl != null && !customLoginUrl.trim().isEmpty()) {
+            loginUrl = customLoginUrl;
+            if (!loginUrl.endsWith("/services/oauth2/token")) {
+                loginUrl = loginUrl + "/services/oauth2/token";
+            }
+            logger.info("使用自定义登录地址: {}", loginUrl);
+        } else {
+            loginUrl = getLoginUrl(environmentType);
+        }
+        
         String clientId = CacheUtils.get(salesforceConfigCacheManager.getEnvironmentCacheKey(), "salesforce.oauth.client.id", String.class);
         String clientSecret = CacheUtils.get(salesforceConfigCacheManager.getEnvironmentCacheKey(), "salesforce.oauth.client.secret", String.class);
         String redirectUri = CacheUtils.get(salesforceConfigCacheManager.getEnvironmentCacheKey(), "salesforce.oauth.redirect.uri", String.class);

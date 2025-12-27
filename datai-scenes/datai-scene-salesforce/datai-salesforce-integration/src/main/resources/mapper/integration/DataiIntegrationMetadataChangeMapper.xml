@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.datai.integration.mapper.DataiIntegrationMetadataChangeMapper">
+    
+    <resultMap type="DataiIntegrationMetadataChange" id="DataiIntegrationMetadataChangeResult">
+        <result property="id" column="id" />
+        <result property="changeType" column="change_type" />
+        <result property="operationType" column="operation_type" />
+        <result property="objectApi" column="object_api" />
+        <result property="fieldApi" column="field_api" />
+        <result property="objectLabel" column="object_label" />
+        <result property="fieldLabel" column="field_label" />
+        <result property="changeTime" column="change_time" />
+        <result property="changeUser" column="change_user" />
+        <result property="changeReason" column="change_reason" />
+        <result property="syncStatus" column="sync_status" />
+        <result property="syncTime" column="sync_time" />
+        <result property="syncErrorMessage" column="sync_error_message" />
+        <result property="retryCount" column="retry_count" />
+        <result property="lastRetryTime" column="last_retry_time" />
+        <result property="isCustom" column="is_custom" />
+        <result property="deptId" column="dept_id" />
+        <result property="createBy" column="create_by" />
+        <result property="createTime" column="create_time" />
+        <result property="updateBy" column="update_by" />
+        <result property="updateTime" column="update_time" />
+        <result property="remark" column="remark" />
+    </resultMap>
+
+    <sql id="selectDataiIntegrationMetadataChangeVo">
+        select 
+            dimc.id,
+            dimc.change_type,
+            dimc.operation_type,
+            dimc.object_api,
+            dimc.field_api,
+            dimc.object_label,
+            dimc.field_label,
+            dimc.change_time,
+            dimc.change_user,
+            dimc.change_reason,
+            dimc.sync_status,
+            dimc.sync_time,
+            dimc.sync_error_message,
+            dimc.retry_count,
+            dimc.last_retry_time,
+            dimc.is_custom,
+            dimc.dept_id,
+            dimc.create_by,
+            dimc.create_time,
+            dimc.update_by,
+            dimc.update_time,
+            dimc.remark
+        from datai_integration_metadata_change dimc
+    </sql>
+
+    <select id="selectDataiIntegrationMetadataChangeList" parameterType="DataiIntegrationMetadataChange" resultMap="DataiIntegrationMetadataChangeResult">
+        <include refid="selectDataiIntegrationMetadataChangeVo"/>
+        <where>
+            <if test="changeType != null  and changeType != ''"> and dimc.change_type = #{changeType}</if>
+            <if test="operationType != null  and operationType != ''"> and dimc.operation_type = #{operationType}</if>
+            <if test="objectApi != null  and objectApi != ''"> and dimc.object_api = #{objectApi}</if>
+            <if test="fieldApi != null  and fieldApi != ''"> and dimc.field_api = #{fieldApi}</if>
+            <if test="objectLabel != null  and objectLabel != ''"> and dimc.object_label = #{objectLabel}</if>
+            <if test="fieldLabel != null  and fieldLabel != ''"> and dimc.field_label = #{fieldLabel}</if>
+            <if test="changeTime != null "> and dimc.change_time = #{changeTime}</if>
+            <if test="changeUser != null  and changeUser != ''"> and dimc.change_user = #{changeUser}</if>
+            <if test="changeReason != null  and changeReason != ''"> and dimc.change_reason = #{changeReason}</if>
+            <if test="syncStatus != null "> and dimc.sync_status = #{syncStatus}</if>
+            <if test="syncTime != null "> and dimc.sync_time = #{syncTime}</if>
+            <if test="syncErrorMessage != null  and syncErrorMessage != ''"> and dimc.sync_error_message = #{syncErrorMessage}</if>
+            <if test="retryCount != null "> and dimc.retry_count = #{retryCount}</if>
+            <if test="lastRetryTime != null "> and dimc.last_retry_time = #{lastRetryTime}</if>
+            <if test="isCustom != null "> and dimc.is_custom = #{isCustom}</if>
+            <if test="deptId != null "> and dimc.dept_id = #{deptId}</if>
+        </where>
+    </select>
+
+    <select id="selectUnsyncedMetadataChangeList" parameterType="DataiIntegrationMetadataChange" resultMap="DataiIntegrationMetadataChangeResult">
+        <include refid="selectDataiIntegrationMetadataChangeVo"/>
+        <where>
+            dimc.sync_status = 0
+            <if test="changeType != null  and changeType != ''"> and dimc.change_type = #{changeType}</if>
+            <if test="operationType != null  and operationType != ''"> and dimc.operation_type = #{operationType}</if>
+            <if test="objectApi != null  and objectApi != ''"> and dimc.object_api = #{objectApi}</if>
+            <if test="fieldApi != null  and fieldApi != ''"> and dimc.field_api = #{fieldApi}</if>
+            <if test="objectLabel != null  and objectLabel != ''"> and dimc.object_label = #{objectLabel}</if>
+            <if test="fieldLabel != null  and fieldLabel != ''"> and dimc.field_label = #{fieldLabel}</if>
+            <if test="changeTime != null "> and dimc.change_time = #{changeTime}</if>
+            <if test="changeUser != null  and changeUser != ''"> and dimc.change_user = #{changeUser}</if>
+            <if test="changeReason != null  and changeReason != ''"> and dimc.change_reason = #{changeReason}</if>
+            <if test="syncTime != null "> and dimc.sync_time = #{syncTime}</if>
+            <if test="syncErrorMessage != null  and syncErrorMessage != ''"> and dimc.sync_error_message = #{syncErrorMessage}</if>
+            <if test="retryCount != null "> and dimc.retry_count = #{retryCount}</if>
+            <if test="lastRetryTime != null "> and dimc.last_retry_time = #{lastRetryTime}</if>
+            <if test="isCustom != null "> and dimc.is_custom = #{isCustom}</if>
+            <if test="deptId != null "> and dimc.dept_id = #{deptId}</if>
+        </where>
+        order by dimc.change_time desc
+    </select>
+    
+    <select id="selectDataiIntegrationMetadataChangeById" parameterType="Long" resultMap="DataiIntegrationMetadataChangeResult">
+        <include refid="selectDataiIntegrationMetadataChangeVo"/>
+        where dimc.id = #{id}
+    </select>
+        
+    <insert id="insertDataiIntegrationMetadataChange" parameterType="DataiIntegrationMetadataChange" useGeneratedKeys="true" keyProperty="id">
+        insert into datai_integration_metadata_change
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="changeType != null and changeType != ''">change_type,</if>
+            <if test="operationType != null and operationType != ''">operation_type,</if>
+            <if test="objectApi != null and objectApi != ''">object_api,</if>
+            <if test="fieldApi != null">field_api,</if>
+            <if test="objectLabel != null">object_label,</if>
+            <if test="fieldLabel != null">field_label,</if>
+            <if test="changeTime != null">change_time,</if>
+            <if test="changeUser != null">change_user,</if>
+            <if test="changeReason != null">change_reason,</if>
+            <if test="syncStatus != null">sync_status,</if>
+            <if test="syncTime != null">sync_time,</if>
+            <if test="syncErrorMessage != null">sync_error_message,</if>
+            <if test="retryCount != null">retry_count,</if>
+            <if test="lastRetryTime != null">last_retry_time,</if>
+            <if test="isCustom != null">is_custom,</if>
+            <if test="deptId != null">dept_id,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="remark != null">remark,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="changeType != null and changeType != ''">#{changeType},</if>
+            <if test="operationType != null and operationType != ''">#{operationType},</if>
+            <if test="objectApi != null and objectApi != ''">#{objectApi},</if>
+            <if test="fieldApi != null">#{fieldApi},</if>
+            <if test="objectLabel != null">#{objectLabel},</if>
+            <if test="fieldLabel != null">#{fieldLabel},</if>
+            <if test="changeTime != null">#{changeTime},</if>
+            <if test="changeUser != null">#{changeUser},</if>
+            <if test="changeReason != null">#{changeReason},</if>
+            <if test="syncStatus != null">#{syncStatus},</if>
+            <if test="syncTime != null">#{syncTime},</if>
+            <if test="syncErrorMessage != null">#{syncErrorMessage},</if>
+            <if test="retryCount != null">#{retryCount},</if>
+            <if test="lastRetryTime != null">#{lastRetryTime},</if>
+            <if test="isCustom != null">#{isCustom},</if>
+            <if test="deptId != null">#{deptId},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="remark != null">#{remark},</if>
+         </trim>
+    </insert>
+
+    <update id="updateDataiIntegrationMetadataChange" parameterType="DataiIntegrationMetadataChange">
+        update datai_integration_metadata_change
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="changeType != null and changeType != ''">change_type = #{changeType},</if>
+            <if test="operationType != null and operationType != ''">operation_type = #{operationType},</if>
+            <if test="objectApi != null and objectApi != ''">object_api = #{objectApi},</if>
+            <if test="fieldApi != null">field_api = #{fieldApi},</if>
+            <if test="objectLabel != null">object_label = #{objectLabel},</if>
+            <if test="fieldLabel != null">field_label = #{fieldLabel},</if>
+            <if test="changeTime != null">change_time = #{changeTime},</if>
+            <if test="changeUser != null">change_user = #{changeUser},</if>
+            <if test="changeReason != null">change_reason = #{changeReason},</if>
+            <if test="syncStatus != null">sync_status = #{syncStatus},</if>
+            <if test="syncTime != null">sync_time = #{syncTime},</if>
+            <if test="syncErrorMessage != null">sync_error_message = #{syncErrorMessage},</if>
+            <if test="retryCount != null">retry_count = #{retryCount},</if>
+            <if test="lastRetryTime != null">last_retry_time = #{lastRetryTime},</if>
+            <if test="isCustom != null">is_custom = #{isCustom},</if>
+            <if test="deptId != null">dept_id = #{deptId},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="remark != null">remark = #{remark},</if>
+        </trim>
+        where datai_integration_metadata_change.id = #{id}
+    </update>
+
+    <delete id="deleteDataiIntegrationMetadataChangeById" parameterType="Long">
+        delete from datai_integration_metadata_change where id = #{id}
+    </delete>
+
+    <delete id="deleteDataiIntegrationMetadataChangeByIds" parameterType="String">
+        delete from datai_integration_metadata_change where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <update id="batchUpdateSyncStatus">
+        update datai_integration_metadata_change
+        set sync_status = #{syncStatus},
+            sync_time = now(),
+            <if test="syncErrorMessage != null and syncErrorMessage != ''">
+                sync_error_message = #{syncErrorMessage},
+            </if>
+            update_by = #{updateBy},
+            update_time = now()
+        where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+</mapper>

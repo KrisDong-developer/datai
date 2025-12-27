@@ -13,29 +13,22 @@ import java.util.Map;
  */
 public interface ISalesforceDataPullService {
 
+
     /**
      * 同步Salesforce对象的表结构
      * 
      * @param objectApis Salesforce对象API列表
      * @return 同步结果，键为对象API，值为同步结果
      */
-    Map<String, Boolean> syncMultipleObjectStructures(List<String> objectApis);
+    boolean syncObjectStructures(List<String> objectApis);
 
     /**
-     * 同步多个Salesforce对象的数据
+     * 同步Salesforce对象的数据
      * 
      * @param objectApis Salesforce对象API列表
      * @return 同步结果，键为对象API，值为同步结果
      */
-    Map<String, Boolean> syncObjectsData(List<String> objectApis);
-
-    /**
-     * 同步单个Salesforce对象的数据
-     * 
-     * @param objectApi Salesforce对象API
-     * @return 同步结果
-     */
-    boolean syncObjectsData(String objectApi);
+    boolean syncObjectsData(List<String> objectApis);
 
     /**
      * 同步Salesforce对象的指定批次数据
@@ -45,5 +38,17 @@ public interface ISalesforceDataPullService {
      * @return 同步结果
      */
     boolean syncObjectDataByBatch(String objectApi, String batchId);
+
+    /**
+     * 自动同步Salesforce对象信息到对象信息表
+     * 同步满足以下任一条件的对象：
+     * - isQueryable (可查询)
+     * - isCreateable (可创建)
+     * - isUpdateable (可更新)
+     * - isDeletable (可删除)
+     * 
+     * @return 同步操作是否成功
+     */
+    boolean autoSyncObjects();
 
 }

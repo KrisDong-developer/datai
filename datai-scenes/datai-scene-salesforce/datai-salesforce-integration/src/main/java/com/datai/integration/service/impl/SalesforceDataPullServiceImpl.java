@@ -2,16 +2,20 @@ package com.datai.integration.service.impl;
 
 import com.datai.integration.domain.DataiIntegrationField;
 import com.datai.integration.domain.DataiIntegrationFilterLookup;
+import com.datai.integration.domain.DataiIntegrationMetadataChange;
 import com.datai.integration.domain.DataiIntegrationObject;
 import com.datai.integration.domain.DataiIntegrationPicklist;
-import com.datai.integration.factory.SOAPConnectionFactory;
+import com.datai.integration.factory.impl.SOAPConnectionFactory;
 import com.datai.integration.mapper.CustomMapper;
 import com.datai.integration.service.IDataiIntegrationFieldService;
 import com.datai.integration.service.IDataiIntegrationFilterLookupService;
+import com.datai.integration.service.IDataiIntegrationMetadataChangeService;
 import com.datai.integration.service.IDataiIntegrationObjectService;
 import com.datai.integration.service.IDataiIntegrationPicklistService;
 import com.datai.integration.service.ISalesforceDataPullService;
 import com.datai.salesforce.common.param.SalesforceParam;
+import com.sforce.soap.partner.DescribeGlobalResult;
+import com.sforce.soap.partner.DescribeGlobalSObjectResult;
 import com.sforce.soap.partner.DescribeSObjectResult;
 import com.sforce.soap.partner.Field;
 import com.sforce.soap.partner.FilteredLookupInfo;
@@ -24,7 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -57,10 +61,14 @@ public class SalesforceDataPullServiceImpl implements ISalesforceDataPullService
     @Autowired
     private IDataiIntegrationFilterLookupService integrationFilterLookupService;
 
+    @Autowired
+    private IDataiIntegrationMetadataChangeService metadataChangeService;
 
+    @Autowired
+    private SOAPConnectionFactory soapConnectionFactory;
 
     /**
-     * 大数据量对象阈值（100万）
+     * 大数据量对象阈值（500万）
      */
     private static final int LARGE_OBJECT_THRESHOLD = 5000000;
 
@@ -71,19 +79,22 @@ public class SalesforceDataPullServiceImpl implements ISalesforceDataPullService
      * @return 同步结果，键为对象API，值为同步结果
      */
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public Map<String, Boolean> syncMultipleObjectStructures(List<String> objectApis) {
+    public boolean syncObjectStructures(List<String> objectApis) {
         log.info("准备同步Salesforce对象的表结构，对象API列表: {}", objectApis);
-        Map<String, Boolean> resultMap = new HashMap<>();
-        
         if (objectApis == null || objectApis.isEmpty()) {
-            log.warn("对象API列表为空，无需同步");
-            return resultMap;
+            DataiIntegrationObject object = new DataiIntegrationObject();
+            object.setIsWork(true);
+            object.setSyncStatus(true);
+            List<DataiIntegrationObject> integrationObjects = integrationObjectService.selectDataiIntegrationObjectList(object);
+            integrationObjects.forEach(item -> objectApis.add(item.getApi()));
+            if (objectApis == null || objectApis.isEmpty()){
+                log.warn("对象API列表为空，无需同步，请输入API或启用对象");
+                return false;
+            }
         }
-
         try {
             // 获取源ORG连接，添加重试机制
-            PartnerConnection connection = retryOperation(() -> SOAPConnectionFactory.instance(), 3, 1000);
+            PartnerConnection connection = retryOperation(() -> soapConnectionFactory.getConnection(), 3, 1000);
             log.info("成功获取源ORG连接");
 
             for (String objectApi : objectApis) {
@@ -100,7 +111,6 @@ public class SalesforceDataPullServiceImpl implements ISalesforceDataPullService
                         // 检查buildObjectMetadata是否成功
                         if (object == null) {
                             log.error("构建对象 {} 的元数据失败，跳过该对象的同步", objectApi);
-                            resultMap.put(objectApi.trim(), false);
                             continue;
                         }
 
@@ -126,13 +136,10 @@ public class SalesforceDataPullServiceImpl implements ISalesforceDataPullService
                         }
                         
                         log.info("同步对象 {} 成功", objectApi);
-                        resultMap.put(objectApi.trim(), result);
                     } catch (ConnectionException e) {
                         log.error("获取对象 {} 的元数据失败: {}", objectApi, e.getMessage(), e);
-                        resultMap.put(objectApi.trim(), false);
                     } catch (Exception e) {
                         log.error("处理对象 {} 时出错: {}", objectApi, e.getMessage(), e);
-                        resultMap.put(objectApi.trim(), false);
                     }
                 }
             }
@@ -140,7 +147,7 @@ public class SalesforceDataPullServiceImpl implements ISalesforceDataPullService
             log.error("Salesforce对象同步任务执行失败", e);
         }
         
-        return resultMap;
+        return true;
     }
 
     /**
@@ -301,21 +308,224 @@ public class SalesforceDataPullServiceImpl implements ISalesforceDataPullService
             }
         }
 
-        // 保存字段、选择列表和过滤查找信息
-        if (!fields.isEmpty()) {
-            for (DataiIntegrationField field : fields) {
-                integrationFieldService.insertDataiIntegrationField(field);
+        // 同步字段并记录变更
+        syncFieldsAndRecordChanges(objectApi, fields, picklists, filterLookups);
+    }
+
+    private void syncFieldsAndRecordChanges(String objectApi, List<DataiIntegrationField> newFields, 
+                                            List<DataiIntegrationPicklist> picklists, 
+                                            List<DataiIntegrationFilterLookup> filterLookups) {
+        try {
+            // 获取现有字段
+            DataiIntegrationField queryField = new DataiIntegrationField();
+            queryField.setApi(objectApi);
+            List<DataiIntegrationField> existingFields = integrationFieldService.selectDataiIntegrationFieldList(queryField);
+            
+            // 创建现有字段映射
+            Map<String, DataiIntegrationField> existingFieldMap = new HashMap<>();
+            for (DataiIntegrationField existingField : existingFields) {
+                existingFieldMap.put(existingField.getField(), existingField);
             }
+            
+            // 创建新字段映射
+            Map<String, DataiIntegrationField> newFieldMap = new HashMap<>();
+            for (DataiIntegrationField newField : newFields) {
+                newFieldMap.put(newField.getField(), newField);
+            }
+            
+            // 获取对象信息
+            DataiIntegrationObject queryObject = new DataiIntegrationObject();
+            queryObject.setApi(objectApi);
+            List<DataiIntegrationObject> objects = integrationObjectService.selectDataiIntegrationObjectList(queryObject);
+            String objectLabel = objects.isEmpty() ? objectApi : objects.get(0).getLabel();
+            Boolean isCustom = objects.isEmpty() ? false : objects.get(0).getIsCustom();
+            
+            // 处理新增和更新的字段
+            for (DataiIntegrationField newField : newFields) {
+                DataiIntegrationField existingField = existingFieldMap.get(newField.getField());
+                
+                if (existingField == null) {
+                    // 新增字段
+                    integrationFieldService.insertDataiIntegrationField(newField);
+                    recordFieldChange(objectApi, objectLabel, newField.getField(), newField.getLabel(), 
+                                     null, "INSERT", "新增字段", isCustom);
+                    log.debug("新增字段: {}.{}", objectApi, newField.getField());
+                } else {
+                    // 检查字段是否有变更
+                    List<String> changedFields = compareFields(existingField, newField);
+                    if (!changedFields.isEmpty()) {
+                        newField.setId(existingField.getId());
+                        integrationFieldService.updateDataiIntegrationField(newField);
+                        recordFieldChange(objectApi, objectLabel, newField.getField(), newField.getLabel(), 
+                                         "字段属性变更: " + String.join(", ", changedFields), 
+                                         "UPDATE", "字段属性更新", isCustom);
+                        log.debug("更新字段: {}.{} - 变更: {}", objectApi, newField.getField(), 
+                                 String.join(", ", changedFields));
+                    }
+                }
+            }
+            
+            // 处理删除的字段
+            for (DataiIntegrationField existingField : existingFields) {
+                if (!newFieldMap.containsKey(existingField.getField())) {
+                    recordFieldChange(objectApi, objectLabel, existingField.getField(), existingField.getLabel(), 
+                                     "字段已从Salesforce中删除", "DELETE", "字段删除", isCustom);
+                    log.warn("检测到字段已删除: {}.{}", objectApi, existingField.getField());
+                }
+            }
+            
+            // 保存选择列表和过滤查找信息
+            if (!picklists.isEmpty()) {
+                for (DataiIntegrationPicklist picklist : picklists) {
+                    integrationPicklistService.insertDataiIntegrationPicklist(picklist);
+                }
+            }
+            if (!filterLookups.isEmpty()) {
+                for (DataiIntegrationFilterLookup filterLookup : filterLookups) {
+                    integrationFilterLookupService.insertDataiIntegrationFilterLookup(filterLookup);
+                }
+            }
+            
+        } catch (Exception e) {
+            log.error("同步对象 {} 的字段时出错: {}", objectApi, e.getMessage(), e);
         }
-        if (!picklists.isEmpty()) {
-            for (DataiIntegrationPicklist picklist : picklists) {
-                integrationPicklistService.insertDataiIntegrationPicklist(picklist);
-            }
+    }
+
+    private List<String> compareFields(DataiIntegrationField oldField, DataiIntegrationField newField) {
+        List<String> changedFields = new ArrayList<>();
+        
+        if (!Objects.equals(oldField.getLabel(), newField.getLabel())) {
+            changedFields.add("label");
         }
-        if (!filterLookups.isEmpty()) {
-            for (DataiIntegrationFilterLookup filterLookup : filterLookups) {
-                integrationFilterLookupService.insertDataiIntegrationFilterLookup(filterLookup);
-            }
+        if (!Objects.equals(oldField.getIsCreateable(), newField.getIsCreateable())) {
+            changedFields.add("isCreateable");
+        }
+        if (!Objects.equals(oldField.getIsNillable(), newField.getIsNillable())) {
+            changedFields.add("isNillable");
+        }
+        if (!Objects.equals(oldField.getIsUpdateable(), newField.getIsUpdateable())) {
+            changedFields.add("isUpdateable");
+        }
+        if (!Objects.equals(oldField.getIsDefaultedOnCreate(), newField.getIsDefaultedOnCreate())) {
+            changedFields.add("isDefaultedOnCreate");
+        }
+        if (!Objects.equals(oldField.getIsUnique(), newField.getIsUnique())) {
+            changedFields.add("isUnique");
+        }
+        if (!Objects.equals(oldField.getIsFilterable(), newField.getIsFilterable())) {
+            changedFields.add("isFilterable");
+        }
+        if (!Objects.equals(oldField.getIsSortable(), newField.getIsSortable())) {
+            changedFields.add("isSortable");
+        }
+        if (!Objects.equals(oldField.getIsAggregatable(), newField.getIsAggregatable())) {
+            changedFields.add("isAggregatable");
+        }
+        if (!Objects.equals(oldField.getIsGroupable(), newField.getIsGroupable())) {
+            changedFields.add("isGroupable");
+        }
+        if (!Objects.equals(oldField.getIsPolymorphicForeignKey(), newField.getIsPolymorphicForeignKey())) {
+            changedFields.add("isPolymorphicForeignKey");
+        }
+        if (!Objects.equals(oldField.getIsExternalId(), newField.getIsExternalId())) {
+            changedFields.add("isExternalId");
+        }
+        if (!Objects.equals(oldField.getIsCustom(), newField.getIsCustom())) {
+            changedFields.add("isCustom");
+        }
+        if (!Objects.equals(oldField.getIsCalculated(), newField.getIsCalculated())) {
+            changedFields.add("isCalculated");
+        }
+        if (!Objects.equals(oldField.getIsAutoNumber(), newField.getIsAutoNumber())) {
+            changedFields.add("isAutoNumber");
+        }
+        if (!Objects.equals(oldField.getIsCaseSensitive(), newField.getIsCaseSensitive())) {
+            changedFields.add("isCaseSensitive");
+        }
+        if (!Objects.equals(oldField.getIsEncrypted(), newField.getIsEncrypted())) {
+            changedFields.add("isEncrypted");
+        }
+        if (!Objects.equals(oldField.getIsHtmlFormatted(), newField.getIsHtmlFormatted())) {
+            changedFields.add("isHtmlFormatted");
+        }
+        if (!Objects.equals(oldField.getIsIdLookup(), newField.getIsIdLookup())) {
+            changedFields.add("isIdLookup");
+        }
+        if (!Objects.equals(oldField.getIsPermissionable(), newField.getIsPermissionable())) {
+            changedFields.add("isPermissionable");
+        }
+        if (!Objects.equals(oldField.getIsRestrictedPicklist(), newField.getIsRestrictedPicklist())) {
+            changedFields.add("isRestrictedPicklist");
+        }
+        if (!Objects.equals(oldField.getIsRestrictedDelete(), newField.getIsRestrictedDelete())) {
+            changedFields.add("isRestrictedDelete");
+        }
+        if (!Objects.equals(oldField.getIsWriteRequiresMasterRead(), newField.getIsWriteRequiresMasterRead())) {
+            changedFields.add("isWriteRequiresMasterRead");
+        }
+        if (!Objects.equals(oldField.getFieldDataType(), newField.getFieldDataType())) {
+            changedFields.add("fieldDataType");
+        }
+        if (!Objects.equals(oldField.getFieldLength(), newField.getFieldLength())) {
+            changedFields.add("fieldLength");
+        }
+        if (!Objects.equals(oldField.getFieldPrecision(), newField.getFieldPrecision())) {
+            changedFields.add("fieldPrecision");
+        }
+        if (!Objects.equals(oldField.getFieldScale(), newField.getFieldScale())) {
+            changedFields.add("fieldScale");
+        }
+        if (!Objects.equals(oldField.getFieldByteLength(), newField.getFieldByteLength())) {
+            changedFields.add("fieldByteLength");
+        }
+        if (!Objects.equals(oldField.getDefaultValue(), newField.getDefaultValue())) {
+            changedFields.add("defaultValue");
+        }
+        if (!Objects.equals(oldField.getCalculatedFormula(), newField.getCalculatedFormula())) {
+            changedFields.add("calculatedFormula");
+        }
+        if (!Objects.equals(oldField.getInlineHelpText(), newField.getInlineHelpText())) {
+            changedFields.add("inlineHelpText");
+        }
+        if (!Objects.equals(oldField.getRelationshipName(), newField.getRelationshipName())) {
+            changedFields.add("relationshipName");
+        }
+        if (!Objects.equals(oldField.getRelationshipOrder(), newField.getRelationshipOrder())) {
+            changedFields.add("relationshipOrder");
+        }
+        if (!Objects.equals(oldField.getReferenceTargetField(), newField.getReferenceTargetField())) {
+            changedFields.add("referenceTargetField");
+        }
+        if (!Objects.equals(oldField.getReferenceTo(), newField.getReferenceTo())) {
+            changedFields.add("referenceTo");
+        }
+        if (!Objects.equals(oldField.getPolymorphicForeignField(), newField.getPolymorphicForeignField())) {
+            changedFields.add("polymorphicForeignField");
+        }
+        
+        return changedFields;
+    }
+
+    private void recordFieldChange(String objectApi, String objectLabel, String fieldApi, String fieldLabel, 
+                                   String changeReason, String operationType, String defaultReason, Boolean isCustom) {
+        try {
+            DataiIntegrationMetadataChange metadataChange = new DataiIntegrationMetadataChange();
+            metadataChange.setChangeType("FIELD");
+            metadataChange.setOperationType(operationType);
+            metadataChange.setObjectApi(objectApi);
+            metadataChange.setObjectLabel(objectLabel);
+            metadataChange.setFieldApi(fieldApi);
+            metadataChange.setFieldLabel(fieldLabel);
+            metadataChange.setChangeTime(LocalDateTime.now());
+            metadataChange.setSyncStatus(false);
+            metadataChange.setIsCustom(isCustom);
+            metadataChange.setChangeReason(changeReason != null ? changeReason : defaultReason);
+            metadataChange.setChangeUser("SYSTEM");
+
+            metadataChangeService.insertDataiIntegrationMetadataChange(metadataChange);
+            log.debug("记录字段变更成功: {}.{} - {}", objectApi, fieldApi, operationType);
+        } catch (Exception e) {
+            log.error("记录字段变更失败: {}.{} - {}", objectApi, fieldApi, e.getMessage(), e);
         }
     }
 
@@ -354,16 +564,9 @@ public class SalesforceDataPullServiceImpl implements ISalesforceDataPullService
             // 同步时间
             object.setLastSyncDate(LocalDateTime.now());
             
-            // 保存到数据库
-            int insertResult = integrationObjectService.insertDataiIntegrationObject(object);
-            if (insertResult > 0) {
-                log.info("保存对象 {} 元数据到数据库成功", objDetail.getName());
-            } else {
-                log.warn("保存对象 {} 元数据到数据库失败，返回结果: {}", objDetail.getName(), insertResult);
-            }
             return object;
         } catch (Exception e) {
-            log.error("保存对象 {} 元数据时出错: {}", objDetail.getName(), e.getMessage(), e);
+            log.error("构建对象 {} 元数据时出错: {}", objDetail.getName(), e.getMessage(), e);
             return null;
         }
     }
@@ -448,7 +651,7 @@ public class SalesforceDataPullServiceImpl implements ISalesforceDataPullService
         
         try {
             // 获取Salesforce SOAP连接，添加重试机制
-            PartnerConnection connection = retryOperation(() -> SOAPConnectionFactory.instance(), 3, 1000);
+            PartnerConnection connection = retryOperation(() -> soapConnectionFactory.getConnection(), 3, 1000);
             log.info("成功获取Salesforce SOAP连接，耗时 {}ms", System.currentTimeMillis() - startTime);
 
             // 获取对象的字段信息
@@ -824,51 +1027,31 @@ public class SalesforceDataPullServiceImpl implements ISalesforceDataPullService
         return recordMap;
     }
 
-    /**
-     * 同步单个Salesforce对象的数据
-     *
-     * @param objectApi Salesforce对象API
-     * @return 同步结果
-     */
-    @Override
-    public boolean syncObjectsData(String objectApi) {
-        if (objectApi == null || objectApi.trim().isEmpty()) {
-            log.error("对象API为空，无法同步数据");
-            return false;
-        }
-        return syncSingleObjectData(objectApi.trim());
-    }
+
 
     @Override
-    public Map<String, Boolean> syncObjectsData(List<String> objectApis) {
+    public boolean syncObjectsData(List<String> objectApis) {
         log.info("准备同步多个Salesforce对象的数据，对象API列表: {}", objectApis);
+
         Map<String, Boolean> resultMap = new ConcurrentHashMap<>();
-        
+
         if (objectApis == null || objectApis.isEmpty()) {
-            log.warn("对象API列表为空，无需同步数据");
-            return resultMap;
+            DataiIntegrationObject object = new DataiIntegrationObject();
+            object.setIsWork(true);
+            object.setSyncStatus(true);
+            List<DataiIntegrationObject> integrationObjects = integrationObjectService.selectDataiIntegrationObjectList(object);
+            integrationObjects.forEach(item -> objectApis.add(item.getApi()));
+            if (objectApis == null || objectApis.isEmpty()){
+                log.warn("对象API列表为空，无需同步，请输入API或启用对象");
+                return false;
+            }
+        }
+
+        for (String objectApi : objectApis) {
+            syncSingleObjectData(objectApi);
         }
         
-        // 使用并行流处理多个对象，提高同步效率
-        objectApis.parallelStream()
-            .filter(objectApi -> objectApi != null && !objectApi.trim().isEmpty())
-            .forEach(objectApi -> {
-                String trimmedApi = objectApi.trim();
-                try {
-                    boolean result = syncObjectsData(trimmedApi);
-                    resultMap.put(trimmedApi, result);
-                    if (result) {
-                        log.info("对象 {} 数据同步成功", trimmedApi);
-                    } else {
-                        log.error("对象 {} 数据同步失败", trimmedApi);
-                    }
-                } catch (Exception e) {
-                    log.error("同步对象 {} 数据时发生异常", trimmedApi, e);
-                    resultMap.put(trimmedApi, false);
-                }
-            });
-        
-        return resultMap;
+        return true;
     }
 
     /**
@@ -889,7 +1072,7 @@ public class SalesforceDataPullServiceImpl implements ISalesforceDataPullService
         
         try {
             // 获取Salesforce SOAP连接，添加重试机制
-            PartnerConnection connection = retryOperation(() -> SOAPConnectionFactory.instance(), 3, 1000);
+            PartnerConnection connection = retryOperation(() -> soapConnectionFactory.getConnection(), 3, 1000);
             log.info("成功获取Salesforce SOAP连接");
 
             // 获取对象的字段信息
@@ -914,6 +1097,208 @@ public class SalesforceDataPullServiceImpl implements ISalesforceDataPullService
         } catch (Exception e) {
             log.error("同步Salesforce对象指定批次数据失败，对象API: {}, 批次ID: {}", objectApi, batchId, e);
             return false;
+        }
+    }
+
+    @Override
+    public boolean autoSyncObjects() {
+        log.info("开始自动同步Salesforce对象信息");
+
+        try {
+            PartnerConnection connection = retryOperation(() -> soapConnectionFactory.getConnection(), 3, 1000);
+            log.info("成功获取Salesforce SOAP连接");
+
+            DescribeGlobalResult globalDescribe = connection.describeGlobal();
+            DescribeGlobalSObjectResult[] sObjects = globalDescribe.getSobjects();
+
+            if (sObjects == null || sObjects.length == 0) {
+                log.warn("未获取到任何Salesforce对象");
+                return true;
+            }
+
+            log.info("从Salesforce获取到 {} 个对象", sObjects.length);
+
+            int syncCount = 0;
+            int skipCount = 0;
+            Set<String> syncedObjectApis = new HashSet<>();
+
+            for (DescribeGlobalSObjectResult sObject : sObjects) {
+                try {
+                    if (shouldSyncObject(sObject)) {
+                        String operationType = syncSingleObject(connection, sObject.getName());
+                        if (operationType != null) {
+                            syncCount++;
+                            syncedObjectApis.add(sObject.getName());
+                            log.info("成功同步对象: {} ({}) - 操作类型: {}", sObject.getLabel(), sObject.getName(), operationType);
+                        }
+                    } else {
+                        skipCount++;
+                        log.debug("跳过对象: {} (不满足同步条件)", sObject.getName());
+                    }
+                } catch (Exception e) {
+                    log.error("同步对象 {} 失败: {}", sObject.getName(), e.getMessage(), e);
+                }
+            }
+
+            checkDeletedObjects(syncedObjectApis);
+
+            log.info("自动同步完成，共同步 {} 个对象，跳过 {} 个对象", syncCount, skipCount);
+            return true;
+        } catch (Exception e) {
+            log.error("自动同步Salesforce对象信息失败", e);
+            return false;
+        }
+    }
+
+    private boolean shouldSyncObject(DescribeGlobalSObjectResult sObject) {
+        return sObject.isQueryable() || sObject.isCreateable() || sObject.isUpdateable() || sObject.isDeletable();
+    }
+
+    private String syncSingleObject(PartnerConnection connection, String objectApi) throws ConnectionException {
+        DescribeSObjectResult objDetail = connection.describeSObject(objectApi);
+
+        DataiIntegrationObject queryObject = new DataiIntegrationObject();
+        queryObject.setApi(objectApi);
+        List<DataiIntegrationObject> existingObjects = integrationObjectService.selectDataiIntegrationObjectList(queryObject);
+
+        DataiIntegrationObject object = buildObjectMetadata(objDetail);
+        String operationType = null;
+
+        if (existingObjects.isEmpty()) {
+            integrationObjectService.insertDataiIntegrationObject(object);
+            operationType = "INSERT";
+            log.debug("插入新对象: {}", objectApi);
+            recordObjectChange(object, null, operationType);
+        } else {
+            DataiIntegrationObject existingObject = existingObjects.get(0);
+            object.setId(existingObject.getId());
+            integrationObjectService.updateDataiIntegrationObject(object);
+            operationType = "UPDATE";
+            log.debug("更新已存在对象: {}", objectApi);
+            recordObjectChange(object, existingObject, operationType);
+        }
+
+        return operationType;
+    }
+
+    private void recordObjectChange(DataiIntegrationObject newObject, DataiIntegrationObject oldObject, String operationType) {
+        try {
+            DataiIntegrationMetadataChange metadataChange = new DataiIntegrationMetadataChange();
+            metadataChange.setChangeType("OBJECT");
+            metadataChange.setOperationType(operationType);
+            metadataChange.setObjectApi(newObject.getApi());
+            metadataChange.setObjectLabel(newObject.getLabel());
+            metadataChange.setChangeTime(LocalDateTime.now());
+            metadataChange.setSyncStatus(false);
+            metadataChange.setIsCustom(newObject.getIsCustom());
+
+            if (oldObject != null) {
+                List<String> changedFields = new ArrayList<>();
+                if (!Objects.equals(oldObject.getLabel(), newObject.getLabel())) {
+                    changedFields.add("label");
+                }
+                if (!Objects.equals(oldObject.getLabelPlural(), newObject.getLabelPlural())) {
+                    changedFields.add("labelPlural");
+                }
+                if (!Objects.equals(oldObject.getKeyPrefix(), newObject.getKeyPrefix())) {
+                    changedFields.add("keyPrefix");
+                }
+                if (!Objects.equals(oldObject.getIsQueryable(), newObject.getIsQueryable())) {
+                    changedFields.add("isQueryable");
+                }
+                if (!Objects.equals(oldObject.getIsCreateable(), newObject.getIsCreateable())) {
+                    changedFields.add("isCreateable");
+                }
+                if (!Objects.equals(oldObject.getIsUpdateable(), newObject.getIsUpdateable())) {
+                    changedFields.add("isUpdateable");
+                }
+                if (!Objects.equals(oldObject.getIsDeletable(), newObject.getIsDeletable())) {
+                    changedFields.add("isDeletable");
+                }
+                if (!Objects.equals(oldObject.getIsReplicateable(), newObject.getIsReplicateable())) {
+                    changedFields.add("isReplicateable");
+                }
+                if (!Objects.equals(oldObject.getIsRetrieveable(), newObject.getIsRetrieveable())) {
+                    changedFields.add("isRetrieveable");
+                }
+                if (!Objects.equals(oldObject.getIsSearchable(), newObject.getIsSearchable())) {
+                    changedFields.add("isSearchable");
+                }
+                if (!Objects.equals(oldObject.getIsCustom(), newObject.getIsCustom())) {
+                    changedFields.add("isCustom");
+                }
+                if (!Objects.equals(oldObject.getIsCustomSetting(), newObject.getIsCustomSetting())) {
+                    changedFields.add("isCustomSetting");
+                }
+                if (!Objects.equals(oldObject.getIsWork(), newObject.getIsWork())) {
+                    changedFields.add("isWork");
+                }
+                if (!Objects.equals(oldObject.getIsIncremental(), newObject.getIsIncremental())) {
+                    changedFields.add("isIncremental");
+                }
+
+                if (!changedFields.isEmpty()) {
+                    metadataChange.setChangeReason("对象属性变更: " + String.join(", ", changedFields));
+                } else {
+                    metadataChange.setChangeReason("对象元数据更新");
+                }
+            } else {
+                metadataChange.setChangeReason("新增对象");
+            }
+
+            metadataChange.setChangeUser("SYSTEM");
+
+            metadataChangeService.insertDataiIntegrationMetadataChange(metadataChange);
+            log.debug("记录对象变更成功: {} - {}", newObject.getApi(), operationType);
+        } catch (Exception e) {
+            log.error("记录对象变更失败: {} - {}", newObject.getApi(), e.getMessage(), e);
+        }
+    }
+
+    private void checkDeletedObjects(Set<String> syncedObjectApis) {
+        try {
+            DataiIntegrationObject queryObject = new DataiIntegrationObject();
+            queryObject.setIsWork(true);
+            List<DataiIntegrationObject> existingObjects = integrationObjectService.selectDataiIntegrationObjectList(queryObject);
+
+            for (DataiIntegrationObject existingObject : existingObjects) {
+                if (!syncedObjectApis.contains(existingObject.getApi())) {
+                    try {
+                        DescribeGlobalResult globalDescribe = soapConnectionFactory.getConnection().describeGlobal();
+                        DescribeGlobalSObjectResult[] sObjects = globalDescribe.getSobjects();
+                        boolean objectExists = false;
+                        
+                        if (sObjects != null) {
+                            for (DescribeGlobalSObjectResult sObject : sObjects) {
+                                if (existingObject.getApi().equals(sObject.getName())) {
+                                    objectExists = true;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (!objectExists) {
+                            DataiIntegrationMetadataChange metadataChange = new DataiIntegrationMetadataChange();
+                            metadataChange.setChangeType("OBJECT");
+                            metadataChange.setOperationType("DELETE");
+                            metadataChange.setObjectApi(existingObject.getApi());
+                            metadataChange.setObjectLabel(existingObject.getLabel());
+                            metadataChange.setChangeTime(LocalDateTime.now());
+                            metadataChange.setSyncStatus(false);
+                            metadataChange.setIsCustom(existingObject.getIsCustom());
+                            metadataChange.setChangeReason("对象已从Salesforce中删除");
+                            metadataChange.setChangeUser("SYSTEM");
+
+                            metadataChangeService.insertDataiIntegrationMetadataChange(metadataChange);
+                            log.warn("检测到对象已删除: {}", existingObject.getApi());
+                        }
+                    } catch (Exception e) {
+                        log.error("检查对象删除状态失败: {} - {}", existingObject.getApi(), e.getMessage());
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.error("检查删除对象时出错: {}", e.getMessage(), e);
         }
     }
 }

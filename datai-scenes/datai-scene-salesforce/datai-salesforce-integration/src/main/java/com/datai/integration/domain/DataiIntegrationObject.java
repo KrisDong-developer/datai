@@ -9,12 +9,12 @@ import com.datai.common.annotation.Excel;
 import com.datai.common.core.domain.BaseEntity;
 
 /**
- * 对象同步控制对象 datai_integration_object
+ * 对象信息表 datai_integration_object
  * 
  * @author datai
  * @date 2025-12-24
  */
-@Schema(description = "对象同步控制对象")
+@Schema(description = "对象信息表")
 public class DataiIntegrationObject extends BaseEntity
 {
     private static final long serialVersionUID = 1L;

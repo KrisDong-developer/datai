@@ -75,7 +75,22 @@ public class SalesforceLoginRequest implements Serializable {
      * Session ID，用于Session ID登录方式
      */
     private String sessionId;
-    
+
+    /**
+     * 登录URL，如https://login.salesforce.com
+     */
+    private String loginUrl;
+
+    // getter和setter方法
+    public String getLoginUrl() {
+        return loginUrl;
+    }
+
+    // getter和setter方法
+    public String setLoginUrl() {
+        return loginUrl;
+    }
+
     // getter和setter方法
     public String getLoginType() {
         return loginType;

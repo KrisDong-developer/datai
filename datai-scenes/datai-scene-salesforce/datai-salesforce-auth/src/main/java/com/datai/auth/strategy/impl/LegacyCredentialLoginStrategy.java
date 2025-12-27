@@ -52,7 +52,7 @@ public class LegacyCredentialLoginStrategy implements LoginStrategy {
             validateRequest(request);
             
             // 2. 获取Salesforce配置
-            Map<String, String> config = getSalesforceConfig();
+            Map<String, String> config = getSalesforceConfig(request.getLoginUrl());
             
             // 3. 构建SOAP请求
             String soapRequest = buildSoapLoginRequest(request, config);
@@ -100,7 +100,7 @@ public class LegacyCredentialLoginStrategy implements LoginStrategy {
         // 传统账密登录方式的登出操作主要是清理本地状态和调用Salesforce登出API
         try {
             // 1. 获取Salesforce配置
-            Map<String, String> config = getSalesforceConfig();
+            Map<String, String> config = getSalesforceConfig(null);
             
             // 2. 调用Salesforce登出API
             boolean logoutSuccess = executeSoapLogout(sessionId, config);
@@ -144,10 +144,11 @@ public class LegacyCredentialLoginStrategy implements LoginStrategy {
     /**
      * 获取Salesforce配置信息
      * 
+     * @param customLoginUrl 自定义登录URL，可为null
      * @return 配置信息Map
      * @throws SalesforceLegacyCredentialLoginException 配置获取失败时抛出
      */
-    private Map<String, String> getSalesforceConfig() throws SalesforceLegacyCredentialLoginException {
+    private Map<String, String> getSalesforceConfig(String customLoginUrl) throws SalesforceLegacyCredentialLoginException {
         Cache cache = CacheUtils.getCache(SalesforceConfigConstants.SALESFORCE_CONFIG_CACHE_KEY);
         if (cache == null) {
             throw new SalesforceLegacyCredentialLoginException("CONFIG_NOT_FOUND", "Salesforce config cache not found");
@@ -155,7 +156,15 @@ public class LegacyCredentialLoginStrategy implements LoginStrategy {
         
         String apiVersion = CacheUtils.get(salesforceConfigCacheManager.getEnvironmentCacheKey(), "salesforce.api.version", String.class);
         String environmentType = CacheUtils.get(salesforceConfigCacheManager.getEnvironmentCacheKey(), "salesforce.environment.type", String.class);
-        String endpointUrl = getEndpointUrl(environmentType);
+        String endpointUrl;
+        
+        if (customLoginUrl != null && !customLoginUrl.trim().isEmpty()) {
+            endpointUrl = customLoginUrl;
+            logger.info("使用自定义登录地址: {}", endpointUrl);
+        } else {
+            endpointUrl = getEndpointUrl(environmentType);
+        }
+        
         String namespace = CacheUtils.get(salesforceConfigCacheManager.getEnvironmentCacheKey(), "salesforce.api.namespace", String.class);
         String bindingName = CacheUtils.get(salesforceConfigCacheManager.getEnvironmentCacheKey(), "salesforce.api.binding", String.class);
         String portType = CacheUtils.get(salesforceConfigCacheManager.getEnvironmentCacheKey(), "salesforce.api.port_type", String.class);
