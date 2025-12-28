@@ -209,4 +209,36 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             #{id}
         </foreach>
     </update>
+
+    <select id="selectChangeStatistics" resultType="java.util.Map">
+        select 
+            count(*) as totalCount,
+            sum(case when sync_status = true then 1 else 0 end) as syncedCount,
+            sum(case when sync_status = false then 1 else 0 end) as unsyncedCount,
+            sum(case when change_type = 'object' then 1 else 0 end) as objectChangeCount,
+            sum(case when change_type = 'field' then 1 else 0 end) as fieldChangeCount,
+            sum(case when operation_type = 'create' then 1 else 0 end) as createCount,
+            sum(case when operation_type = 'update' then 1 else 0 end) as updateCount,
+            sum(case when operation_type = 'delete' then 1 else 0 end) as deleteCount,
+            sum(case when is_custom = true then 1 else 0 end) as customCount,
+            sum(case when is_custom = false then 1 else 0 end) as standardCount,
+            count(distinct object_api) as objectCount,
+            count(distinct field_api) as fieldCount,
+            sum(retry_count) as totalRetryCount,
+            max(retry_count) as maxRetryCount,
+            min(change_time) as firstChangeTime,
+            max(change_time) as lastChangeTime,
+            min(sync_time) as firstSyncTime,
+            max(sync_time) as lastSyncTime
+        from datai_integration_metadata_change
+        <where>
+            <if test="changeType != null and changeType != ''"> and change_type = #{changeType}</if>
+            <if test="operationType != null and operationType != ''"> and operation_type = #{operationType}</if>
+            <if test="objectApi != null and objectApi != ''"> and object_api = #{objectApi}</if>
+            <if test="syncStatus != null"> and sync_status = #{syncStatus}</if>
+            <if test="isCustom != null"> and is_custom = #{isCustom}</if>
+            <if test="startTime != null"> and change_time &gt;= #{startTime}</if>
+            <if test="endTime != null"> and change_time &lt;= #{endTime}</if>
+        </where>
+    </select>
 </mapper>

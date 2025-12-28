@@ -1,6 +1,7 @@
 package com.datai.integration.mapper;
 
 import java.util.List;
+import java.util.Map;
 import com.datai.integration.domain.DataiIntegrationObject;
 
 /**
@@ -58,4 +59,20 @@ public interface DataiIntegrationObjectMapper
      * @return 结果
      */
     public int deleteDataiIntegrationObjectByIds(Integer[] ids);
+
+    /**
+     * 查询对象同步统计信息
+     * 
+     * @param api 对象API
+     * @return 统计信息
+     */
+    public Map<String, Object> selectObjectSyncStatistics(String api);
+
+    /**
+     * 查询对象依赖关系
+     * 
+     * @param api 对象API
+     * @return 依赖关系列表
+     */
+    public List<Map<String, Object>> selectObjectDependencies(String api);
 }

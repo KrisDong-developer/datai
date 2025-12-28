@@ -51,3 +51,4 @@ nbdist/
 !*/build/*.xml
 
 effective-pom.xml
+/datai-scenes/datai-scene-salesforce/datai-salesforce-integration/src/main/resources/参考代码/

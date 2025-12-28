@@ -1,6 +1,7 @@
 package com.datai.integration.controller;
 
 import java.util.List;
+import java.util.Map;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import com.datai.common.annotation.Log;
 import com.datai.common.core.controller.BaseController;
@@ -137,5 +139,46 @@ public class DataiIntegrationMetadataChangeController extends BaseController
         Integer syncStatus = ((Number) params.get("syncStatus")).intValue();
         String syncErrorMessage = (String) params.get("syncErrorMessage");
         return toAjax(dataiIntegrationMetadataChangeService.batchUpdateSyncStatus(ids, syncStatus, syncErrorMessage));
+    }
+
+    /**
+     * 获取变更统计信息
+     */
+    @Operation(summary = "获取变更统计信息")
+    @PreAuthorize("@ss.hasPermi('integration:change:statistics')")
+    @GetMapping("/statistics")
+    public AjaxResult getChangeStatistics(@RequestParam(required = false) String changeType,
+                                          @RequestParam(required = false) String operationType,
+                                          @RequestParam(required = false) String objectApi,
+                                          @RequestParam(required = false) Boolean syncStatus,
+                                          @RequestParam(required = false) Boolean isCustom,
+                                          @RequestParam(required = false) String startTime,
+                                          @RequestParam(required = false) String endTime)
+    {
+        Map<String, Object> params = new java.util.HashMap<>();
+        if (changeType != null && !changeType.isEmpty()) {
+            params.put("changeType", changeType);
+        }
+        if (operationType != null && !operationType.isEmpty()) {
+            params.put("operationType", operationType);
+        }
+        if (objectApi != null && !objectApi.isEmpty()) {
+            params.put("objectApi", objectApi);
+        }
+        if (syncStatus != null) {
+            params.put("syncStatus", syncStatus);
+        }
+        if (isCustom != null) {
+            params.put("isCustom", isCustom);
+        }
+        if (startTime != null && !startTime.isEmpty()) {
+            params.put("startTime", startTime);
+        }
+        if (endTime != null && !endTime.isEmpty()) {
+            params.put("endTime", endTime);
+        }
+        
+        Map<String, Object> statistics = dataiIntegrationMetadataChangeService.getChangeStatistics(params);
+        return success(statistics);
     }
 }

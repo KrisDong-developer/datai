@@ -1,6 +1,7 @@
 package com.datai.integration.mapper;
 
 import java.util.List;
+import java.util.Map;
 import com.datai.integration.domain.DataiIntegrationMetadataChange;
 
 /**
@@ -77,4 +78,12 @@ public interface DataiIntegrationMetadataChangeMapper
      * @return 结果
      */
     public int batchUpdateSyncStatus(Long[] ids, Integer syncStatus, String syncErrorMessage, String updateBy);
+
+    /**
+     * 查询变更统计信息
+     * 
+     * @param params 查询参数
+     * @return 统计信息
+     */
+    public Map<String, Object> selectChangeStatistics(Map<String, Object> params);
 }

@@ -110,4 +110,27 @@ public class DataiIntegrationBatchController extends BaseController
     {
         return toAjax(dataiIntegrationBatchService.deleteDataiIntegrationBatchByIds(ids));
     }
+
+    /**
+     * 重试失败的批次
+     */
+    @Operation(summary = "重试失败的批次")
+    @PreAuthorize("@ss.hasPermi('integration:batch:retry')")
+    @Log(title = "数据批次", businessType = BusinessType.UPDATE)
+    @PostMapping("/{id}/retry")
+    public AjaxResult retryFailed(@PathVariable("id") Integer id)
+    {
+        return toAjax(dataiIntegrationBatchService.retryFailed(id) ? 1 : 0);
+    }
+
+    /**
+     * 获取批次同步统计信息
+     */
+    @Operation(summary = "获取批次同步统计信息")
+    @PreAuthorize("@ss.hasPermi('integration:batch:statistics')")
+    @GetMapping("/{id}/statistics")
+    public AjaxResult getSyncStatistics(@PathVariable("id") Integer id)
+    {
+        return success(dataiIntegrationBatchService.getSyncStatistics(id));
+    }
 }

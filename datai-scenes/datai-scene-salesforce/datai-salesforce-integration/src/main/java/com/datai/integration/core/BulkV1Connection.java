@@ -144,15 +144,6 @@ public class BulkV1Connection extends BulkConnection {
     // 3. 获取信息方法 (GET 逻辑)
     // ==========================================
 
-    public JobInfo getJobStatus(String jobId) throws AsyncApiException {
-        try {
-            InputStream in = invokeBulkV1GET(new String[]{"job", jobId});
-            return processBulkV1Get(in, com.sforce.async.ContentType.XML, JobInfo.class);
-        } catch (Exception e) {
-            return super.getJobStatus(jobId, com.sforce.async.ContentType.XML);
-        }
-    }
-
     public InputStream getBatchResultStream(String jobId, String batchId) throws AsyncApiException {
         try {
             return invokeBulkV1GET(new String[]{"job", jobId, "batch", batchId, "result"});
@@ -230,6 +221,39 @@ public class BulkV1Connection extends BulkConnection {
     // 4. 新增：创建 Job (Create Job)
     // ==========================================
 
+    @Override
+    public JobInfo createJob(String object, String operation) throws AsyncApiException {
+        log.debug("创建Job - 对象: {}, 操作: {}", object, operation);
+        try {
+            return super.createJob(object, operation);
+        } catch (AsyncApiException e) {
+            log.error("创建Job失败 - 对象: {}, 操作: {}, 错误: {}", object, operation, e.getMessage(), e);
+            throw e;
+        }
+    }
+
+    @Override
+    public JobInfo createJob(JobInfo job) throws AsyncApiException {
+        log.debug("创建Job - 对象: {}, 操作: {}", job.getObject(), job.getOperation());
+        try {
+            return super.createJob(job);
+        } catch (AsyncApiException e) {
+            log.error("创建Job失败 - 对象: {}, 操作: {}, 错误: {}", job.getObject(), job.getOperation(), e.getMessage(), e);
+            throw e;
+        }
+    }
+
+    @Override
+    public JobInfo createJob(JobInfo job, com.sforce.async.ContentType contentType) throws AsyncApiException {
+        log.debug("创建Job - 对象: {}, 操作: {}, 内容类型: {}", job.getObject(), job.getOperation(), contentType);
+        try {
+            return super.createJob(job, contentType);
+        } catch (AsyncApiException e) {
+            log.error("创建Job失败 - 对象: {}, 操作: {}, 内容类型: {}, 错误: {}", job.getObject(), job.getOperation(), contentType, e.getMessage(), e);
+            throw e;
+        }
+    }
+
     /**
      * 创建一个新的 Bulk Job
      * @param objectType Salesforce 对象名 (如 Account)
@@ -240,25 +264,13 @@ public class BulkV1Connection extends BulkConnection {
         JobInfo job = new JobInfo();
         job.setObject(objectType);
         job.setOperation(operation);
-        job.setContentType(com.sforce.async.ContentType.CSV); // 默认 CSV
+        job.setContentType(com.sforce.async.ContentType.CSV);
         return createJob(job);
     }
 
     // ==========================================
     // 5. 新增：获取批次状态 (Get Batch Status)
     // ==========================================
-
-    /**
-     * 获取特定 Batch 的详细状态
-     */
-    public BatchInfo getBatchInfo(String jobId, String batchId) throws AsyncApiException {
-        try {
-            InputStream in = invokeBulkV1GET(new String[]{"job", jobId, "batch", batchId});
-            return processBulkV1Get(in, com.sforce.async.ContentType.XML, BatchInfo.class);
-        } catch (Exception e) {
-            return super.getBatchInfo(jobId, batchId);
-        }
-    }
 
     /**
      * 获取 Job 下所有批次的状态列表
@@ -269,6 +281,17 @@ public class BulkV1Connection extends BulkConnection {
             return processBulkV1Get(in, com.sforce.async.ContentType.XML, BatchInfoList.class);
         } catch (Exception e) {
             return super.getBatchInfoList(jobId);
+        }
+    }
+
+    @Override
+    public BatchInfoList getBatchInfoList(String jobId, com.sforce.async.ContentType contentType) throws AsyncApiException {
+        log.debug("获取Batch信息列表 - JobId: {}, 内容类型: {}", jobId, contentType);
+        try {
+            return super.getBatchInfoList(jobId, contentType);
+        } catch (AsyncApiException e) {
+            log.error("获取Batch信息列表失败 - JobId: {}, 内容类型: {}, 错误: {}", jobId, contentType, e.getMessage(), e);
+            throw e;
         }
     }
 
@@ -310,6 +333,314 @@ public class BulkV1Connection extends BulkConnection {
      * 获取具体的查询结果流 (针对具体的 Result ID)
      */
     public InputStream getQueryResultStream(String jobId, String batchId, String resultId) throws AsyncApiException {
-        return invokeBulkV1GET(new String[]{"job", jobId, "batch", batchId, "result", resultId});
+        log.debug("获取查询结果流 - JobId: {}, BatchId: {}, ResultId: {}", jobId, batchId, resultId);
+        try {
+            return invokeBulkV1GET(new String[]{"job", jobId, "batch", batchId, "result", resultId});
+        } catch (Exception e) {
+            return super.getQueryResultStream(jobId, batchId, resultId);
+        }
+    }
+
+    // ==========================================
+    // 7. 新增：createBatch相关方法
+    // ==========================================
+
+    @Override
+    public BatchInfo createBatchFromStream(JobInfo jobInfo, InputStream input) throws AsyncApiException {
+        log.debug("创建Batch - JobId: {}, 从流创建", jobInfo.getId());
+        try {
+            return super.createBatchFromStream(jobInfo, input);
+        } catch (AsyncApiException e) {
+            log.error("创建Batch失败 - JobId: {}, 错误: {}", jobInfo.getId(), e.getMessage(), e);
+            throw e;
+        }
+    }
+
+    @Override
+    public BatchInfo createBatchFromZipStream(JobInfo jobInfo, InputStream zipInput) throws AsyncApiException {
+        log.debug("创建Batch - JobId: {}, 从ZIP流创建", jobInfo.getId());
+        try {
+            return super.createBatchFromZipStream(jobInfo, zipInput);
+        } catch (AsyncApiException e) {
+            log.error("创建Batch失败 - JobId: {}, 错误: {}", jobInfo.getId(), e.getMessage(), e);
+            throw e;
+        }
+    }
+
+    @Override
+    public BatchInfo createBatchFromDir(JobInfo job, InputStream batchContent, java.io.File attachmentDir) throws AsyncApiException {
+        log.debug("创建Batch - JobId: {}, 从目录创建", job.getId());
+        try {
+            return super.createBatchFromDir(job, batchContent, attachmentDir);
+        } catch (AsyncApiException e) {
+            log.error("创建Batch失败 - JobId: {}, 错误: {}", job.getId(), e.getMessage(), e);
+            throw e;
+        }
+    }
+
+    @Override
+    public BatchInfo createBatchWithFileAttachments(JobInfo jobInfo, InputStream batchContent, java.io.File rootDirectory, String... files) throws AsyncApiException {
+        log.debug("创建Batch - JobId: {}, 从文件附件创建", jobInfo.getId());
+        try {
+            return super.createBatchWithFileAttachments(jobInfo, batchContent, rootDirectory, files);
+        } catch (AsyncApiException e) {
+            log.error("创建Batch失败 - JobId: {}, 错误: {}", jobInfo.getId(), e.getMessage(), e);
+            throw e;
+        }
+    }
+
+    @Override
+    public BatchInfo createBatchWithFileAttachments(JobInfo jobInfo, InputStream batchContent, java.util.Map<String, java.io.File> attachedFiles) throws AsyncApiException {
+        log.debug("创建Batch - JobId: {}, 从文件附件Map创建", jobInfo.getId());
+        try {
+            return super.createBatchWithFileAttachments(jobInfo, batchContent, attachedFiles);
+        } catch (AsyncApiException e) {
+            log.error("创建Batch失败 - JobId: {}, 错误: {}", jobInfo.getId(), e.getMessage(), e);
+            throw e;
+        }
+    }
+
+    @Override
+    public BatchInfo createBatchWithInputStreamAttachments(JobInfo jobInfo, InputStream batchContent, java.util.Map<String, InputStream> attachments) throws AsyncApiException {
+        log.debug("创建Batch - JobId: {}, 从输入流附件创建", jobInfo.getId());
+        try {
+            return super.createBatchWithInputStreamAttachments(jobInfo, batchContent, attachments);
+        } catch (AsyncApiException e) {
+            log.error("创建Batch失败 - JobId: {}, 错误: {}", jobInfo.getId(), e.getMessage(), e);
+            throw e;
+        }
+    }
+
+    @Override
+    public BatchInfo createBatchFromForeignCsvStream(JobInfo jobInfo, InputStream input, String charSet) throws AsyncApiException {
+        log.debug("创建Batch - JobId: {}, 从外部CSV流创建, 字符集: {}", jobInfo.getId(), charSet);
+        try {
+            return super.createBatchFromForeignCsvStream(jobInfo, input, charSet);
+        } catch (AsyncApiException e) {
+            log.error("创建Batch失败 - JobId: {}, 字符集: {}, 错误: {}", jobInfo.getId(), charSet, e.getMessage(), e);
+            throw e;
+        }
+    }
+
+    @Override
+    public void createTransformationSpecFromStream(JobInfo jobInfo, InputStream input) throws AsyncApiException {
+        log.debug("创建转换规范 - JobId: {}", jobInfo.getId());
+        try {
+            super.createTransformationSpecFromStream(jobInfo, input);
+        } catch (AsyncApiException e) {
+            log.error("创建转换规范失败 - JobId: {}, 错误: {}", jobInfo.getId(), e.getMessage(), e);
+            throw e;
+        }
+    }
+
+    @Override
+    public BatchRequest createBatch(JobInfo job) throws AsyncApiException {
+        log.debug("创建BatchRequest - JobId: {}", job.getId());
+        try {
+            return super.createBatch(job);
+        } catch (AsyncApiException e) {
+            log.error("创建BatchRequest失败 - JobId: {}, 错误: {}", job.getId(), e.getMessage(), e);
+            throw e;
+        }
+    }
+
+    @Override
+    public CsvBatchRequest createCsvBatch(JobInfo job) throws AsyncApiException {
+        log.debug("创建CsvBatchRequest - JobId: {}", job.getId());
+        try {
+            return super.createCsvBatch(job);
+        } catch (AsyncApiException e) {
+            log.error("创建CsvBatchRequest失败 - JobId: {}, 错误: {}", job.getId(), e.getMessage(), e);
+            throw e;
+        }
+    }
+
+    @Override
+    public TransformationSpecRequest createTransformationSpec(JobInfo job) throws AsyncApiException {
+        log.debug("创建TransformationSpecRequest - JobId: {}", job.getId());
+        try {
+            return super.createTransformationSpec(job);
+        } catch (AsyncApiException e) {
+            log.error("创建TransformationSpecRequest失败 - JobId: {}, 错误: {}", job.getId(), e.getMessage(), e);
+            throw e;
+        }
+    }
+
+    // ==========================================
+    // 8. 新增：getBatchInfo方法重载
+    // ==========================================
+
+    @Override
+    public BatchInfo getBatchInfo(String jobId, String batchId) throws AsyncApiException {
+        log.debug("获取Batch信息 - JobId: {}, BatchId: {}", jobId, batchId);
+        try {
+            return super.getBatchInfo(jobId, batchId);
+        } catch (AsyncApiException e) {
+            log.error("获取Batch信息失败 - JobId: {}, BatchId: {}, 错误: {}", jobId, batchId, e.getMessage(), e);
+            throw e;
+        }
+    }
+
+    @Override
+    public BatchInfo getBatchInfo(String jobId, String batchId, com.sforce.async.ContentType contentType) throws AsyncApiException {
+        log.debug("获取Batch信息 - JobId: {}, BatchId: {}, 内容类型: {}", jobId, batchId, contentType);
+        try {
+            return super.getBatchInfo(jobId, batchId, contentType);
+        } catch (AsyncApiException e) {
+            log.error("获取Batch信息失败 - JobId: {}, BatchId: {}, 内容类型: {}, 错误: {}", jobId, batchId, contentType, e.getMessage(), e);
+            throw e;
+        }
+    }
+
+    // ==========================================
+    // 9. 新增：getBatchResult相关方法
+    // ==========================================
+
+    @Override
+    public BatchResult getBatchResult(String jobId, String batchId) throws AsyncApiException {
+        log.debug("获取Batch结果 - JobId: {}, BatchId: {}", jobId, batchId);
+        try {
+            return super.getBatchResult(jobId, batchId);
+        } catch (AsyncApiException e) {
+            log.error("获取Batch结果失败 - JobId: {}, BatchId: {}, 错误: {}", jobId, batchId, e.getMessage(), e);
+            throw e;
+        }
+    }
+
+    @Override
+    public BatchResult getBatchResult(String jobId, String batchId, com.sforce.async.ContentType contentType) throws AsyncApiException {
+        log.debug("获取Batch结果 - JobId: {}, BatchId: {}, 内容类型: {}", jobId, batchId, contentType);
+        try {
+            return super.getBatchResult(jobId, batchId, contentType);
+        } catch (AsyncApiException e) {
+            log.error("获取Batch结果失败 - JobId: {}, BatchId: {}, 内容类型: {}, 错误: {}", jobId, batchId, contentType, e.getMessage(), e);
+            throw e;
+        }
+    }
+
+    @Override
+    public java.net.URL buildBatchResultURL(String jobId, String batchId) throws AsyncApiException {
+        log.debug("构建Batch结果URL - JobId: {}, BatchId: {}", jobId, batchId);
+        try {
+            return super.buildBatchResultURL(jobId, batchId);
+        } catch (AsyncApiException e) {
+            log.error("构建Batch结果URL失败 - JobId: {}, BatchId: {}, 错误: {}", jobId, batchId, e.getMessage(), e);
+            throw e;
+        }
+    }
+
+    @Override
+    public InputStream getBatchRequestInputStream(String jobId, String batchId) throws AsyncApiException {
+        log.debug("获取Batch请求输入流 - JobId: {}, BatchId: {}", jobId, batchId);
+        try {
+            return super.getBatchRequestInputStream(jobId, batchId);
+        } catch (AsyncApiException e) {
+            log.error("获取Batch请求输入流失败 - JobId: {}, BatchId: {}, 错误: {}", jobId, batchId, e.getMessage(), e);
+            throw e;
+        }
+    }
+
+    // ==========================================
+    // 10. 新增：getQueryResultList方法重载
+    // ==========================================
+
+    @Override
+    public QueryResultList getQueryResultList(String jobId, String batchId) throws AsyncApiException {
+        log.debug("获取查询结果列表 - JobId: {}, BatchId: {}", jobId, batchId);
+        try {
+            return super.getQueryResultList(jobId, batchId);
+        } catch (AsyncApiException e) {
+            log.error("获取查询结果列表失败 - JobId: {}, BatchId: {}, 错误: {}", jobId, batchId, e.getMessage(), e);
+            throw e;
+        }
+    }
+
+    @Override
+    public QueryResultList getQueryResultList(String jobId, String batchId, com.sforce.async.ContentType contentType) throws AsyncApiException {
+        log.debug("获取查询结果列表 - JobId: {}, BatchId: {}, 内容类型: {}", jobId, batchId, contentType);
+        try {
+            return super.getQueryResultList(jobId, batchId, contentType);
+        } catch (AsyncApiException e) {
+            log.error("获取查询结果列表失败 - JobId: {}, BatchId: {}, 内容类型: {}, 错误: {}", jobId, batchId, contentType, e.getMessage(), e);
+            throw e;
+        }
+    }
+
+    @Override
+    public java.net.URL buildQueryResultURL(String jobId, String batchId, String resultId) throws AsyncApiException {
+        log.debug("构建查询结果URL - JobId: {}, BatchId: {}, ResultId: {}", jobId, batchId, resultId);
+        try {
+            return super.buildQueryResultURL(jobId, batchId, resultId);
+        } catch (AsyncApiException e) {
+            log.error("构建查询结果URL失败 - JobId: {}, BatchId: {}, ResultId: {}, 错误: {}", jobId, batchId, resultId, e.getMessage(), e);
+            throw e;
+        }
+    }
+
+    // ==========================================
+    // 11. 新增：getJobStatus方法重载
+    // ==========================================
+
+    @Override
+    public JobInfo getJobStatus(String jobId) throws AsyncApiException {
+        log.debug("获取Job状态 - JobId: {}", jobId);
+        try {
+            return super.getJobStatus(jobId);
+        } catch (AsyncApiException e) {
+            log.error("获取Job状态失败 - JobId: {}, 错误: {}", jobId, e.getMessage(), e);
+            throw e;
+        }
+    }
+
+    @Override
+    public JobInfo getJobStatus(String jobId, com.sforce.async.ContentType contentType) throws AsyncApiException {
+        log.debug("获取Job状态 - JobId: {}, 内容类型: {}", jobId, contentType);
+        try {
+            return super.getJobStatus(jobId, contentType);
+        } catch (AsyncApiException e) {
+            log.error("获取Job状态失败 - JobId: {}, 内容类型: {}, 错误: {}", jobId, contentType, e.getMessage(), e);
+            throw e;
+        }
+    }
+
+    // ==========================================
+    // 12. 新增：updateJob方法
+    // ==========================================
+
+    @Override
+    public JobInfo updateJob(JobInfo job) throws AsyncApiException {
+        log.debug("更新Job - JobId: {}, 状态: {}", job.getId(), job.getState());
+        try {
+            return super.updateJob(job);
+        } catch (AsyncApiException e) {
+            log.error("更新Job失败 - JobId: {}, 错误: {}", job.getId(), e.getMessage(), e);
+            throw e;
+        }
+    }
+
+    @Override
+    public JobInfo updateJob(JobInfo job, com.sforce.async.ContentType contentType) throws AsyncApiException {
+        log.debug("更新Job - JobId: {}, 状态: {}, 内容类型: {}", job.getId(), job.getState(), contentType);
+        try {
+            return super.updateJob(job, contentType);
+        } catch (AsyncApiException e) {
+            log.error("更新Job失败 - JobId: {}, 内容类型: {}, 错误: {}", job.getId(), contentType, e.getMessage(), e);
+            throw e;
+        }
+    }
+
+    // ==========================================
+    // 13. 新增：其他方法
+    // ==========================================
+
+    @Override
+    public void addHeader(String headerName, String headerValue) {
+        log.debug("添加HTTP头 - 名称: {}, 值: {}", headerName, headerValue);
+        super.addHeader(headerName, headerValue);
+    }
+
+    @Override
+    public ConnectorConfig getConfig() {
+        return super.getConfig();
     }
 }

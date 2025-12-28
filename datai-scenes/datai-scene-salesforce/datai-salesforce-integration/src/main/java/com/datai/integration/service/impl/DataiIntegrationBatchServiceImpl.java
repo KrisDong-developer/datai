@@ -1,6 +1,8 @@
 package com.datai.integration.service.impl;
 
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
         import com.datai.common.utils.DateUtils;
         import com.datai.common.utils.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,6 +11,10 @@ import com.datai.integration.mapper.DataiIntegrationBatchMapper;
 import com.datai.integration.domain.DataiIntegrationBatch;
 import com.datai.integration.service.IDataiIntegrationBatchService;
 import com.datai.common.core.domain.model.LoginUser;
+import com.datai.integration.domain.DataiIntegrationBatchHistory;
+import com.datai.integration.service.IDataiIntegrationBatchHistoryService;
+import com.datai.integration.service.ISalesforceDataPullService;
+import lombok.extern.slf4j.Slf4j;
 
 
 /**
@@ -18,9 +24,16 @@ import com.datai.common.core.domain.model.LoginUser;
  * @date 2025-12-24
  */
 @Service
+@Slf4j
 public class DataiIntegrationBatchServiceImpl implements IDataiIntegrationBatchService {
     @Autowired
     private DataiIntegrationBatchMapper dataiIntegrationBatchMapper;
+
+    @Autowired
+    private IDataiIntegrationBatchHistoryService batchHistoryService;
+
+    @Autowired
+    private ISalesforceDataPullService salesforceDataPullService;
 
     /**
      * 查询数据批次
@@ -104,5 +117,136 @@ public class DataiIntegrationBatchServiceImpl implements IDataiIntegrationBatchS
     public int deleteDataiIntegrationBatchById(Integer id)
     {
         return dataiIntegrationBatchMapper.deleteDataiIntegrationBatchById(id);
+    }
+
+    /**
+     * 重试失败的批次
+     *
+     * @param id 批次ID
+     * @return 结果
+     */
+    @Override
+    public boolean retryFailed(Integer id) {
+        try {
+            log.info("开始重试失败的批次，批次ID: {}", id);
+
+            DataiIntegrationBatch batch = selectDataiIntegrationBatchById(id);
+            if (batch == null) {
+                log.error("批次不存在，批次ID: {}", id);
+                return false;
+            }
+
+            DataiIntegrationBatchHistory queryHistory = new DataiIntegrationBatchHistory();
+            queryHistory.setBatchId(id);
+            queryHistory.setSyncStatus(false);
+            List<DataiIntegrationBatchHistory> failedHistories = batchHistoryService.selectDataiIntegrationBatchHistoryList(queryHistory);
+
+            if (failedHistories.isEmpty()) {
+                log.warn("批次没有失败的同步记录，批次ID: {}", id);
+                return true;
+            }
+
+            log.info("批次 {} 共有 {} 条失败的同步记录，准备重试", id, failedHistories.size());
+
+            boolean retryResult = salesforceDataPullService.syncObjectDataByBatch(batch.getApi(), id.toString());
+
+            if (retryResult) {
+                log.info("批次 {} 重试成功", id);
+            } else {
+                log.error("批次 {} 重试失败", id);
+            }
+
+            return retryResult;
+        } catch (Exception e) {
+            log.error("重试批次 {} 时发生异常", id, e);
+            return false;
+        }
+    }
+
+    /**
+     * 获取批次同步统计信息
+     *
+     * @param id 批次ID
+     * @return 统计信息
+     */
+    @Override
+    public Map<String, Object> getSyncStatistics(Integer id) {
+        Map<String, Object> statistics = new HashMap<>();
+
+        try {
+            DataiIntegrationBatch batch = selectDataiIntegrationBatchById(id);
+            if (batch == null) {
+                log.error("批次不存在，批次ID: {}", id);
+                statistics.put("success", false);
+                statistics.put("message", "批次不存在");
+                return statistics;
+            }
+
+            DataiIntegrationBatchHistory queryHistory = new DataiIntegrationBatchHistory();
+            queryHistory.setBatchId(id);
+            List<DataiIntegrationBatchHistory> histories = batchHistoryService.selectDataiIntegrationBatchHistoryList(queryHistory);
+
+            int totalCount = histories.size();
+            int successCount = 0;
+            int failedCount = 0;
+            int totalSyncNum = 0;
+            long totalCost = 0L;
+            long minCost = Long.MAX_VALUE;
+            long maxCost = 0L;
+
+            for (DataiIntegrationBatchHistory history : histories) {
+                if (history.getSyncStatus()) {
+                    successCount++;
+                } else {
+                    failedCount++;
+                }
+
+                if (history.getSyncNum() != null) {
+                    totalSyncNum += history.getSyncNum();
+                }
+
+                if (history.getCost() != null) {
+                    totalCost += history.getCost();
+                    minCost = Math.min(minCost, history.getCost());
+                    maxCost = Math.max(maxCost, history.getCost());
+                }
+            }
+
+            long avgCost = totalCount > 0 ? totalCost / totalCount : 0;
+            if (minCost == Long.MAX_VALUE) {
+                minCost = 0L;
+            }
+
+            statistics.put("success", true);
+            statistics.put("message", "获取统计信息成功");
+            statistics.put("data", new HashMap<String, Object>() {{
+                put("batchId", id);
+                put("api", batch.getApi());
+                put("label", batch.getLabel());
+                put("syncType", batch.getSyncType());
+                put("sfNum", batch.getSfNum());
+                put("dbNum", batch.getDbNum());
+                put("totalCount", totalCount);
+                put("successCount", successCount);
+                put("failedCount", failedCount);
+                put("successRate", totalCount > 0 ? (double) successCount / totalCount * 100 : 0);
+                put("totalSyncNum", totalSyncNum);
+                put("totalCost", totalCost);
+                put("avgCost", avgCost);
+                put("minCost", minCost);
+                put("maxCost", maxCost);
+                put("firstSyncTime", batch.getFirstSyncTime());
+                put("lastSyncTime", batch.getLastSyncTime());
+                put("syncStatus", batch.getSyncStatus());
+            }});
+
+            log.info("获取批次 {} 统计信息成功", id);
+        } catch (Exception e) {
+            log.error("获取批次 {} 统计信息时发生异常", id, e);
+            statistics.put("success", false);
+            statistics.put("message", "获取统计信息失败: " + e.getMessage());
+        }
+
+        return statistics;
     }
 }

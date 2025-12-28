@@ -1,6 +1,7 @@
 package com.datai.integration.service;
 
 import java.util.List;
+import java.util.Map;
 import com.datai.integration.domain.DataiIntegrationBatch;
 
 /**
@@ -58,4 +59,20 @@ public interface IDataiIntegrationBatchService
      * @return 结果
      */
     public int deleteDataiIntegrationBatchById(Integer id);
+
+    /**
+     * 重试失败的批次
+     * 
+     * @param id 批次ID
+     * @return 结果
+     */
+    public boolean retryFailed(Integer id);
+
+    /**
+     * 获取批次同步统计信息
+     * 
+     * @param id 批次ID
+     * @return 统计信息
+     */
+    public Map<String, Object> getSyncStatistics(Integer id);
 }

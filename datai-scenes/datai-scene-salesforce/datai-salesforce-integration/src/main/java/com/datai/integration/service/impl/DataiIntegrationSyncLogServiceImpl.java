@@ -1,12 +1,14 @@
 package com.datai.integration.service.impl;
 
 import java.util.List;
+import java.util.Map;
         import com.datai.common.utils.DateUtils;
         import com.datai.common.utils.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.datai.integration.mapper.DataiIntegrationSyncLogMapper;
 import com.datai.integration.domain.DataiIntegrationSyncLog;
+import com.datai.integration.domain.dto.LogStatisticsDTO;
 import com.datai.integration.service.IDataiIntegrationSyncLogService;
 import com.datai.common.core.domain.model.LoginUser;
 
@@ -103,5 +105,17 @@ public class DataiIntegrationSyncLogServiceImpl implements IDataiIntegrationSync
     public int deleteDataiIntegrationSyncLogById(Long id)
     {
         return dataiIntegrationSyncLogMapper.deleteDataiIntegrationSyncLogById(id);
+    }
+
+    /**
+     * 获取日志统计信息
+     *
+     * @param params 查询参数
+     * @return 日志统计信息
+     */
+    @Override
+    public LogStatisticsDTO getLogStatistics(Map<String, Object> params)
+    {
+        return dataiIntegrationSyncLogMapper.getLogStatistics(params);
     }
 }

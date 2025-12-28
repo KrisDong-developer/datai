@@ -1,7 +1,9 @@
 package com.datai.integration.service;
 
 import java.util.List;
+import java.util.Map;
 import com.datai.integration.domain.DataiIntegrationSyncLog;
+import com.datai.integration.domain.dto.LogStatisticsDTO;
 
 /**
  * 数据同步日志Service接口
@@ -58,4 +60,12 @@ public interface IDataiIntegrationSyncLogService
      * @return 结果
      */
     public int deleteDataiIntegrationSyncLogById(Long id);
+
+    /**
+     * 获取日志统计信息
+     * 
+     * @param params 查询参数
+     * @return 日志统计信息
+     */
+    public LogStatisticsDTO getLogStatistics(Map<String, Object> params);
 }

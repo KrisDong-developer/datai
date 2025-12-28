@@ -1,6 +1,7 @@
 package com.datai.integration.mapper;
 
 import java.util.List;
+import java.util.Map;
 import com.datai.integration.domain.DataiIntegrationBatchHistory;
 
 /**
@@ -58,4 +59,12 @@ public interface DataiIntegrationBatchHistoryMapper
      * @return 结果
      */
     public int deleteDataiIntegrationBatchHistoryByIds(Integer[] ids);
+
+    /**
+     * 查询历史统计信息
+     * 
+     * @param params 查询参数
+     * @return 统计信息
+     */
+    public Map<String, Object> selectHistoryStatistics(Map<String, Object> params);
 }

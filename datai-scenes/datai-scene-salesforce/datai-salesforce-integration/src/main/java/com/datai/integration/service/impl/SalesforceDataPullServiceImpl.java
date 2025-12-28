@@ -14,6 +14,7 @@ import com.datai.integration.service.IDataiIntegrationObjectService;
 import com.datai.integration.service.IDataiIntegrationPicklistService;
 import com.datai.integration.service.ISalesforceDataPullService;
 import com.datai.salesforce.common.param.SalesforceParam;
+import com.datai.setting.future.SalesforceExecutor;
 import com.sforce.soap.partner.DescribeGlobalResult;
 import com.sforce.soap.partner.DescribeGlobalSObjectResult;
 import com.sforce.soap.partner.DescribeSObjectResult;
@@ -33,6 +34,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
@@ -66,6 +68,10 @@ public class SalesforceDataPullServiceImpl implements ISalesforceDataPullService
 
     @Autowired
     private SOAPConnectionFactory soapConnectionFactory;
+
+    @Autowired
+    private SalesforceExecutor salesforceExecutor;
+
 
     /**
      * 大数据量对象阈值（500万）
@@ -1047,11 +1053,87 @@ public class SalesforceDataPullServiceImpl implements ISalesforceDataPullService
             }
         }
 
+        log.info("开始多线程并发同步 {} 个对象", objectApis.size());
+
+        List<Future<?>> futures = new ArrayList<>();
+        Map<String, Integer> objectPriorityMap = new HashMap<>();
+
         for (String objectApi : objectApis) {
-            syncSingleObjectData(objectApi);
+            if (objectApi == null || objectApi.trim().isEmpty()) {
+                log.warn("对象API为空，跳过");
+                continue;
+            }
+
+            try {
+                DataiIntegrationObject queryObject = new DataiIntegrationObject();
+                queryObject.setApi(objectApi.trim());
+                List<DataiIntegrationObject> objects = integrationObjectService.selectDataiIntegrationObjectList(queryObject);
+                
+                Integer priority = 0;
+                if (!objects.isEmpty()) {
+                    priority = objects.get(0).getObjectIndex() != null ? objects.get(0).getObjectIndex() : 0;
+                }
+                objectPriorityMap.put(objectApi.trim(), priority);
+            } catch (Exception e) {
+                log.error("获取对象 {} 的优先级信息失败，使用默认优先级: {}", objectApi, e.getMessage());
+                objectPriorityMap.put(objectApi.trim(), 0);
+            }
         }
+
+        int batchIndex = 0;
+        for (String objectApi : objectApis) {
+            if (objectApi == null || objectApi.trim().isEmpty()) {
+                continue;
+            }
+
+            final String api = objectApi.trim();
+            final int priority = objectPriorityMap.getOrDefault(api, 0);
+
+            Future<?> future = salesforceExecutor.execute(() -> {
+                try {
+                    log.info("开始同步对象: {} (优先级: {})", api, priority);
+                    boolean result = syncSingleObjectData(api);
+                    resultMap.put(api, result);
+                    if (result) {
+                        log.info("对象 {} 同步成功", api);
+                    } else {
+                        log.warn("对象 {} 同步失败", api);
+                    }
+                } catch (Exception e) {
+                    log.error("同步对象 {} 时发生异常: {}", api, e.getMessage(), e);
+                    resultMap.put(api, false);
+                }
+            }, batchIndex, priority);
+
+            futures.add(future);
+            batchIndex++;
+        }
+
+        log.info("所有对象同步任务已提交，等待任务完成...");
         
-        return true;
+        int successCount = 0;
+        int failCount = 0;
+
+        for (Future<?> future : futures) {
+            try {
+                future.get();
+            } catch (Exception e) {
+                log.error("等待同步任务完成时发生异常: {}", e.getMessage(), e);
+                failCount++;
+            }
+        }
+
+        for (Map.Entry<String, Boolean> entry : resultMap.entrySet()) {
+            if (entry.getValue()) {
+                successCount++;
+            } else {
+                failCount++;
+            }
+        }
+
+        log.info("多线程并发同步完成，成功: {}, 失败: {}", successCount, failCount);
+        
+        return failCount == 0;
     }
 
     /**

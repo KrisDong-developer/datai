@@ -219,4 +219,35 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             #{id}
         </foreach>
     </delete>
+
+    <select id="selectObjectSyncStatistics" resultType="java.util.Map">
+        select 
+            count(*) as totalSyncCount,
+            sum(case when sync_status = true then 1 else 0 end) as successSyncCount,
+            sum(case when sync_status = false then 1 else 0 end) as failedSyncCount,
+            sum(sync_num) as totalSyncRecords,
+            avg(cost) as avgSyncTime,
+            min(start_time) as firstSyncTime,
+            max(end_time) as lastSyncTime,
+            min(sync_start_time) as firstSyncStartTime,
+            max(sync_end_time) as lastSyncEndTime,
+            sum(case when sync_type = 'full' then 1 else 0 end) as fullSyncCount,
+            sum(case when sync_type = 'incremental' then 1 else 0 end) as incrementalSyncCount
+        from datai_integration_batch_history
+        where api = #{api}
+    </select>
+
+    <select id="selectObjectDependencies" resultType="java.util.Map">
+        select 
+            f.field as fieldApi,
+            f.label as fieldLabel,
+            f.reference_to as referencedObjects,
+            f.relationship_name as relationshipName,
+            f.field_data_type as fieldDataType
+        from datai_integration_field f
+        where f.api = #{api}
+        and f.reference_to is not null 
+        and f.reference_to != ''
+        order by f.field
+    </select>
 </mapper>

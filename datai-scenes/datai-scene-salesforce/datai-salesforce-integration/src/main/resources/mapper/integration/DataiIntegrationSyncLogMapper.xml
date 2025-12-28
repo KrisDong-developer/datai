@@ -118,4 +118,102 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             #{id}
         </foreach>
     </delete>
+
+    <select id="getLogStatistics" parameterType="map" resultType="com.datai.integration.domain.dto.LogStatisticsDTO">
+        SELECT 
+            COUNT(*) as totalCount,
+            SUM(CASE WHEN operation_status = 'success' THEN 1 ELSE 0 END) as successCount,
+            SUM(CASE WHEN operation_status = 'failure' THEN 1 ELSE 0 END) as failureCount,
+            CASE WHEN COUNT(*) > 0 
+                THEN ROUND(SUM(CASE WHEN operation_status = 'success' THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 2)
+                ELSE 0 
+            END as successRate,
+            ROUND(AVG(execution_time), 2) as avgExecutionTime,
+            ROUND(MAX(execution_time), 2) as maxExecutionTime,
+            ROUND(MIN(execution_time), 2) as minExecutionTime
+        FROM datai_integration_sync_log
+        <where>
+            <if test="batchId != null">and batch_id = #{batchId}</if>
+            <if test="objectApi != null and objectApi != ''">and object_api = #{objectApi}</if>
+            <if test="operationType != null and operationType != ''">and operation_type = #{operationType}</if>
+            <if test="operationStatus != null and operationStatus != ''">and operation_status = #{operationStatus}</if>
+            <if test="startTime != null">and create_time &gt;= #{startTime}</if>
+            <if test="endTime != null">and create_time &lt;= #{endTime}</if>
+            <if test="deptId != null">and dept_id = #{deptId}</if>
+        </where>
+    </select>
+
+    <select id="getOperationTypeStatistics" parameterType="map" resultType="com.datai.integration.domain.dto.LogStatisticsDTO$OperationTypeStatistics">
+        SELECT 
+            operation_type as operationType,
+            COUNT(*) as count,
+            SUM(CASE WHEN operation_status = 'success' THEN 1 ELSE 0 END) as successCount,
+            SUM(CASE WHEN operation_status = 'failure' THEN 1 ELSE 0 END) as failureCount,
+            ROUND(AVG(execution_time), 2) as avgExecutionTime
+        FROM datai_integration_sync_log
+        <where>
+            <if test="batchId != null">and batch_id = #{batchId}</if>
+            <if test="objectApi != null and objectApi != ''">and object_api = #{objectApi}</if>
+            <if test="startTime != null">and create_time &gt;= #{startTime}</if>
+            <if test="endTime != null">and create_time &lt;= #{endTime}</if>
+            <if test="deptId != null">and dept_id = #{deptId}</if>
+        </where>
+        GROUP BY operation_type
+        ORDER BY count DESC
+    </select>
+
+    <select id="getObjectApiStatistics" parameterType="map" resultType="com.datai.integration.domain.dto.LogStatisticsDTO$ObjectApiStatistics">
+        SELECT 
+            object_api as objectApi,
+            COUNT(*) as count,
+            SUM(CASE WHEN operation_status = 'success' THEN 1 ELSE 0 END) as successCount,
+            SUM(CASE WHEN operation_status = 'failure' THEN 1 ELSE 0 END) as failureCount,
+            ROUND(AVG(execution_time), 2) as avgExecutionTime
+        FROM datai_integration_sync_log
+        <where>
+            <if test="batchId != null">and batch_id = #{batchId}</if>
+            <if test="operationType != null and operationType != ''">and operation_type = #{operationType}</if>
+            <if test="startTime != null">and create_time &gt;= #{startTime}</if>
+            <if test="endTime != null">and create_time &lt;= #{endTime}</if>
+            <if test="deptId != null">and dept_id = #{deptId}</if>
+        </where>
+        GROUP BY object_api
+        ORDER BY count DESC
+    </select>
+
+    <select id="getStatusStatistics" parameterType="map" resultType="map">
+        SELECT 
+            operation_status as status,
+            COUNT(*) as count
+        FROM datai_integration_sync_log
+        <where>
+            <if test="batchId != null">and batch_id = #{batchId}</if>
+            <if test="objectApi != null and objectApi != ''">and object_api = #{objectApi}</if>
+            <if test="operationType != null and operationType != ''">and operation_type = #{operationType}</if>
+            <if test="startTime != null">and create_time &gt;= #{startTime}</if>
+            <if test="endTime != null">and create_time &lt;= #{endTime}</if>
+            <if test="deptId != null">and dept_id = #{deptId}</if>
+        </where>
+        GROUP BY operation_status
+    </select>
+
+    <select id="getBatchStatistics" parameterType="map" resultType="com.datai.integration.domain.dto.LogStatisticsDTO$BatchStatistics">
+        SELECT 
+            batch_id as batchId,
+            COUNT(*) as count,
+            SUM(CASE WHEN operation_status = 'success' THEN 1 ELSE 0 END) as successCount,
+            SUM(CASE WHEN operation_status = 'failure' THEN 1 ELSE 0 END) as failureCount,
+            ROUND(AVG(execution_time), 2) as avgExecutionTime
+        FROM datai_integration_sync_log
+        <where>
+            <if test="objectApi != null and objectApi != ''">and object_api = #{objectApi}</if>
+            <if test="operationType != null and operationType != ''">and operation_type = #{operationType}</if>
+            <if test="startTime != null">and create_time &gt;= #{startTime}</if>
+            <if test="endTime != null">and create_time &lt;= #{endTime}</if>
+            <if test="deptId != null">and dept_id = #{deptId}</if>
+        </where>
+        GROUP BY batch_id
+        ORDER BY batch_id DESC
+        LIMIT 10
+    </select>
 </mapper>

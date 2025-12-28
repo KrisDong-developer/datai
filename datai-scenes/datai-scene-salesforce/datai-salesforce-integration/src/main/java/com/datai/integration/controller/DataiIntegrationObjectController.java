@@ -1,6 +1,7 @@
 package com.datai.integration.controller;
 
 import java.util.List;
+import java.util.Map;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -109,5 +110,29 @@ public class DataiIntegrationObjectController extends BaseController
     public AjaxResult remove(@PathVariable( name = "ids" ) Integer[] ids) 
     {
         return toAjax(dataiIntegrationObjectService.deleteDataiIntegrationObjectByIds(ids));
+    }
+
+    /**
+     * 获取对象同步统计信息
+     */
+    @Operation(summary = "获取对象同步统计信息")
+    @PreAuthorize("@ss.hasPermi('integration:object:statistics')")
+    @GetMapping("/{id}/statistics")
+    public AjaxResult getSyncStatistics(@PathVariable("id") Integer id)
+    {
+        Map<String, Object> statistics = dataiIntegrationObjectService.getSyncStatistics(id);
+        return success(statistics);
+    }
+
+    /**
+     * 获取对象依赖关系
+     */
+    @Operation(summary = "获取对象依赖关系")
+    @PreAuthorize("@ss.hasPermi('integration:object:dependencies')")
+    @GetMapping("/{id}/dependencies")
+    public AjaxResult getObjectDependencies(@PathVariable("id") Integer id)
+    {
+        List<Map<String, Object>> dependencies = dataiIntegrationObjectService.getObjectDependencies(id);
+        return success(dependencies);
     }
 }

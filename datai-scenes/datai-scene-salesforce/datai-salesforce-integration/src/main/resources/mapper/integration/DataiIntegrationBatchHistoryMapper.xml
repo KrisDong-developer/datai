@@ -153,4 +153,43 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             #{id}
         </foreach>
     </delete>
+
+    <select id="selectBatchStatistics" parameterType="Integer" resultType="java.util.Map">
+        select 
+            count(*) as totalCount,
+            sum(case when sync_status = true then 1 else 0 end) as successCount,
+            sum(case when sync_status = false then 1 else 0 end) as failedCount,
+            sum(sync_num) as totalSyncNum,
+            sum(cost) as totalCost,
+            avg(cost) as avgCost,
+            min(cost) as minCost,
+            max(cost) as maxCost
+        from datai_integration_batch_history
+        where batch_id = #{batchId}
+    </select>
+
+    <select id="selectHistoryStatistics" resultType="java.util.Map">
+        select 
+            count(*) as totalCount,
+            sum(case when sync_status = true then 1 else 0 end) as successCount,
+            sum(case when sync_status = false then 1 else 0 end) as failedCount,
+            sum(sync_num) as totalSyncNum,
+            sum(cost) as totalCost,
+            avg(cost) as avgCost,
+            min(cost) as minCost,
+            max(cost) as maxCost,
+            count(distinct batch_id) as batchCount,
+            count(distinct api) as apiCount,
+            min(start_time) as firstSyncTime,
+            max(end_time) as lastSyncTime
+        from datai_integration_batch_history
+        <where>
+            <if test="api != null and api != ''"> and api = #{api}</if>
+            <if test="batchId != null"> and batch_id = #{batchId}</if>
+            <if test="syncType != null and syncType != ''"> and sync_type = #{syncType}</if>
+            <if test="syncStatus != null"> and sync_status = #{syncStatus}</if>
+            <if test="startTime != null"> and start_time &gt;= #{startTime}</if>
+            <if test="endTime != null"> and end_time &lt;= #{endTime}</if>
+        </where>
+    </select>
 </mapper>

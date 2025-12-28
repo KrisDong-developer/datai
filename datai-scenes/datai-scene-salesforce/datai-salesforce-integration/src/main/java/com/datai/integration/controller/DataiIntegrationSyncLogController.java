@@ -1,6 +1,7 @@
 package com.datai.integration.controller;
 
 import java.util.List;
+import java.util.Map;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +18,7 @@ import com.datai.common.core.controller.BaseController;
 import com.datai.common.core.domain.AjaxResult;
 import com.datai.common.enums.BusinessType;
 import com.datai.integration.domain.DataiIntegrationSyncLog;
+import com.datai.integration.domain.dto.LogStatisticsDTO;
 import com.datai.integration.service.IDataiIntegrationSyncLogService;
 import com.datai.common.utils.poi.ExcelUtil;
 import com.datai.common.core.page.TableDataInfo;
@@ -109,5 +111,41 @@ public class DataiIntegrationSyncLogController extends BaseController
     public AjaxResult remove(@PathVariable( name = "ids" ) Long[] ids) 
     {
         return toAjax(dataiIntegrationSyncLogService.deleteDataiIntegrationSyncLogByIds(ids));
+    }
+
+    /**
+     * 获取日志统计信息
+     */
+    @Operation(summary = "获取日志统计信息")
+    @PreAuthorize("@ss.hasPermi('integration:synclog:query')")
+    @GetMapping("/statistics")
+    public AjaxResult getLogStatistics(DataiIntegrationSyncLog dataiIntegrationSyncLog)
+    {
+        Map<String, Object> params = new java.util.HashMap<>();
+        if (dataiIntegrationSyncLog.getBatchId() != null) {
+            params.put("batchId", dataiIntegrationSyncLog.getBatchId());
+        }
+        if (dataiIntegrationSyncLog.getObjectApi() != null && !dataiIntegrationSyncLog.getObjectApi().isEmpty()) {
+            params.put("objectApi", dataiIntegrationSyncLog.getObjectApi());
+        }
+        if (dataiIntegrationSyncLog.getOperationType() != null && !dataiIntegrationSyncLog.getOperationType().isEmpty()) {
+            params.put("operationType", dataiIntegrationSyncLog.getOperationType());
+        }
+        if (dataiIntegrationSyncLog.getOperationStatus() != null && !dataiIntegrationSyncLog.getOperationStatus().isEmpty()) {
+            params.put("operationStatus", dataiIntegrationSyncLog.getOperationStatus());
+        }
+        if (dataiIntegrationSyncLog.getDeptId() != null) {
+            params.put("deptId", dataiIntegrationSyncLog.getDeptId());
+        }
+        if (dataiIntegrationSyncLog.getParams() != null) {
+            if (dataiIntegrationSyncLog.getParams().get("beginTime") != null) {
+                params.put("startTime", dataiIntegrationSyncLog.getParams().get("beginTime"));
+            }
+            if (dataiIntegrationSyncLog.getParams().get("endTime") != null) {
+                params.put("endTime", dataiIntegrationSyncLog.getParams().get("endTime"));
+            }
+        }
+        LogStatisticsDTO statistics = dataiIntegrationSyncLogService.getLogStatistics(params);
+        return success(statistics);
     }
 }

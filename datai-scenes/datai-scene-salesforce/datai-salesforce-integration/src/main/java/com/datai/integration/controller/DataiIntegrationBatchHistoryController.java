@@ -1,6 +1,8 @@
 package com.datai.integration.controller;
 
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +13,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import com.datai.common.annotation.Log;
 import com.datai.common.core.controller.BaseController;
@@ -109,5 +112,42 @@ public class DataiIntegrationBatchHistoryController extends BaseController
     public AjaxResult remove(@PathVariable( name = "ids" ) Integer[] ids) 
     {
         return toAjax(dataiIntegrationBatchHistoryService.deleteDataiIntegrationBatchHistoryByIds(ids));
+    }
+
+    /**
+     * 获取历史统计信息
+     */
+    @Operation(summary = "获取历史统计信息")
+    @PreAuthorize("@ss.hasPermi('integration:batchhistory:statistics')")
+    @GetMapping("/statistics")
+    public AjaxResult getHistoryStatistics(
+            @RequestParam(required = false) String api,
+            @RequestParam(required = false) Integer batchId,
+            @RequestParam(required = false) String syncType,
+            @RequestParam(required = false) Boolean syncStatus,
+            @RequestParam(required = false) String startTime,
+            @RequestParam(required = false) String endTime)
+    {
+        Map<String, Object> params = new HashMap<>();
+        if (api != null && !api.isEmpty()) {
+            params.put("api", api);
+        }
+        if (batchId != null) {
+            params.put("batchId", batchId);
+        }
+        if (syncType != null && !syncType.isEmpty()) {
+            params.put("syncType", syncType);
+        }
+        if (syncStatus != null) {
+            params.put("syncStatus", syncStatus);
+        }
+        if (startTime != null && !startTime.isEmpty()) {
+            params.put("startTime", startTime);
+        }
+        if (endTime != null && !endTime.isEmpty()) {
+            params.put("endTime", endTime);
+        }
+
+        return success(dataiIntegrationBatchHistoryService.getHistoryStatistics(params));
     }
 }

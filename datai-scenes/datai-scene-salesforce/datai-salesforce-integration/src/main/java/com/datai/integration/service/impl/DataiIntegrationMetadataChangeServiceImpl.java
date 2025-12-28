@@ -1,6 +1,8 @@
 package com.datai.integration.service.impl;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
         import com.datai.common.utils.DateUtils;
         import com.datai.common.utils.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -117,5 +119,51 @@ public class DataiIntegrationMetadataChangeServiceImpl implements IDataiIntegrat
         LoginUser loginUser = SecurityUtils.getLoginUser();
         String username = loginUser.getUsername();
         return dataiIntegrationMetadataChangeMapper.batchUpdateSyncStatus(ids, syncStatus, syncErrorMessage, username);
+    }
+
+    @Override
+    public Map<String, Object> getChangeStatistics(Map<String, Object> params)
+    {
+        Map<String, Object> statistics = new HashMap<>();
+
+        try {
+            Map<String, Object> result = dataiIntegrationMetadataChangeMapper.selectChangeStatistics(params);
+            
+            int totalCount = result.get("totalCount") != null ? ((Number) result.get("totalCount")).intValue() : 0;
+            int syncedCount = result.get("syncedCount") != null ? ((Number) result.get("syncedCount")).intValue() : 0;
+            int unsyncedCount = result.get("unsyncedCount") != null ? ((Number) result.get("unsyncedCount")).intValue() : 0;
+            
+            double syncRate = totalCount > 0 ? (double) syncedCount / totalCount * 100 : 0;
+            
+            statistics.put("success", true);
+            statistics.put("message", "获取变更统计信息成功");
+            statistics.put("data", new HashMap<String, Object>() {{
+                put("totalCount", totalCount);
+                put("syncedCount", syncedCount);
+                put("unsyncedCount", unsyncedCount);
+                put("syncRate", syncRate);
+                put("objectChangeCount", result.get("objectChangeCount"));
+                put("fieldChangeCount", result.get("fieldChangeCount"));
+                put("createCount", result.get("createCount"));
+                put("updateCount", result.get("updateCount"));
+                put("deleteCount", result.get("deleteCount"));
+                put("customCount", result.get("customCount"));
+                put("standardCount", result.get("standardCount"));
+                put("objectCount", result.get("objectCount"));
+                put("fieldCount", result.get("fieldCount"));
+                put("totalRetryCount", result.get("totalRetryCount"));
+                put("maxRetryCount", result.get("maxRetryCount"));
+                put("firstChangeTime", result.get("firstChangeTime"));
+                put("lastChangeTime", result.get("lastChangeTime"));
+                put("firstSyncTime", result.get("firstSyncTime"));
+                put("lastSyncTime", result.get("lastSyncTime"));
+            }});
+            
+        } catch (Exception e) {
+            statistics.put("success", false);
+            statistics.put("message", "获取变更统计信息失败: " + e.getMessage());
+        }
+        
+        return statistics;
     }
 }

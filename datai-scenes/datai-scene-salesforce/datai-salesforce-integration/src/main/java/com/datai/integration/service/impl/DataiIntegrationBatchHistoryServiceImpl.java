@@ -1,8 +1,10 @@
 package com.datai.integration.service.impl;
 
 import java.util.List;
-        import com.datai.common.utils.DateUtils;
-        import com.datai.common.utils.SecurityUtils;
+import java.util.Map;
+import java.util.HashMap;
+import com.datai.common.utils.DateUtils;
+import com.datai.common.utils.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.datai.integration.mapper.DataiIntegrationBatchHistoryMapper;
@@ -103,5 +105,56 @@ public class DataiIntegrationBatchHistoryServiceImpl implements IDataiIntegratio
     public int deleteDataiIntegrationBatchHistoryById(Integer id)
     {
         return dataiIntegrationBatchHistoryMapper.deleteDataiIntegrationBatchHistoryById(id);
+    }
+
+    /**
+     * 获取历史统计信息
+     *
+     * @param params 查询参数
+     * @return 统计信息
+     */
+    @Override
+    public Map<String, Object> getHistoryStatistics(Map<String, Object> params)
+    {
+        Map<String, Object> statistics = new HashMap<>();
+
+        try {
+            Map<String, Object> result = dataiIntegrationBatchHistoryMapper.selectHistoryStatistics(params);
+
+            int totalCount = result.get("totalCount") != null ? ((Number) result.get("totalCount")).intValue() : 0;
+            int successCount = result.get("successCount") != null ? ((Number) result.get("successCount")).intValue() : 0;
+            int failedCount = result.get("failedCount") != null ? ((Number) result.get("failedCount")).intValue() : 0;
+            int totalSyncNum = result.get("totalSyncNum") != null ? ((Number) result.get("totalSyncNum")).intValue() : 0;
+            long totalCost = result.get("totalCost") != null ? ((Number) result.get("totalCost")).longValue() : 0L;
+            double avgCost = result.get("avgCost") != null ? ((Number) result.get("avgCost")).doubleValue() : 0.0;
+            long minCost = result.get("minCost") != null ? ((Number) result.get("minCost")).longValue() : 0L;
+            long maxCost = result.get("maxCost") != null ? ((Number) result.get("maxCost")).longValue() : 0L;
+            int batchCount = result.get("batchCount") != null ? ((Number) result.get("batchCount")).intValue() : 0;
+            int apiCount = result.get("apiCount") != null ? ((Number) result.get("apiCount")).intValue() : 0;
+
+            statistics.put("success", true);
+            statistics.put("message", "获取统计信息成功");
+            statistics.put("data", new HashMap<String, Object>() {{
+                put("totalCount", totalCount);
+                put("successCount", successCount);
+                put("failedCount", failedCount);
+                put("successRate", totalCount > 0 ? (double) successCount / totalCount * 100 : 0);
+                put("totalSyncNum", totalSyncNum);
+                put("totalCost", totalCost);
+                put("avgCost", avgCost);
+                put("minCost", minCost);
+                put("maxCost", maxCost);
+                put("batchCount", batchCount);
+                put("apiCount", apiCount);
+                put("firstSyncTime", result.get("firstSyncTime"));
+                put("lastSyncTime", result.get("lastSyncTime"));
+            }});
+
+        } catch (Exception e) {
+            statistics.put("success", false);
+            statistics.put("message", "获取统计信息失败: " + e.getMessage());
+        }
+
+        return statistics;
     }
 }
