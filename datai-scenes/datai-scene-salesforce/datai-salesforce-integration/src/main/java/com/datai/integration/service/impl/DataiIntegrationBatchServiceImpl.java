@@ -219,6 +219,12 @@ public class DataiIntegrationBatchServiceImpl implements IDataiIntegrationBatchS
 
             statistics.put("success", true);
             statistics.put("message", "获取统计信息成功");
+            int finalSuccessCount = successCount;
+            int finalFailedCount = failedCount;
+            int finalTotalSyncNum = totalSyncNum;
+            long finalTotalCost = totalCost;
+            long finalMinCost = minCost;
+            long finalMaxCost = maxCost;
             statistics.put("data", new HashMap<String, Object>() {{
                 put("batchId", id);
                 put("api", batch.getApi());
@@ -227,14 +233,14 @@ public class DataiIntegrationBatchServiceImpl implements IDataiIntegrationBatchS
                 put("sfNum", batch.getSfNum());
                 put("dbNum", batch.getDbNum());
                 put("totalCount", totalCount);
-                put("successCount", successCount);
-                put("failedCount", failedCount);
-                put("successRate", totalCount > 0 ? (double) successCount / totalCount * 100 : 0);
-                put("totalSyncNum", totalSyncNum);
-                put("totalCost", totalCost);
+                put("successCount", finalSuccessCount);
+                put("failedCount", finalFailedCount);
+                put("successRate", totalCount > 0 ? (double) finalSuccessCount / totalCount * 100 : 0);
+                put("totalSyncNum", finalTotalSyncNum);
+                put("totalCost", finalTotalCost);
                 put("avgCost", avgCost);
-                put("minCost", minCost);
-                put("maxCost", maxCost);
+                put("minCost", finalMinCost);
+                put("maxCost", finalMaxCost);
                 put("firstSyncTime", batch.getFirstSyncTime());
                 put("lastSyncTime", batch.getLastSyncTime());
                 put("syncStatus", batch.getSyncStatus());
