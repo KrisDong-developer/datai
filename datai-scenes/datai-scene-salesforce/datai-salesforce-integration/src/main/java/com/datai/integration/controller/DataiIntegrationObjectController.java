@@ -2,6 +2,9 @@ package com.datai.integration.controller;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+
+import com.datai.integration.model.vo.DataiIntegrationObjectVo;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,7 +20,8 @@ import com.datai.common.annotation.Log;
 import com.datai.common.core.controller.BaseController;
 import com.datai.common.core.domain.AjaxResult;
 import com.datai.common.enums.BusinessType;
-import com.datai.integration.domain.DataiIntegrationObject;
+import com.datai.integration.model.domain.DataiIntegrationObject;
+import com.datai.integration.model.dto.DataiIntegrationObjectDto;
 import com.datai.integration.service.IDataiIntegrationObjectService;
 import com.datai.common.utils.poi.ExcelUtil;
 import com.datai.common.core.page.TableDataInfo;
@@ -44,11 +48,13 @@ public class DataiIntegrationObjectController extends BaseController
     @Operation(summary = "查询对象同步控制列表")
     @PreAuthorize("@ss.hasPermi('integration:object:list')")
     @GetMapping("/list")
-    public TableDataInfo list(DataiIntegrationObject dataiIntegrationObject)
+    public TableDataInfo list(DataiIntegrationObjectDto dataiIntegrationObjectDto)
     {
         startPage();
+        DataiIntegrationObject dataiIntegrationObject = DataiIntegrationObjectDto.toObj(dataiIntegrationObjectDto);
         List<DataiIntegrationObject> list = dataiIntegrationObjectService.selectDataiIntegrationObjectList(dataiIntegrationObject);
-        return getDataTable(list);
+        List<DataiIntegrationObjectVo> voList = list.stream().map(DataiIntegrationObjectVo::objToVo).collect(Collectors.toList());
+        return getDataTable(voList);
     }
 
     /**
@@ -58,8 +64,9 @@ public class DataiIntegrationObjectController extends BaseController
     @PreAuthorize("@ss.hasPermi('integration:object:export')")
     @Log(title = "对象同步控制", businessType = BusinessType.EXPORT)
     @PostMapping("/export")
-    public void export(HttpServletResponse response, DataiIntegrationObject dataiIntegrationObject)
+    public void export(HttpServletResponse response, DataiIntegrationObjectDto dataiIntegrationObjectDto)
     {
+        DataiIntegrationObject dataiIntegrationObject = DataiIntegrationObjectDto.toObj(dataiIntegrationObjectDto);
         List<DataiIntegrationObject> list = dataiIntegrationObjectService.selectDataiIntegrationObjectList(dataiIntegrationObject);
         ExcelUtil<DataiIntegrationObject> util = new ExcelUtil<DataiIntegrationObject>(DataiIntegrationObject.class);
         util.exportExcel(response, list, "对象同步控制数据");
@@ -73,7 +80,9 @@ public class DataiIntegrationObjectController extends BaseController
     @GetMapping(value = "/{id}")
     public AjaxResult getInfo(@PathVariable("id") Integer id)
     {
-        return success(dataiIntegrationObjectService.selectDataiIntegrationObjectById(id));
+        DataiIntegrationObject dataiIntegrationObject = dataiIntegrationObjectService.selectDataiIntegrationObjectById(id);
+        DataiIntegrationObjectVo vo = DataiIntegrationObjectVo.objToVo(dataiIntegrationObject);
+        return success(vo);
     }
 
     /**
@@ -83,8 +92,9 @@ public class DataiIntegrationObjectController extends BaseController
     @PreAuthorize("@ss.hasPermi('integration:object:add')")
     @Log(title = "对象同步控制", businessType = BusinessType.INSERT)
     @PostMapping
-    public AjaxResult add(@RequestBody DataiIntegrationObject dataiIntegrationObject)
+    public AjaxResult add(@RequestBody DataiIntegrationObjectDto dataiIntegrationObjectDto)
     {
+        DataiIntegrationObject dataiIntegrationObject = DataiIntegrationObjectDto.toObj(dataiIntegrationObjectDto);
         return toAjax(dataiIntegrationObjectService.insertDataiIntegrationObject(dataiIntegrationObject));
     }
 
@@ -95,8 +105,9 @@ public class DataiIntegrationObjectController extends BaseController
     @PreAuthorize("@ss.hasPermi('integration:object:edit')")
     @Log(title = "对象同步控制", businessType = BusinessType.UPDATE)
     @PutMapping
-    public AjaxResult edit(@RequestBody DataiIntegrationObject dataiIntegrationObject)
+    public AjaxResult edit(@RequestBody DataiIntegrationObjectDto dataiIntegrationObjectDto)
     {
+        DataiIntegrationObject dataiIntegrationObject = DataiIntegrationObjectDto.toObj(dataiIntegrationObjectDto);
         return toAjax(dataiIntegrationObjectService.updateDataiIntegrationObject(dataiIntegrationObject));
     }
 

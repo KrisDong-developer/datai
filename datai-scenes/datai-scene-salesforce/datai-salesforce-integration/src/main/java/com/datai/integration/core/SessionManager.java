@@ -1,7 +1,7 @@
 package com.datai.integration.core;
 
 import com.datai.salesforce.common.constant.SalesforceConfigConstants;
-import com.datai.auth.domain.SalesforceLoginResult;
+import com.datai.auth.model.domain.SalesforceLoginResult;
 import com.datai.auth.service.ISalesforceLoginService;
 import com.datai.common.utils.CacheUtils;
 import lombok.extern.slf4j.Slf4j;

@@ -1,7 +1,7 @@
 package com.datai.auth.service;
 
 import java.util.List;
-import com.datai.auth.domain.DataiSfLoginHistory;
+import com.datai.auth.model.domain.DataiSfLoginHistory;
 
 /**
  * 登录历史信息Service接口

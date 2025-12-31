@@ -1,6 +1,9 @@
 package com.datai.integration.controller;
 
 import java.util.List;
+import java.util.stream.Collectors;
+
+import com.datai.integration.model.vo.DataiIntegrationPicklistVo;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +19,8 @@ import com.datai.common.annotation.Log;
 import com.datai.common.core.controller.BaseController;
 import com.datai.common.core.domain.AjaxResult;
 import com.datai.common.enums.BusinessType;
-import com.datai.integration.domain.DataiIntegrationPicklist;
+import com.datai.integration.model.domain.DataiIntegrationPicklist;
+import com.datai.integration.model.dto.DataiIntegrationPicklistDto;
 import com.datai.integration.service.IDataiIntegrationPicklistService;
 import com.datai.common.utils.poi.ExcelUtil;
 import com.datai.common.core.page.TableDataInfo;
@@ -43,11 +47,13 @@ public class DataiIntegrationPicklistController extends BaseController
     @Operation(summary = "查询字段选择列表信息列表")
     @PreAuthorize("@ss.hasPermi('integration:picklist:list')")
     @GetMapping("/list")
-    public TableDataInfo list(DataiIntegrationPicklist dataiIntegrationPicklist)
+    public TableDataInfo list(DataiIntegrationPicklistDto dataiIntegrationPicklistDto)
     {
         startPage();
+        DataiIntegrationPicklist dataiIntegrationPicklist = DataiIntegrationPicklistDto.toObj(dataiIntegrationPicklistDto);
         List<DataiIntegrationPicklist> list = dataiIntegrationPicklistService.selectDataiIntegrationPicklistList(dataiIntegrationPicklist);
-        return getDataTable(list);
+        List<DataiIntegrationPicklistVo> voList = list.stream().map(DataiIntegrationPicklistVo::objToVo).collect(Collectors.toList());
+        return getDataTable(voList);
     }
 
     /**
@@ -57,8 +63,9 @@ public class DataiIntegrationPicklistController extends BaseController
     @PreAuthorize("@ss.hasPermi('integration:picklist:export')")
     @Log(title = "字段选择列表信息", businessType = BusinessType.EXPORT)
     @PostMapping("/export")
-    public void export(HttpServletResponse response, DataiIntegrationPicklist dataiIntegrationPicklist)
+    public void export(HttpServletResponse response, DataiIntegrationPicklistDto dataiIntegrationPicklistDto)
     {
+        DataiIntegrationPicklist dataiIntegrationPicklist = DataiIntegrationPicklistDto.toObj(dataiIntegrationPicklistDto);
         List<DataiIntegrationPicklist> list = dataiIntegrationPicklistService.selectDataiIntegrationPicklistList(dataiIntegrationPicklist);
         ExcelUtil<DataiIntegrationPicklist> util = new ExcelUtil<DataiIntegrationPicklist>(DataiIntegrationPicklist.class);
         util.exportExcel(response, list, "字段选择列表信息数据");
@@ -72,7 +79,9 @@ public class DataiIntegrationPicklistController extends BaseController
     @GetMapping(value = "/{id}")
     public AjaxResult getInfo(@PathVariable("id") Integer id)
     {
-        return success(dataiIntegrationPicklistService.selectDataiIntegrationPicklistById(id));
+        DataiIntegrationPicklist dataiIntegrationPicklist = dataiIntegrationPicklistService.selectDataiIntegrationPicklistById(id);
+        DataiIntegrationPicklistVo vo = DataiIntegrationPicklistVo.objToVo(dataiIntegrationPicklist);
+        return success(vo);
     }
 
     /**
@@ -82,8 +91,9 @@ public class DataiIntegrationPicklistController extends BaseController
     @PreAuthorize("@ss.hasPermi('integration:picklist:add')")
     @Log(title = "字段选择列表信息", businessType = BusinessType.INSERT)
     @PostMapping
-    public AjaxResult add(@RequestBody DataiIntegrationPicklist dataiIntegrationPicklist)
+    public AjaxResult add(@RequestBody DataiIntegrationPicklistDto dataiIntegrationPicklistDto)
     {
+        DataiIntegrationPicklist dataiIntegrationPicklist = DataiIntegrationPicklistDto.toObj(dataiIntegrationPicklistDto);
         return toAjax(dataiIntegrationPicklistService.insertDataiIntegrationPicklist(dataiIntegrationPicklist));
     }
 
@@ -94,8 +104,9 @@ public class DataiIntegrationPicklistController extends BaseController
     @PreAuthorize("@ss.hasPermi('integration:picklist:edit')")
     @Log(title = "字段选择列表信息", businessType = BusinessType.UPDATE)
     @PutMapping
-    public AjaxResult edit(@RequestBody DataiIntegrationPicklist dataiIntegrationPicklist)
+    public AjaxResult edit(@RequestBody DataiIntegrationPicklistDto dataiIntegrationPicklistDto)
     {
+        DataiIntegrationPicklist dataiIntegrationPicklist = DataiIntegrationPicklistDto.toObj(dataiIntegrationPicklistDto);
         return toAjax(dataiIntegrationPicklistService.updateDataiIntegrationPicklist(dataiIntegrationPicklist));
     }
 

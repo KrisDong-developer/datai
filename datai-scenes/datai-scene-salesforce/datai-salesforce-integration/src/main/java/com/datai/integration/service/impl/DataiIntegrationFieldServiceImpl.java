@@ -1,6 +1,5 @@
 package com.datai.integration.service.impl;
 
-import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -10,7 +9,7 @@ import com.datai.common.utils.DateUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.datai.integration.mapper.DataiIntegrationFieldMapper;
-import com.datai.integration.domain.DataiIntegrationField;
+import com.datai.integration.model.domain.DataiIntegrationField;
 import com.datai.integration.service.IDataiIntegrationFieldService;
 import com.datai.common.core.domain.model.LoginUser;
 

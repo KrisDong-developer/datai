@@ -1,7 +1,7 @@
 package com.datai.integration.mapper;
 
 import java.util.List;
-import com.datai.integration.domain.DataiIntegrationPicklist;
+import com.datai.integration.model.domain.DataiIntegrationPicklist;
 
 /**
  * 字段选择列表信息Mapper接口

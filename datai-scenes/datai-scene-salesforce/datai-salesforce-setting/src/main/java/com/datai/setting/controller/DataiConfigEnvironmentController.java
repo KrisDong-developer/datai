@@ -1,6 +1,9 @@
 package com.datai.setting.controller;
 
 import java.util.List;
+import java.util.stream.Collectors;
+
+import com.datai.setting.model.vo.DataiConfigEnvironmentVo;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,7 +20,8 @@ import com.datai.common.annotation.Log;
 import com.datai.common.core.controller.BaseController;
 import com.datai.common.core.domain.AjaxResult;
 import com.datai.common.enums.BusinessType;
-import com.datai.setting.domain.DataiConfigEnvironment;
+import com.datai.setting.model.domain.DataiConfigEnvironment;
+import com.datai.setting.model.dto.DataiConfigEnvironmentDto;
 import com.datai.setting.service.IDataiConfigEnvironmentService;
 import com.datai.common.utils.poi.ExcelUtil;
 import com.datai.common.core.page.TableDataInfo;
@@ -45,11 +49,13 @@ public class DataiConfigEnvironmentController extends BaseController
     @Operation(summary = "查询配置环境列表")
     @PreAuthorize("@ss.hasPermi('setting:environment:list')")
     @GetMapping("/list")
-    public TableDataInfo list(DataiConfigEnvironment dataiConfigEnvironment)
+    public TableDataInfo list(DataiConfigEnvironmentDto dataiConfigEnvironmentDto)
     {
         startPage();
+        DataiConfigEnvironment dataiConfigEnvironment = DataiConfigEnvironmentDto.toObj(dataiConfigEnvironmentDto);
         List<DataiConfigEnvironment> list = dataiConfigEnvironmentService.selectDataiConfigEnvironmentList(dataiConfigEnvironment);
-        return getDataTable(list);
+        List<DataiConfigEnvironmentVo> voList = list.stream().map(DataiConfigEnvironmentVo::objToVo).collect(Collectors.toList());
+        return getDataTable(voList);
     }
 
     /**
@@ -59,8 +65,9 @@ public class DataiConfigEnvironmentController extends BaseController
     @PreAuthorize("@ss.hasPermi('setting:environment:export')")
     @Log(title = "配置环境", businessType = BusinessType.EXPORT)
     @PostMapping("/export")
-    public void export(HttpServletResponse response, DataiConfigEnvironment dataiConfigEnvironment)
+    public void export(HttpServletResponse response, DataiConfigEnvironmentDto dataiConfigEnvironmentDto)
     {
+        DataiConfigEnvironment dataiConfigEnvironment = DataiConfigEnvironmentDto.toObj(dataiConfigEnvironmentDto);
         List<DataiConfigEnvironment> list = dataiConfigEnvironmentService.selectDataiConfigEnvironmentList(dataiConfigEnvironment);
         ExcelUtil<DataiConfigEnvironment> util = new ExcelUtil<DataiConfigEnvironment>(DataiConfigEnvironment.class);
         util.exportExcel(response, list, "配置环境数据");
@@ -74,7 +81,9 @@ public class DataiConfigEnvironmentController extends BaseController
     @GetMapping(value = "/{id}")
     public AjaxResult getInfo(@PathVariable("id") Long id)
     {
-        return success(dataiConfigEnvironmentService.selectDataiConfigEnvironmentById(id));
+        DataiConfigEnvironment dataiConfigEnvironment = dataiConfigEnvironmentService.selectDataiConfigEnvironmentById(id);
+        DataiConfigEnvironmentVo dataiConfigEnvironmentVo = DataiConfigEnvironmentVo.objToVo(dataiConfigEnvironment);
+        return success(dataiConfigEnvironmentVo);
     }
 
     /**
@@ -84,8 +93,9 @@ public class DataiConfigEnvironmentController extends BaseController
     @PreAuthorize("@ss.hasPermi('setting:environment:add')")
     @Log(title = "配置环境", businessType = BusinessType.INSERT)
     @PostMapping
-    public AjaxResult add(@RequestBody DataiConfigEnvironment dataiConfigEnvironment)
+    public AjaxResult add(@RequestBody DataiConfigEnvironmentDto dataiConfigEnvironmentDto)
     {
+        DataiConfigEnvironment dataiConfigEnvironment = DataiConfigEnvironmentDto.toObj(dataiConfigEnvironmentDto);
         return toAjax(dataiConfigEnvironmentService.insertDataiConfigEnvironment(dataiConfigEnvironment));
     }
 
@@ -96,8 +106,9 @@ public class DataiConfigEnvironmentController extends BaseController
     @PreAuthorize("@ss.hasPermi('setting:environment:edit')")
     @Log(title = "配置环境", businessType = BusinessType.UPDATE)
     @PutMapping
-    public AjaxResult edit(@RequestBody DataiConfigEnvironment dataiConfigEnvironment)
+    public AjaxResult edit(@RequestBody DataiConfigEnvironmentDto dataiConfigEnvironmentDto)
     {
+        DataiConfigEnvironment dataiConfigEnvironment = DataiConfigEnvironmentDto.toObj(dataiConfigEnvironmentDto);
         return toAjax(dataiConfigEnvironmentService.updateDataiConfigEnvironment(dataiConfigEnvironment));
     }
 
@@ -132,7 +143,8 @@ public class DataiConfigEnvironmentController extends BaseController
         
         if (result) {
             DataiConfigEnvironment currentEnvironment = dataiConfigEnvironmentService.getCurrentActiveEnvironment();
-            return success("环境切换成功：" + currentEnvironment.getEnvironmentName());
+            DataiConfigEnvironmentVo currentEnvironmentVo = DataiConfigEnvironmentVo.objToVo(currentEnvironment);
+            return success("环境切换成功：" + currentEnvironmentVo.getEnvironmentName());
         } else {
             return error("环境切换失败，请检查环境编码是否正确且已激活");
         }
@@ -150,6 +162,7 @@ public class DataiConfigEnvironmentController extends BaseController
         if (currentEnvironment == null) {
             return error("未找到当前激活的环境");
         }
-        return success(currentEnvironment);
+        DataiConfigEnvironmentVo currentEnvironmentVo = DataiConfigEnvironmentVo.objToVo(currentEnvironment);
+        return success(currentEnvironmentVo);
     }
 }

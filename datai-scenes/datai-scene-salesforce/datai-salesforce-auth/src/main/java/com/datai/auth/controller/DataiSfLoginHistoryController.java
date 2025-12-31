@@ -1,6 +1,9 @@
 package com.datai.auth.controller;
 
 import java.util.List;
+import java.util.stream.Collectors;
+
+import com.datai.auth.model.vo.DataiSfLoginHistoryVo;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +19,8 @@ import com.datai.common.annotation.Log;
 import com.datai.common.core.controller.BaseController;
 import com.datai.common.core.domain.AjaxResult;
 import com.datai.common.enums.BusinessType;
-import com.datai.auth.domain.DataiSfLoginHistory;
+import com.datai.auth.model.domain.DataiSfLoginHistory;
+import com.datai.auth.model.dto.DataiSfLoginHistoryDto;
 import com.datai.auth.service.IDataiSfLoginHistoryService;
 import com.datai.common.utils.poi.ExcelUtil;
 import com.datai.common.core.page.TableDataInfo;
@@ -43,11 +47,12 @@ public class DataiSfLoginHistoryController extends BaseController
     @Operation(summary = "查询登录历史信息列表")
     @PreAuthorize("@ss.hasPermi('auth:history:list')")
     @GetMapping("/list")
-    public TableDataInfo list(DataiSfLoginHistory dataiSfLoginHistory)
+    public TableDataInfo list(DataiSfLoginHistoryDto dataiSfLoginHistoryDto)
     {
         startPage();
-        List<DataiSfLoginHistory> list = dataiSfLoginHistoryService.selectDataiSfLoginHistoryList(dataiSfLoginHistory);
-        return getDataTable(list);
+        List<DataiSfLoginHistory> list = dataiSfLoginHistoryService.selectDataiSfLoginHistoryList(DataiSfLoginHistoryDto.toObj(dataiSfLoginHistoryDto));
+        List<DataiSfLoginHistoryVo> voList = list.stream().map(DataiSfLoginHistoryVo::objToVo).collect(Collectors.toList());
+        return getDataTable(voList);
     }
 
     /**
@@ -57,9 +62,9 @@ public class DataiSfLoginHistoryController extends BaseController
     @PreAuthorize("@ss.hasPermi('auth:history:export')")
     @Log(title = "登录历史信息", businessType = BusinessType.EXPORT)
     @PostMapping("/export")
-    public void export(HttpServletResponse response, DataiSfLoginHistory dataiSfLoginHistory)
+    public void export(HttpServletResponse response, DataiSfLoginHistoryDto dataiSfLoginHistoryDto)
     {
-        List<DataiSfLoginHistory> list = dataiSfLoginHistoryService.selectDataiSfLoginHistoryList(dataiSfLoginHistory);
+        List<DataiSfLoginHistory> list = dataiSfLoginHistoryService.selectDataiSfLoginHistoryList(DataiSfLoginHistoryDto.toObj(dataiSfLoginHistoryDto));
         ExcelUtil<DataiSfLoginHistory> util = new ExcelUtil<DataiSfLoginHistory>(DataiSfLoginHistory.class);
         util.exportExcel(response, list, "登录历史信息数据");
     }
@@ -72,7 +77,8 @@ public class DataiSfLoginHistoryController extends BaseController
     @GetMapping(value = "/{id}")
     public AjaxResult getInfo(@PathVariable("id") Long id)
     {
-        return success(dataiSfLoginHistoryService.selectDataiSfLoginHistoryById(id));
+        DataiSfLoginHistory dataiSfLoginHistory = dataiSfLoginHistoryService.selectDataiSfLoginHistoryById(id);
+        return success(DataiSfLoginHistoryVo.objToVo(dataiSfLoginHistory));
     }
 
     /**
@@ -82,9 +88,9 @@ public class DataiSfLoginHistoryController extends BaseController
     @PreAuthorize("@ss.hasPermi('auth:history:add')")
     @Log(title = "登录历史信息", businessType = BusinessType.INSERT)
     @PostMapping
-    public AjaxResult add(@RequestBody DataiSfLoginHistory dataiSfLoginHistory)
+    public AjaxResult add(@RequestBody DataiSfLoginHistoryDto dataiSfLoginHistoryDto)
     {
-        return toAjax(dataiSfLoginHistoryService.insertDataiSfLoginHistory(dataiSfLoginHistory));
+        return toAjax(dataiSfLoginHistoryService.insertDataiSfLoginHistory(DataiSfLoginHistoryDto.toObj(dataiSfLoginHistoryDto)));
     }
 
     /**
@@ -94,9 +100,9 @@ public class DataiSfLoginHistoryController extends BaseController
     @PreAuthorize("@ss.hasPermi('auth:history:edit')")
     @Log(title = "登录历史信息", businessType = BusinessType.UPDATE)
     @PutMapping
-    public AjaxResult edit(@RequestBody DataiSfLoginHistory dataiSfLoginHistory)
+    public AjaxResult edit(@RequestBody DataiSfLoginHistoryDto dataiSfLoginHistoryDto)
     {
-        return toAjax(dataiSfLoginHistoryService.updateDataiSfLoginHistory(dataiSfLoginHistory));
+        return toAjax(dataiSfLoginHistoryService.updateDataiSfLoginHistory(DataiSfLoginHistoryDto.toObj(dataiSfLoginHistoryDto)));
     }
 
     /**

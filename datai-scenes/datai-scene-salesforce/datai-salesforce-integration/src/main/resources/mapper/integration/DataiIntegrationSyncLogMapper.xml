@@ -119,7 +119,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         </foreach>
     </delete>
 
-    <select id="getLogStatistics" parameterType="map" resultType="com.datai.integration.domain.dto.LogStatisticsDTO">
+    <select id="getLogStatistics" parameterType="map" resultType="com.datai.integration.model.dto.LogStatisticsDTO">
         SELECT 
             COUNT(*) as totalCount,
             SUM(CASE WHEN operation_status = 'success' THEN 1 ELSE 0 END) as successCount,
@@ -143,7 +143,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         </where>
     </select>
 
-    <select id="getOperationTypeStatistics" parameterType="map" resultType="com.datai.integration.domain.dto.LogStatisticsDTO$OperationTypeStatistics">
+    <select id="getOperationTypeStatistics" parameterType="map" resultType="com.datai.integration.model.dto.LogStatisticsDTO$OperationTypeStatistics">
         SELECT 
             operation_type as operationType,
             COUNT(*) as count,
@@ -162,7 +162,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         ORDER BY count DESC
     </select>
 
-    <select id="getObjectApiStatistics" parameterType="map" resultType="com.datai.integration.domain.dto.LogStatisticsDTO$ObjectApiStatistics">
+    <select id="getObjectApiStatistics" parameterType="map" resultType="com.datai.integration.model.dto.LogStatisticsDTO$ObjectApiStatistics">
         SELECT 
             object_api as objectApi,
             COUNT(*) as count,
@@ -197,7 +197,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         GROUP BY operation_status
     </select>
 
-    <select id="getBatchStatistics" parameterType="map" resultType="com.datai.integration.domain.dto.LogStatisticsDTO$BatchStatistics">
+    <select id="getBatchStatistics" parameterType="map" resultType="com.datai.integration.model.dto.LogStatisticsDTO$BatchStatistics">
         SELECT 
             batch_id as batchId,
             COUNT(*) as count,

@@ -1,8 +1,7 @@
 package com.datai.setting.service.impl;
 
-import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
+
 import com.alibaba.fastjson2.JSON;
 import com.datai.common.utils.DateUtils;
 import com.datai.common.utils.SecurityUtils;
@@ -11,8 +10,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.datai.setting.mapper.DataiConfigSnapshotMapper;
-import com.datai.setting.domain.DataiConfigSnapshot;
-import com.datai.setting.domain.DataiConfiguration;
+import com.datai.setting.model.domain.DataiConfigSnapshot;
+import com.datai.setting.model.domain.DataiConfiguration;
 import com.datai.setting.service.IDataiConfigSnapshotService;
 import com.datai.setting.service.IDataiConfigurationService;
 import com.datai.common.core.domain.model.LoginUser;
@@ -41,7 +40,7 @@ public class DataiConfigSnapshotServiceImpl implements IDataiConfigSnapshotServi
      * @return 配置快照
      */
     @Override
-    public DataiConfigSnapshot selectDataiConfigSnapshotById(String id)
+    public DataiConfigSnapshot selectDataiConfigSnapshotById(Long id)
     {
         return dataiConfigSnapshotMapper.selectDataiConfigSnapshotById(id);
     }
@@ -177,7 +176,7 @@ public class DataiConfigSnapshotServiceImpl implements IDataiConfigSnapshotServi
         logger.info("开始恢复快照，快照ID: {}, 恢复原因: {}", snapshotId, restoreReason);
         
         try {
-            DataiConfigSnapshot snapshot = dataiConfigSnapshotMapper.selectDataiConfigSnapshotById(snapshotId);
+            DataiConfigSnapshot snapshot = dataiConfigSnapshotMapper.selectDataiConfigSnapshotById(Long.valueOf(snapshotId));
             if (snapshot == null) {
                 logger.error("快照不存在，快照ID: {}", snapshotId);
                 throw new RuntimeException("快照不存在");
@@ -245,7 +244,7 @@ public class DataiConfigSnapshotServiceImpl implements IDataiConfigSnapshotServi
         logger.info("获取快照详细信息，快照ID: {}", snapshotId);
         
         try {
-            DataiConfigSnapshot snapshot = dataiConfigSnapshotMapper.selectDataiConfigSnapshotById(snapshotId);
+            DataiConfigSnapshot snapshot = dataiConfigSnapshotMapper.selectDataiConfigSnapshotById(Long.valueOf(snapshotId));
             if (snapshot == null) {
                 logger.error("快照不存在，快照ID: {}", snapshotId);
                 throw new RuntimeException("快照不存在");
@@ -274,8 +273,8 @@ public class DataiConfigSnapshotServiceImpl implements IDataiConfigSnapshotServi
         logger.info("开始比较两个快照的差异，快照ID1: {}, 快照ID2: {}", snapshotId1, snapshotId2);
         
         try {
-            DataiConfigSnapshot snapshot1 = dataiConfigSnapshotMapper.selectDataiConfigSnapshotById(snapshotId1);
-            DataiConfigSnapshot snapshot2 = dataiConfigSnapshotMapper.selectDataiConfigSnapshotById(snapshotId2);
+            DataiConfigSnapshot snapshot1 = dataiConfigSnapshotMapper.selectDataiConfigSnapshotById(Long.valueOf(snapshotId1));
+            DataiConfigSnapshot snapshot2 = dataiConfigSnapshotMapper.selectDataiConfigSnapshotById(Long.valueOf(snapshotId2));
             
             if (snapshot1 == null) {
                 throw new RuntimeException("快照不存在: " + snapshotId1);

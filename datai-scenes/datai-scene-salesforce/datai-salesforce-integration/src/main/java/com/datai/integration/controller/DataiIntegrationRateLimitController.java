@@ -1,6 +1,9 @@
 package com.datai.integration.controller;
 
 import java.util.List;
+import java.util.stream.Collectors;
+
+import com.datai.integration.model.vo.DataiIntegrationRateLimitVo;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +19,8 @@ import com.datai.common.annotation.Log;
 import com.datai.common.core.controller.BaseController;
 import com.datai.common.core.domain.AjaxResult;
 import com.datai.common.enums.BusinessType;
-import com.datai.integration.domain.DataiIntegrationRateLimit;
+import com.datai.integration.model.domain.DataiIntegrationRateLimit;
+import com.datai.integration.model.dto.DataiIntegrationRateLimitDto;
 import com.datai.integration.service.IDataiIntegrationRateLimitService;
 import com.datai.common.utils.poi.ExcelUtil;
 import com.datai.common.core.page.TableDataInfo;
@@ -43,11 +47,13 @@ public class DataiIntegrationRateLimitController extends BaseController
     @Operation(summary = "查询API限流监控列表")
     @PreAuthorize("@ss.hasPermi('integration:limit:list')")
     @GetMapping("/list")
-    public TableDataInfo list(DataiIntegrationRateLimit dataiIntegrationRateLimit)
+    public TableDataInfo list(DataiIntegrationRateLimitDto dataiIntegrationRateLimitDto)
     {
         startPage();
+        DataiIntegrationRateLimit dataiIntegrationRateLimit = DataiIntegrationRateLimitDto.toObj(dataiIntegrationRateLimitDto);
         List<DataiIntegrationRateLimit> list = dataiIntegrationRateLimitService.selectDataiIntegrationRateLimitList(dataiIntegrationRateLimit);
-        return getDataTable(list);
+        List<DataiIntegrationRateLimitVo> voList = list.stream().map(DataiIntegrationRateLimitVo::objToVo).collect(Collectors.toList());
+        return getDataTable(voList);
     }
 
     /**
@@ -82,8 +88,9 @@ public class DataiIntegrationRateLimitController extends BaseController
     @PreAuthorize("@ss.hasPermi('integration:limit:add')")
     @Log(title = "API限流监控", businessType = BusinessType.INSERT)
     @PostMapping
-    public AjaxResult add(@RequestBody DataiIntegrationRateLimit dataiIntegrationRateLimit)
+    public AjaxResult add(@RequestBody DataiIntegrationRateLimitDto dataiIntegrationRateLimitDto)
     {
+        DataiIntegrationRateLimit dataiIntegrationRateLimit = DataiIntegrationRateLimitDto.toObj(dataiIntegrationRateLimitDto);
         return toAjax(dataiIntegrationRateLimitService.insertDataiIntegrationRateLimit(dataiIntegrationRateLimit));
     }
 
@@ -94,8 +101,9 @@ public class DataiIntegrationRateLimitController extends BaseController
     @PreAuthorize("@ss.hasPermi('integration:limit:edit')")
     @Log(title = "API限流监控", businessType = BusinessType.UPDATE)
     @PutMapping
-    public AjaxResult edit(@RequestBody DataiIntegrationRateLimit dataiIntegrationRateLimit)
+    public AjaxResult edit(@RequestBody DataiIntegrationRateLimitDto dataiIntegrationRateLimitDto)
     {
+        DataiIntegrationRateLimit dataiIntegrationRateLimit = DataiIntegrationRateLimitDto.toObj(dataiIntegrationRateLimitDto);
         return toAjax(dataiIntegrationRateLimitService.updateDataiIntegrationRateLimit(dataiIntegrationRateLimit));
     }
 

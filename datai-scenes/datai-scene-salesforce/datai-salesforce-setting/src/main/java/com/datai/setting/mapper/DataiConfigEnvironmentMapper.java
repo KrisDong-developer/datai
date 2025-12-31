@@ -1,7 +1,7 @@
 package com.datai.setting.mapper;
 
 import java.util.List;
-import com.datai.setting.domain.DataiConfigEnvironment;
+import com.datai.setting.model.domain.DataiConfigEnvironment;
 
 /**
  * 配置环境Mapper接口

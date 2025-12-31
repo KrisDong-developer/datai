@@ -1,8 +1,8 @@
 package com.datai.auth.service;
 
-import com.datai.auth.domain.DataiSfLoginSession;
-import com.datai.auth.domain.SalesforceLoginResult;
-import com.datai.auth.domain.SalesforceLoginRequest;
+import com.datai.auth.model.domain.DataiSfLoginSession;
+import com.datai.auth.model.domain.SalesforceLoginResult;
+import com.datai.auth.model.domain.SalesforceLoginRequest;
 
 /**
  * Salesforce登录服务接口

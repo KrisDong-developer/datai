@@ -2,8 +2,8 @@ package com.datai.setting.config;
 
 import com.datai.common.utils.CacheUtils;
 import com.datai.salesforce.common.constant.SalesforceConfigConstants;
-import com.datai.setting.domain.DataiConfiguration;
-import com.datai.setting.domain.DataiConfigEnvironment;
+import com.datai.setting.model.domain.DataiConfiguration;
+import com.datai.setting.model.domain.DataiConfigEnvironment;
 import com.datai.setting.mapper.DataiConfigurationMapper;
 import com.datai.setting.mapper.DataiConfigEnvironmentMapper;
 import org.slf4j.Logger;

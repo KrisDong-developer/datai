@@ -2,7 +2,7 @@ package com.datai.integration.mapper;
 
 import java.util.List;
 import java.util.Map;
-import com.datai.integration.domain.DataiIntegrationMetadataChange;
+import com.datai.integration.model.domain.DataiIntegrationMetadataChange;
 
 /**
  * 对象元数据变更Mapper接口

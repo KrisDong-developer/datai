@@ -3,6 +3,9 @@ package com.datai.integration.controller;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.stream.Collectors;
+
+import com.datai.integration.model.vo.DataiIntegrationBatchHistoryVo;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,13 +16,13 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import com.datai.common.annotation.Log;
 import com.datai.common.core.controller.BaseController;
 import com.datai.common.core.domain.AjaxResult;
 import com.datai.common.enums.BusinessType;
-import com.datai.integration.domain.DataiIntegrationBatchHistory;
+import com.datai.integration.model.domain.DataiIntegrationBatchHistory;
+import com.datai.integration.model.dto.DataiIntegrationBatchHistoryDto;
 import com.datai.integration.service.IDataiIntegrationBatchHistoryService;
 import com.datai.common.utils.poi.ExcelUtil;
 import com.datai.common.core.page.TableDataInfo;
@@ -46,11 +49,15 @@ public class DataiIntegrationBatchHistoryController extends BaseController
     @Operation(summary = "查询数据批次历史列表")
     @PreAuthorize("@ss.hasPermi('integration:batchhistory:list')")
     @GetMapping("/list")
-    public TableDataInfo list(DataiIntegrationBatchHistory dataiIntegrationBatchHistory)
+    public TableDataInfo list(DataiIntegrationBatchHistoryDto dataiIntegrationBatchHistoryDto)
     {
         startPage();
-        List<DataiIntegrationBatchHistory> list = dataiIntegrationBatchHistoryService.selectDataiIntegrationBatchHistoryList(dataiIntegrationBatchHistory);
-        return getDataTable(list);
+        List<DataiIntegrationBatchHistory> list = dataiIntegrationBatchHistoryService.selectDataiIntegrationBatchHistoryList(
+            DataiIntegrationBatchHistoryDto.toObj(dataiIntegrationBatchHistoryDto));
+        List<DataiIntegrationBatchHistoryVo> voList = list.stream()
+            .map(DataiIntegrationBatchHistoryVo::objToVo)
+            .collect(Collectors.toList());
+        return getDataTable(voList);
     }
 
     /**
@@ -60,9 +67,10 @@ public class DataiIntegrationBatchHistoryController extends BaseController
     @PreAuthorize("@ss.hasPermi('integration:batchhistory:export')")
     @Log(title = "数据批次历史", businessType = BusinessType.EXPORT)
     @PostMapping("/export")
-    public void export(HttpServletResponse response, DataiIntegrationBatchHistory dataiIntegrationBatchHistory)
+    public void export(HttpServletResponse response, DataiIntegrationBatchHistoryDto dataiIntegrationBatchHistoryDto)
     {
-        List<DataiIntegrationBatchHistory> list = dataiIntegrationBatchHistoryService.selectDataiIntegrationBatchHistoryList(dataiIntegrationBatchHistory);
+        List<DataiIntegrationBatchHistory> list = dataiIntegrationBatchHistoryService.selectDataiIntegrationBatchHistoryList(
+            DataiIntegrationBatchHistoryDto.toObj(dataiIntegrationBatchHistoryDto));
         ExcelUtil<DataiIntegrationBatchHistory> util = new ExcelUtil<DataiIntegrationBatchHistory>(DataiIntegrationBatchHistory.class);
         util.exportExcel(response, list, "数据批次历史数据");
     }
@@ -75,7 +83,8 @@ public class DataiIntegrationBatchHistoryController extends BaseController
     @GetMapping(value = "/{id}")
     public AjaxResult getInfo(@PathVariable("id") Integer id)
     {
-        return success(dataiIntegrationBatchHistoryService.selectDataiIntegrationBatchHistoryById(id));
+        DataiIntegrationBatchHistory dataiIntegrationBatchHistory = dataiIntegrationBatchHistoryService.selectDataiIntegrationBatchHistoryById(id);
+        return success(DataiIntegrationBatchHistoryVo.objToVo(dataiIntegrationBatchHistory));
     }
 
     /**
@@ -85,9 +94,10 @@ public class DataiIntegrationBatchHistoryController extends BaseController
     @PreAuthorize("@ss.hasPermi('integration:batchhistory:add')")
     @Log(title = "数据批次历史", businessType = BusinessType.INSERT)
     @PostMapping
-    public AjaxResult add(@RequestBody DataiIntegrationBatchHistory dataiIntegrationBatchHistory)
+    public AjaxResult add(@RequestBody DataiIntegrationBatchHistoryDto dataiIntegrationBatchHistoryDto)
     {
-        return toAjax(dataiIntegrationBatchHistoryService.insertDataiIntegrationBatchHistory(dataiIntegrationBatchHistory));
+        return toAjax(dataiIntegrationBatchHistoryService.insertDataiIntegrationBatchHistory(
+            DataiIntegrationBatchHistoryDto.toObj(dataiIntegrationBatchHistoryDto)));
     }
 
     /**
@@ -97,9 +107,10 @@ public class DataiIntegrationBatchHistoryController extends BaseController
     @PreAuthorize("@ss.hasPermi('integration:batchhistory:edit')")
     @Log(title = "数据批次历史", businessType = BusinessType.UPDATE)
     @PutMapping
-    public AjaxResult edit(@RequestBody DataiIntegrationBatchHistory dataiIntegrationBatchHistory)
+    public AjaxResult edit(@RequestBody DataiIntegrationBatchHistoryDto dataiIntegrationBatchHistoryDto)
     {
-        return toAjax(dataiIntegrationBatchHistoryService.updateDataiIntegrationBatchHistory(dataiIntegrationBatchHistory));
+        return toAjax(dataiIntegrationBatchHistoryService.updateDataiIntegrationBatchHistory(
+            DataiIntegrationBatchHistoryDto.toObj(dataiIntegrationBatchHistoryDto)));
     }
 
     /**
@@ -120,32 +131,26 @@ public class DataiIntegrationBatchHistoryController extends BaseController
     @Operation(summary = "获取历史统计信息")
     @PreAuthorize("@ss.hasPermi('integration:batchhistory:statistics')")
     @GetMapping("/statistics")
-    public AjaxResult getHistoryStatistics(
-            @RequestParam(required = false) String api,
-            @RequestParam(required = false) Integer batchId,
-            @RequestParam(required = false) String syncType,
-            @RequestParam(required = false) Boolean syncStatus,
-            @RequestParam(required = false) String startTime,
-            @RequestParam(required = false) String endTime)
+    public AjaxResult getHistoryStatistics(DataiIntegrationBatchHistoryDto dataiIntegrationBatchHistoryDto)
     {
         Map<String, Object> params = new HashMap<>();
-        if (api != null && !api.isEmpty()) {
-            params.put("api", api);
+        if (dataiIntegrationBatchHistoryDto.getApi() != null && !dataiIntegrationBatchHistoryDto.getApi().isEmpty()) {
+            params.put("api", dataiIntegrationBatchHistoryDto.getApi());
         }
-        if (batchId != null) {
-            params.put("batchId", batchId);
+        if (dataiIntegrationBatchHistoryDto.getBatchId() != null) {
+            params.put("batchId", dataiIntegrationBatchHistoryDto.getBatchId());
         }
-        if (syncType != null && !syncType.isEmpty()) {
-            params.put("syncType", syncType);
+        if (dataiIntegrationBatchHistoryDto.getSyncType() != null && !dataiIntegrationBatchHistoryDto.getSyncType().isEmpty()) {
+            params.put("syncType", dataiIntegrationBatchHistoryDto.getSyncType());
         }
-        if (syncStatus != null) {
-            params.put("syncStatus", syncStatus);
+        if (dataiIntegrationBatchHistoryDto.getSyncStatus() != null) {
+            params.put("syncStatus", dataiIntegrationBatchHistoryDto.getSyncStatus());
         }
-        if (startTime != null && !startTime.isEmpty()) {
-            params.put("startTime", startTime);
+        if (dataiIntegrationBatchHistoryDto.getStartTime() != null) {
+            params.put("startTime", dataiIntegrationBatchHistoryDto.getStartTime());
         }
-        if (endTime != null && !endTime.isEmpty()) {
-            params.put("endTime", endTime);
+        if (dataiIntegrationBatchHistoryDto.getEndTime() != null) {
+            params.put("endTime", dataiIntegrationBatchHistoryDto.getEndTime());
         }
 
         return success(dataiIntegrationBatchHistoryService.getHistoryStatistics(params));

@@ -1,7 +1,7 @@
 package com.datai.setting.service;
 
 import java.util.List;
-import com.datai.setting.domain.DataiConfiguration;
+import com.datai.setting.model.domain.DataiConfiguration;
 
 /**
  * 配置Service接口

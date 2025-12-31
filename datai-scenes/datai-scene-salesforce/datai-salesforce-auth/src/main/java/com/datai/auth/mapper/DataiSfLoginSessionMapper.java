@@ -1,7 +1,7 @@
 package com.datai.auth.mapper;
 
 import java.util.List;
-import com.datai.auth.domain.DataiSfLoginSession;
+import com.datai.auth.model.domain.DataiSfLoginSession;
 
 /**
  * 登录会话信息Mapper接口

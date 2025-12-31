@@ -1,6 +1,5 @@
 package com.datai.setting.service.impl;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 import com.datai.common.utils.CacheUtils;
@@ -12,7 +11,7 @@ import org.springframework.stereotype.Service;
 import com.datai.setting.mapper.DataiConfigurationMapper;
 import com.datai.salesforce.common.constant.SalesforceConfigConstants;
 import com.datai.setting.config.SalesforceConfigCacheManager;
-import com.datai.setting.domain.DataiConfiguration;
+import com.datai.setting.model.domain.DataiConfiguration;
 import com.datai.setting.service.IDataiConfigurationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

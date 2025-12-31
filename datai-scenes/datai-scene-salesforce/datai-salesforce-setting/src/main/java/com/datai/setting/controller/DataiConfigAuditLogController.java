@@ -1,6 +1,10 @@
 package com.datai.setting.controller;
 
 import java.util.List;
+import java.util.stream.Collectors;
+
+import com.datai.setting.model.dto.DataiConfigAuditLogDto;
+import com.datai.setting.model.vo.DataiConfigAuditLogVo;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +20,7 @@ import com.datai.common.annotation.Log;
 import com.datai.common.core.controller.BaseController;
 import com.datai.common.core.domain.AjaxResult;
 import com.datai.common.enums.BusinessType;
-import com.datai.setting.domain.DataiConfigAuditLog;
+import com.datai.setting.model.domain.DataiConfigAuditLog;
 import com.datai.setting.service.IDataiConfigAuditLogService;
 import com.datai.common.utils.poi.ExcelUtil;
 import com.datai.common.core.page.TableDataInfo;
@@ -43,11 +47,13 @@ public class DataiConfigAuditLogController extends BaseController
     @Operation(summary = "查询配置审计日志列表")
     @PreAuthorize("@ss.hasPermi('setting:log:list')")
     @GetMapping("/list")
-    public TableDataInfo list(DataiConfigAuditLog dataiConfigAuditLog)
+    public TableDataInfo list(DataiConfigAuditLogDto dataiConfigAuditLogDto)
     {
         startPage();
+        DataiConfigAuditLog dataiConfigAuditLog = DataiConfigAuditLogDto.toObj(dataiConfigAuditLogDto);
         List<DataiConfigAuditLog> list = dataiConfigAuditLogService.selectDataiConfigAuditLogList(dataiConfigAuditLog);
-        return getDataTable(list);
+        List<DataiConfigAuditLogVo> voList = list.stream().map(DataiConfigAuditLogVo::objToVo).collect(Collectors.toList());
+        return getDataTable(voList);
     }
 
     /**
@@ -57,8 +63,9 @@ public class DataiConfigAuditLogController extends BaseController
     @PreAuthorize("@ss.hasPermi('setting:log:export')")
     @Log(title = "配置审计日志", businessType = BusinessType.EXPORT)
     @PostMapping("/export")
-    public void export(HttpServletResponse response, DataiConfigAuditLog dataiConfigAuditLog)
+    public void export(HttpServletResponse response, DataiConfigAuditLogDto dataiConfigAuditLogDto)
     {
+        DataiConfigAuditLog dataiConfigAuditLog = DataiConfigAuditLogDto.toObj(dataiConfigAuditLogDto);
         List<DataiConfigAuditLog> list = dataiConfigAuditLogService.selectDataiConfigAuditLogList(dataiConfigAuditLog);
         ExcelUtil<DataiConfigAuditLog> util = new ExcelUtil<DataiConfigAuditLog>(DataiConfigAuditLog.class);
         util.exportExcel(response, list, "配置审计日志数据");
@@ -72,7 +79,9 @@ public class DataiConfigAuditLogController extends BaseController
     @GetMapping(value = "/{id}")
     public AjaxResult getInfo(@PathVariable("id") Long id)
     {
-        return success(dataiConfigAuditLogService.selectDataiConfigAuditLogById(id));
+        DataiConfigAuditLog dataiConfigAuditLog = dataiConfigAuditLogService.selectDataiConfigAuditLogById(id);
+        DataiConfigAuditLogVo dataiConfigAuditLogVo = DataiConfigAuditLogVo.objToVo(dataiConfigAuditLog);
+        return success(dataiConfigAuditLogVo);
     }
 
     /**
@@ -82,8 +91,9 @@ public class DataiConfigAuditLogController extends BaseController
     @PreAuthorize("@ss.hasPermi('setting:log:add')")
     @Log(title = "配置审计日志", businessType = BusinessType.INSERT)
     @PostMapping
-    public AjaxResult add(@RequestBody DataiConfigAuditLog dataiConfigAuditLog)
+    public AjaxResult add(@RequestBody DataiConfigAuditLogDto dataiConfigAuditLogDto)
     {
+        DataiConfigAuditLog dataiConfigAuditLog = DataiConfigAuditLogDto.toObj(dataiConfigAuditLogDto);
         return toAjax(dataiConfigAuditLogService.insertDataiConfigAuditLog(dataiConfigAuditLog));
     }
 
@@ -94,8 +104,9 @@ public class DataiConfigAuditLogController extends BaseController
     @PreAuthorize("@ss.hasPermi('setting:log:edit')")
     @Log(title = "配置审计日志", businessType = BusinessType.UPDATE)
     @PutMapping
-    public AjaxResult edit(@RequestBody DataiConfigAuditLog dataiConfigAuditLog)
+    public AjaxResult edit(@RequestBody DataiConfigAuditLogDto dataiConfigAuditLogDto)
     {
+        DataiConfigAuditLog dataiConfigAuditLog = DataiConfigAuditLogDto.toObj(dataiConfigAuditLogDto);
         return toAjax(dataiConfigAuditLogService.updateDataiConfigAuditLog(dataiConfigAuditLog));
     }
 

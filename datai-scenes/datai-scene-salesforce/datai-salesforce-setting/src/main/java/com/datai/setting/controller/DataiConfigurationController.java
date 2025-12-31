@@ -1,6 +1,9 @@
 package com.datai.setting.controller;
 
 import java.util.List;
+import java.util.stream.Collectors;
+
+import com.datai.setting.model.vo.DataiConfigurationVo;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +19,8 @@ import com.datai.common.annotation.Log;
 import com.datai.common.core.controller.BaseController;
 import com.datai.common.core.domain.AjaxResult;
 import com.datai.common.enums.BusinessType;
-import com.datai.setting.domain.DataiConfiguration;
+import com.datai.setting.model.domain.DataiConfiguration;
+import com.datai.setting.model.dto.DataiConfigurationDto;
 import com.datai.setting.service.IDataiConfigurationService;
 import com.datai.common.utils.poi.ExcelUtil;
 import com.datai.common.core.page.TableDataInfo;
@@ -43,11 +47,13 @@ public class DataiConfigurationController extends BaseController
     @Operation(summary = "查询配置列表")
     @PreAuthorize("@ss.hasPermi('setting:configuration:list')")
     @GetMapping("/list")
-    public TableDataInfo list(DataiConfiguration dataiConfiguration)
+    public TableDataInfo list(DataiConfigurationDto dataiConfigurationDto)
     {
         startPage();
+        DataiConfiguration dataiConfiguration = DataiConfigurationDto.toObj(dataiConfigurationDto);
         List<DataiConfiguration> list = dataiConfigurationService.selectDataiConfigurationList(dataiConfiguration);
-        return getDataTable(list);
+        List<DataiConfigurationVo> voList = list.stream().map(DataiConfigurationVo::objToVo).collect(Collectors.toList());
+        return getDataTable(voList);
     }
 
     /**
@@ -57,8 +63,9 @@ public class DataiConfigurationController extends BaseController
     @PreAuthorize("@ss.hasPermi('setting:configuration:export')")
     @Log(title = "配置", businessType = BusinessType.EXPORT)
     @PostMapping("/export")
-    public void export(HttpServletResponse response, DataiConfiguration dataiConfiguration)
+    public void export(HttpServletResponse response, DataiConfigurationDto dataiConfigurationDto)
     {
+        DataiConfiguration dataiConfiguration = DataiConfigurationDto.toObj(dataiConfigurationDto);
         List<DataiConfiguration> list = dataiConfigurationService.selectDataiConfigurationList(dataiConfiguration);
         ExcelUtil<DataiConfiguration> util = new ExcelUtil<DataiConfiguration>(DataiConfiguration.class);
         util.exportExcel(response, list, "配置数据");
@@ -72,7 +79,9 @@ public class DataiConfigurationController extends BaseController
     @GetMapping(value = "/{id}")
     public AjaxResult getInfo(@PathVariable("id") Long id)
     {
-        return success(dataiConfigurationService.selectDataiConfigurationById(id));
+        DataiConfiguration dataiConfiguration = dataiConfigurationService.selectDataiConfigurationById(id);
+        DataiConfigurationVo dataiConfigurationVo = DataiConfigurationVo.objToVo(dataiConfiguration);
+        return success(dataiConfigurationVo);
     }
 
     /**
@@ -82,8 +91,9 @@ public class DataiConfigurationController extends BaseController
     @PreAuthorize("@ss.hasPermi('setting:configuration:add')")
     @Log(title = "配置", businessType = BusinessType.INSERT)
     @PostMapping
-    public AjaxResult add(@RequestBody DataiConfiguration dataiConfiguration)
+    public AjaxResult add(@RequestBody DataiConfigurationDto dataiConfigurationDto)
     {
+        DataiConfiguration dataiConfiguration = DataiConfigurationDto.toObj(dataiConfigurationDto);
         return toAjax(dataiConfigurationService.insertDataiConfiguration(dataiConfiguration));
     }
 
@@ -94,8 +104,9 @@ public class DataiConfigurationController extends BaseController
     @PreAuthorize("@ss.hasPermi('setting:configuration:edit')")
     @Log(title = "配置", businessType = BusinessType.UPDATE)
     @PutMapping
-    public AjaxResult edit(@RequestBody DataiConfiguration dataiConfiguration)
+    public AjaxResult edit(@RequestBody DataiConfigurationDto dataiConfigurationDto)
     {
+        DataiConfiguration dataiConfiguration = DataiConfigurationDto.toObj(dataiConfigurationDto);
         return toAjax(dataiConfigurationService.updateDataiConfiguration(dataiConfiguration));
     }
 

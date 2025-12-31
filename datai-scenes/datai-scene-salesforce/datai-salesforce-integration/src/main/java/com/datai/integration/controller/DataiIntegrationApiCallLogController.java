@@ -2,6 +2,9 @@ package com.datai.integration.controller;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+
+import com.datai.integration.model.vo.DataiIntegrationApiCallLogVo;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,7 +20,8 @@ import com.datai.common.annotation.Log;
 import com.datai.common.core.controller.BaseController;
 import com.datai.common.core.domain.AjaxResult;
 import com.datai.common.enums.BusinessType;
-import com.datai.integration.domain.DataiIntegrationApiCallLog;
+import com.datai.integration.model.domain.DataiIntegrationApiCallLog;
+import com.datai.integration.model.dto.DataiIntegrationApiCallLogDto;
 import com.datai.integration.service.IDataiIntegrationApiCallLogService;
 import com.datai.common.utils.poi.ExcelUtil;
 import com.datai.common.core.page.TableDataInfo;
@@ -44,11 +48,15 @@ public class DataiIntegrationApiCallLogController extends BaseController
     @Operation(summary = "查询API调用日志列表")
     @PreAuthorize("@ss.hasPermi('integration:apilog:list')")
     @GetMapping("/list")
-    public TableDataInfo list(DataiIntegrationApiCallLog dataiIntegrationApiCallLog)
+    public TableDataInfo list(DataiIntegrationApiCallLogDto dataiIntegrationApiCallLogDto)
     {
         startPage();
-        List<DataiIntegrationApiCallLog> list = dataiIntegrationApiCallLogService.selectDataiIntegrationApiCallLogList(dataiIntegrationApiCallLog);
-        return getDataTable(list);
+        List<DataiIntegrationApiCallLog> list = dataiIntegrationApiCallLogService.selectDataiIntegrationApiCallLogList(
+            DataiIntegrationApiCallLogDto.toObj(dataiIntegrationApiCallLogDto));
+        List<DataiIntegrationApiCallLogVo> voList = list.stream()
+            .map(DataiIntegrationApiCallLogVo::objToVo)
+            .collect(Collectors.toList());
+        return getDataTable(voList);
     }
 
     /**
@@ -58,9 +66,10 @@ public class DataiIntegrationApiCallLogController extends BaseController
     @PreAuthorize("@ss.hasPermi('integration:apilog:export')")
     @Log(title = "API调用日志", businessType = BusinessType.EXPORT)
     @PostMapping("/export")
-    public void export(HttpServletResponse response, DataiIntegrationApiCallLog dataiIntegrationApiCallLog)
+    public void export(HttpServletResponse response, DataiIntegrationApiCallLogDto dataiIntegrationApiCallLogDto)
     {
-        List<DataiIntegrationApiCallLog> list = dataiIntegrationApiCallLogService.selectDataiIntegrationApiCallLogList(dataiIntegrationApiCallLog);
+        List<DataiIntegrationApiCallLog> list = dataiIntegrationApiCallLogService.selectDataiIntegrationApiCallLogList(
+            DataiIntegrationApiCallLogDto.toObj(dataiIntegrationApiCallLogDto));
         ExcelUtil<DataiIntegrationApiCallLog> util = new ExcelUtil<DataiIntegrationApiCallLog>(DataiIntegrationApiCallLog.class);
         util.exportExcel(response, list, "API调用日志数据");
     }
@@ -73,7 +82,8 @@ public class DataiIntegrationApiCallLogController extends BaseController
     @GetMapping(value = "/{id}")
     public AjaxResult getInfo(@PathVariable("id") Long id)
     {
-        return success(dataiIntegrationApiCallLogService.selectDataiIntegrationApiCallLogById(id));
+        DataiIntegrationApiCallLog dataiIntegrationApiCallLog = dataiIntegrationApiCallLogService.selectDataiIntegrationApiCallLogById(id);
+        return success(DataiIntegrationApiCallLogVo.objToVo(dataiIntegrationApiCallLog));
     }
 
     /**
@@ -83,9 +93,10 @@ public class DataiIntegrationApiCallLogController extends BaseController
     @PreAuthorize("@ss.hasPermi('integration:apilog:add')")
     @Log(title = "API调用日志", businessType = BusinessType.INSERT)
     @PostMapping
-    public AjaxResult add(@RequestBody DataiIntegrationApiCallLog dataiIntegrationApiCallLog)
+    public AjaxResult add(@RequestBody DataiIntegrationApiCallLogDto dataiIntegrationApiCallLogDto)
     {
-        return toAjax(dataiIntegrationApiCallLogService.insertDataiIntegrationApiCallLog(dataiIntegrationApiCallLog));
+        return toAjax(dataiIntegrationApiCallLogService.insertDataiIntegrationApiCallLog(
+            DataiIntegrationApiCallLogDto.toObj(dataiIntegrationApiCallLogDto)));
     }
 
     /**
@@ -95,9 +106,10 @@ public class DataiIntegrationApiCallLogController extends BaseController
     @PreAuthorize("@ss.hasPermi('integration:apilog:edit')")
     @Log(title = "API调用日志", businessType = BusinessType.UPDATE)
     @PutMapping
-    public AjaxResult edit(@RequestBody DataiIntegrationApiCallLog dataiIntegrationApiCallLog)
+    public AjaxResult edit(@RequestBody DataiIntegrationApiCallLogDto dataiIntegrationApiCallLogDto)
     {
-        return toAjax(dataiIntegrationApiCallLogService.updateDataiIntegrationApiCallLog(dataiIntegrationApiCallLog));
+        return toAjax(dataiIntegrationApiCallLogService.updateDataiIntegrationApiCallLog(
+            DataiIntegrationApiCallLogDto.toObj(dataiIntegrationApiCallLogDto)));
     }
 
     /**
@@ -118,20 +130,20 @@ public class DataiIntegrationApiCallLogController extends BaseController
     @Operation(summary = "获取API调用日志统计信息")
     @PreAuthorize("@ss.hasPermi('integration:apilog:statistics')")
     @GetMapping("/statistics")
-    public AjaxResult getStatistics(DataiIntegrationApiCallLog dataiIntegrationApiCallLog)
+    public AjaxResult getStatistics(DataiIntegrationApiCallLogDto dataiIntegrationApiCallLogDto)
     {
         Map<String, Object> params = new java.util.HashMap<>();
-        if (dataiIntegrationApiCallLog.getApiType() != null) {
-            params.put("apiType", dataiIntegrationApiCallLog.getApiType());
+        if (dataiIntegrationApiCallLogDto.getApiType() != null) {
+            params.put("apiType", dataiIntegrationApiCallLogDto.getApiType());
         }
-        if (dataiIntegrationApiCallLog.getConnectionClass() != null) {
-            params.put("connectionClass", dataiIntegrationApiCallLog.getConnectionClass());
+        if (dataiIntegrationApiCallLogDto.getConnectionClass() != null) {
+            params.put("connectionClass", dataiIntegrationApiCallLogDto.getConnectionClass());
         }
-        if (dataiIntegrationApiCallLog.getMethodName() != null) {
-            params.put("methodName", dataiIntegrationApiCallLog.getMethodName());
+        if (dataiIntegrationApiCallLogDto.getMethodName() != null) {
+            params.put("methodName", dataiIntegrationApiCallLogDto.getMethodName());
         }
-        if (dataiIntegrationApiCallLog.getStatus() != null) {
-            params.put("status", dataiIntegrationApiCallLog.getStatus());
+        if (dataiIntegrationApiCallLogDto.getStatus() != null) {
+            params.put("status", dataiIntegrationApiCallLogDto.getStatus());
         }
         
         Map<String, Object> result = dataiIntegrationApiCallLogService.getApiCallLogStatistics(params);

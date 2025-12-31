@@ -1,0 +1,76 @@
+package ${packageName}.model.dto.${className};
+
+import java.io.Serializable;
+import java.util.Map;
+import java.util.Date;
+import java.util.List;
+    #foreach ($import in $importList)
+    import ${import};
+    #end
+import lombok.Data;
+import org.springframework.beans.BeanUtils;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import ${packageName}.model.domain.${ClassName};
+
+/**
+ * ${functionName}通用业务传输对象 (Dto)
+ * 整合了查询、新增、修改的所有字段
+ *
+ * @author ${author}
+ * @date ${datetime}
+ */
+@Data
+public class ${ClassName}Dto implements Serializable
+{
+    private static final long serialVersionUID = 1L;
+
+    #foreach ($column in $columns)
+        /** $column.columnComment */
+        #if($column.list)
+            #set($parentheseIndex=$column.columnComment.indexOf("（"))
+            #if($parentheseIndex != -1)
+                #set($comment=$column.columnComment.substring(0, $parentheseIndex))
+            #else
+                #set($comment=$column.columnComment)
+            #end
+            #if($column.javaType == 'Date')
+            @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+            #end
+        #end
+    private $column.javaType $column.javaField;
+
+    #end
+    #if($table.sub)
+        /** $table.subTable.functionName信息 */
+        private List<${subClassName}> ${subclassName}List;
+
+    #end
+    /** 请求参数（用于存放查询范围等临时数据） */
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    private Map<String, Object> params;
+
+    /**
+     * Dto 转 业务对象 (${ClassName})
+     */
+    public static ${ClassName} toObj(${ClassName}Dto Dto) {
+        if (Dto == null) {
+            return null;
+        }
+        ${ClassName} obj = new ${ClassName}();
+        BeanUtils.copyProperties(Dto, obj);
+        return obj;
+    }
+
+    /**
+     * 业务对象 (${ClassName}) 转 Dto
+     */
+    public static ${ClassName}Dto fromObj(${ClassName} obj) {
+        if (obj == null) {
+            return null;
+        }
+            ${ClassName}Dto Dto = new ${ClassName}Dto();
+        BeanUtils.copyProperties(obj, Dto);
+        return Dto;
+    }
+}

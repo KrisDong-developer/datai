@@ -2,7 +2,7 @@ package com.datai.setting.event;
 
 import org.springframework.context.ApplicationEvent;
 
-import com.datai.setting.domain.DataiConfigEnvironment;
+import com.datai.setting.model.domain.DataiConfigEnvironment;
 
 /**
  * 环境切换事件

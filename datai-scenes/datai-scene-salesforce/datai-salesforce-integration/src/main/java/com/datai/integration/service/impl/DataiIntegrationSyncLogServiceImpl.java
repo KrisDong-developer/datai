@@ -1,15 +1,14 @@
 package com.datai.integration.service.impl;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
         import com.datai.common.utils.DateUtils;
         import com.datai.common.utils.SecurityUtils;
+import com.datai.integration.model.dto.LogStatisticsDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.datai.integration.mapper.DataiIntegrationSyncLogMapper;
-import com.datai.integration.domain.DataiIntegrationSyncLog;
-import com.datai.integration.domain.dto.LogStatisticsDTO;
+import com.datai.integration.model.domain.DataiIntegrationSyncLog;
 import com.datai.integration.service.IDataiIntegrationSyncLogService;
 import com.datai.common.core.domain.model.LoginUser;
 

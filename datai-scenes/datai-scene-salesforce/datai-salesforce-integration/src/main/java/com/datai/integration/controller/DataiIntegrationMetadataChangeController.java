@@ -2,6 +2,9 @@ package com.datai.integration.controller;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+
+import com.datai.integration.model.vo.DataiIntegrationMetadataChangeVo;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +21,8 @@ import com.datai.common.annotation.Log;
 import com.datai.common.core.controller.BaseController;
 import com.datai.common.core.domain.AjaxResult;
 import com.datai.common.enums.BusinessType;
-import com.datai.integration.domain.DataiIntegrationMetadataChange;
+import com.datai.integration.model.domain.DataiIntegrationMetadataChange;
+import com.datai.integration.model.dto.DataiIntegrationMetadataChangeDto;
 import com.datai.integration.service.IDataiIntegrationMetadataChangeService;
 import com.datai.common.utils.poi.ExcelUtil;
 import com.datai.common.core.page.TableDataInfo;
@@ -45,11 +49,13 @@ public class DataiIntegrationMetadataChangeController extends BaseController
     @Operation(summary = "查询对象元数据变更列表")
     @PreAuthorize("@ss.hasPermi('integration:change:list')")
     @GetMapping("/list")
-    public TableDataInfo list(DataiIntegrationMetadataChange dataiIntegrationMetadataChange)
+    public TableDataInfo list(DataiIntegrationMetadataChangeDto dataiIntegrationMetadataChangeDto)
     {
         startPage();
+        DataiIntegrationMetadataChange dataiIntegrationMetadataChange = DataiIntegrationMetadataChangeDto.toObj(dataiIntegrationMetadataChangeDto);
         List<DataiIntegrationMetadataChange> list = dataiIntegrationMetadataChangeService.selectDataiIntegrationMetadataChangeList(dataiIntegrationMetadataChange);
-        return getDataTable(list);
+        List<DataiIntegrationMetadataChangeVo> voList = list.stream().map(DataiIntegrationMetadataChangeVo::objToVo).collect(Collectors.toList());
+        return getDataTable(voList);
     }
 
     /**
@@ -58,11 +64,13 @@ public class DataiIntegrationMetadataChangeController extends BaseController
     @Operation(summary = "查询未同步的元数据变更列表")
     @PreAuthorize("@ss.hasPermi('integration:change:unsynced')")
     @GetMapping("/unsynced")
-    public TableDataInfo getUnsyncedChanges(DataiIntegrationMetadataChange dataiIntegrationMetadataChange)
+    public TableDataInfo getUnsyncedChanges(DataiIntegrationMetadataChangeDto dataiIntegrationMetadataChangeDto)
     {
         startPage();
+        DataiIntegrationMetadataChange dataiIntegrationMetadataChange = DataiIntegrationMetadataChangeDto.toObj(dataiIntegrationMetadataChangeDto);
         List<DataiIntegrationMetadataChange> list = dataiIntegrationMetadataChangeService.selectUnsyncedMetadataChangeList(dataiIntegrationMetadataChange);
-        return getDataTable(list);
+        List<DataiIntegrationMetadataChangeVo> voList = list.stream().map(DataiIntegrationMetadataChangeVo::objToVo).collect(Collectors.toList());
+        return getDataTable(voList);
     }
 
     /**
@@ -72,8 +80,9 @@ public class DataiIntegrationMetadataChangeController extends BaseController
     @PreAuthorize("@ss.hasPermi('integration:change:export')")
     @Log(title = "对象元数据变更", businessType = BusinessType.EXPORT)
     @PostMapping("/export")
-    public void export(HttpServletResponse response, DataiIntegrationMetadataChange dataiIntegrationMetadataChange)
+    public void export(HttpServletResponse response, DataiIntegrationMetadataChangeDto dataiIntegrationMetadataChangeDto)
     {
+        DataiIntegrationMetadataChange dataiIntegrationMetadataChange = DataiIntegrationMetadataChangeDto.toObj(dataiIntegrationMetadataChangeDto);
         List<DataiIntegrationMetadataChange> list = dataiIntegrationMetadataChangeService.selectDataiIntegrationMetadataChangeList(dataiIntegrationMetadataChange);
         ExcelUtil<DataiIntegrationMetadataChange> util = new ExcelUtil<DataiIntegrationMetadataChange>(DataiIntegrationMetadataChange.class);
         util.exportExcel(response, list, "对象元数据变更数据");
@@ -87,7 +96,9 @@ public class DataiIntegrationMetadataChangeController extends BaseController
     @GetMapping(value = "/{id}")
     public AjaxResult getInfo(@PathVariable("id") Long id)
     {
-        return success(dataiIntegrationMetadataChangeService.selectDataiIntegrationMetadataChangeById(id));
+        DataiIntegrationMetadataChange dataiIntegrationMetadataChange = dataiIntegrationMetadataChangeService.selectDataiIntegrationMetadataChangeById(id);
+        DataiIntegrationMetadataChangeVo vo = DataiIntegrationMetadataChangeVo.objToVo(dataiIntegrationMetadataChange);
+        return success(vo);
     }
 
     /**
@@ -97,8 +108,9 @@ public class DataiIntegrationMetadataChangeController extends BaseController
     @PreAuthorize("@ss.hasPermi('integration:change:add')")
     @Log(title = "对象元数据变更", businessType = BusinessType.INSERT)
     @PostMapping
-    public AjaxResult add(@RequestBody DataiIntegrationMetadataChange dataiIntegrationMetadataChange)
+    public AjaxResult add(@RequestBody DataiIntegrationMetadataChangeDto dataiIntegrationMetadataChangeDto)
     {
+        DataiIntegrationMetadataChange dataiIntegrationMetadataChange = DataiIntegrationMetadataChangeDto.toObj(dataiIntegrationMetadataChangeDto);
         return toAjax(dataiIntegrationMetadataChangeService.insertDataiIntegrationMetadataChange(dataiIntegrationMetadataChange));
     }
 
@@ -109,8 +121,9 @@ public class DataiIntegrationMetadataChangeController extends BaseController
     @PreAuthorize("@ss.hasPermi('integration:change:edit')")
     @Log(title = "对象元数据变更", businessType = BusinessType.UPDATE)
     @PutMapping
-    public AjaxResult edit(@RequestBody DataiIntegrationMetadataChange dataiIntegrationMetadataChange)
+    public AjaxResult edit(@RequestBody DataiIntegrationMetadataChangeDto dataiIntegrationMetadataChangeDto)
     {
+        DataiIntegrationMetadataChange dataiIntegrationMetadataChange = DataiIntegrationMetadataChangeDto.toObj(dataiIntegrationMetadataChangeDto);
         return toAjax(dataiIntegrationMetadataChangeService.updateDataiIntegrationMetadataChange(dataiIntegrationMetadataChange));
     }
 

@@ -1,6 +1,12 @@
 package com.datai.setting.controller;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import com.datai.setting.model.dto.DataiConfigSnapshotDto;
+import com.datai.setting.model.vo.DataiConfigSnapshotVo;
+import com.datai.setting.service.IDataiConfigEnvironmentService;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +22,7 @@ import com.datai.common.annotation.Log;
 import com.datai.common.core.controller.BaseController;
 import com.datai.common.core.domain.AjaxResult;
 import com.datai.common.enums.BusinessType;
-import com.datai.setting.domain.DataiConfigSnapshot;
+import com.datai.setting.model.domain.DataiConfigSnapshot;
 import com.datai.setting.service.IDataiConfigSnapshotService;
 import com.datai.common.utils.poi.ExcelUtil;
 import com.datai.common.core.page.TableDataInfo;
@@ -37,17 +43,44 @@ public class DataiConfigSnapshotController extends BaseController
     @Autowired
     private IDataiConfigSnapshotService dataiConfigSnapshotService;
 
+    @Autowired
+    private IDataiConfigEnvironmentService dataiConfigEnvironmentService;
+
     /**
      * 查询配置快照列表
      */
     @Operation(summary = "查询配置快照列表")
     @PreAuthorize("@ss.hasPermi('setting:snapshot:list')")
     @GetMapping("/list")
-    public TableDataInfo list(DataiConfigSnapshot dataiConfigSnapshot)
+    public TableDataInfo list(DataiConfigSnapshotDto dataiConfigSnapshotDto)
     {
         startPage();
+        DataiConfigSnapshot dataiConfigSnapshot = DataiConfigSnapshotDto.toObj(dataiConfigSnapshotDto);
         List<DataiConfigSnapshot> list = dataiConfigSnapshotService.selectDataiConfigSnapshotList(dataiConfigSnapshot);
-        return getDataTable(list);
+        
+        List<Long> environmentIds = list.stream()
+            .map(DataiConfigSnapshot::getEnvironmentId)
+            .distinct()
+            .collect(Collectors.toList());
+        
+        Map<Long, String> environmentNameMap = environmentIds.stream()
+            .collect(Collectors.toMap(
+                id -> id,
+                id -> {
+                    var env = dataiConfigEnvironmentService.selectDataiConfigEnvironmentById(id);
+                    return env != null ? env.getEnvironmentName() : null;
+                }
+            ));
+        
+        List<DataiConfigSnapshotVo> voList = list.stream()
+            .map(snapshot -> {
+                DataiConfigSnapshotVo vo = DataiConfigSnapshotVo.objToVo(snapshot);
+                vo.setEnvironmentName(environmentNameMap.get(snapshot.getEnvironmentId()));
+                return vo;
+            })
+            .collect(Collectors.toList());
+        
+        return getDataTable(voList);
     }
 
     /**
@@ -57,8 +90,9 @@ public class DataiConfigSnapshotController extends BaseController
     @PreAuthorize("@ss.hasPermi('setting:snapshot:export')")
     @Log(title = "配置快照", businessType = BusinessType.EXPORT)
     @PostMapping("/export")
-    public void export(HttpServletResponse response, DataiConfigSnapshot dataiConfigSnapshot)
+    public void export(HttpServletResponse response, DataiConfigSnapshotDto dataiConfigSnapshotDto)
     {
+        DataiConfigSnapshot dataiConfigSnapshot = DataiConfigSnapshotDto.toObj(dataiConfigSnapshotDto);
         List<DataiConfigSnapshot> list = dataiConfigSnapshotService.selectDataiConfigSnapshotList(dataiConfigSnapshot);
         ExcelUtil<DataiConfigSnapshot> util = new ExcelUtil<DataiConfigSnapshot>(DataiConfigSnapshot.class);
         util.exportExcel(response, list, "配置快照数据");
@@ -70,9 +104,17 @@ public class DataiConfigSnapshotController extends BaseController
     @Operation(summary = "获取配置快照详细信息")
     @PreAuthorize("@ss.hasPermi('setting:snapshot:query')")
     @GetMapping(value = "/{id}")
-    public AjaxResult getInfo(@PathVariable("id") String id)
+    public AjaxResult getInfo(@PathVariable("id") Long id)
     {
-        return success(dataiConfigSnapshotService.selectDataiConfigSnapshotById(id));
+        DataiConfigSnapshot dataiConfigSnapshot = dataiConfigSnapshotService.selectDataiConfigSnapshotById(id);
+        DataiConfigSnapshotVo dataiConfigSnapshotVo = DataiConfigSnapshotVo.objToVo(dataiConfigSnapshot);
+        if (dataiConfigSnapshotVo != null && dataiConfigSnapshotVo.getEnvironmentId() != null) {
+            var env = dataiConfigEnvironmentService.selectDataiConfigEnvironmentById(dataiConfigSnapshotVo.getEnvironmentId());
+            if (env != null) {
+                dataiConfigSnapshotVo.setEnvironmentName(env.getEnvironmentName());
+            }
+        }
+        return success(dataiConfigSnapshotVo);
     }
 
     /**
@@ -82,8 +124,9 @@ public class DataiConfigSnapshotController extends BaseController
     @PreAuthorize("@ss.hasPermi('setting:snapshot:add')")
     @Log(title = "配置快照", businessType = BusinessType.INSERT)
     @PostMapping
-    public AjaxResult add(@RequestBody DataiConfigSnapshot dataiConfigSnapshot)
+    public AjaxResult add(@RequestBody DataiConfigSnapshotDto dataiConfigSnapshotDto)
     {
+        DataiConfigSnapshot dataiConfigSnapshot = DataiConfigSnapshotDto.toObj(dataiConfigSnapshotDto);
         return toAjax(dataiConfigSnapshotService.insertDataiConfigSnapshot(dataiConfigSnapshot));
     }
 
@@ -94,8 +137,9 @@ public class DataiConfigSnapshotController extends BaseController
     @PreAuthorize("@ss.hasPermi('setting:snapshot:edit')")
     @Log(title = "配置快照", businessType = BusinessType.UPDATE)
     @PutMapping
-    public AjaxResult edit(@RequestBody DataiConfigSnapshot dataiConfigSnapshot)
+    public AjaxResult edit(@RequestBody DataiConfigSnapshotDto dataiConfigSnapshotDto)
     {
+        DataiConfigSnapshot dataiConfigSnapshot = DataiConfigSnapshotDto.toObj(dataiConfigSnapshotDto);
         return toAjax(dataiConfigSnapshotService.updateDataiConfigSnapshot(dataiConfigSnapshot));
     }
 
@@ -117,14 +161,21 @@ public class DataiConfigSnapshotController extends BaseController
     @PreAuthorize("@ss.hasPermi('setting:snapshot:create')")
     @Log(title = "配置快照", businessType = BusinessType.INSERT)
     @PostMapping("/create")
-    public AjaxResult createSnapshot(@RequestBody DataiConfigSnapshot dataiConfigSnapshot)
+    public AjaxResult createSnapshot(@RequestBody DataiConfigSnapshotDto dataiConfigSnapshotDto)
     {
         DataiConfigSnapshot snapshot = dataiConfigSnapshotService.createSnapshot(
-            dataiConfigSnapshot.getSnapshotNumber(),
-            dataiConfigSnapshot.getEnvironmentId(),
-            dataiConfigSnapshot.getRemark()
+            dataiConfigSnapshotDto.getSnapshotNumber(),
+            dataiConfigSnapshotDto.getEnvironmentId(),
+            dataiConfigSnapshotDto.getSnapshotDesc()
         );
-        return success(snapshot);
+        DataiConfigSnapshotVo snapshotVo = DataiConfigSnapshotVo.objToVo(snapshot);
+        if (snapshotVo != null && snapshotVo.getEnvironmentId() != null) {
+            var env = dataiConfigEnvironmentService.selectDataiConfigEnvironmentById(snapshotVo.getEnvironmentId());
+            if (env != null) {
+                snapshotVo.setEnvironmentName(env.getEnvironmentName());
+            }
+        }
+        return success(snapshotVo);
     }
 
     /**
@@ -134,9 +185,9 @@ public class DataiConfigSnapshotController extends BaseController
     @PreAuthorize("@ss.hasPermi('setting:snapshot:restore')")
     @Log(title = "配置快照", businessType = BusinessType.UPDATE)
     @PostMapping("/{snapshotId}/restore")
-    public AjaxResult restoreSnapshot(@PathVariable("snapshotId") String snapshotId, @RequestBody DataiConfigSnapshot dataiConfigSnapshot)
+    public AjaxResult restoreSnapshot(@PathVariable("snapshotId") String snapshotId, @RequestBody DataiConfigSnapshotDto dataiConfigSnapshotDto)
     {
-        return toAjax(dataiConfigSnapshotService.restoreSnapshot(snapshotId, dataiConfigSnapshot.getRemark()));
+        return toAjax(dataiConfigSnapshotService.restoreSnapshot(snapshotId, dataiConfigSnapshotDto.getRemark()));
     }
 
     /**
@@ -148,7 +199,14 @@ public class DataiConfigSnapshotController extends BaseController
     public AjaxResult getSnapshotDetail(@PathVariable("snapshotId") String snapshotId)
     {
         DataiConfigSnapshot snapshot = dataiConfigSnapshotService.getSnapshotDetail(snapshotId);
-        return success(snapshot);
+        DataiConfigSnapshotVo snapshotVo = DataiConfigSnapshotVo.objToVo(snapshot);
+        if (snapshotVo != null && snapshotVo.getEnvironmentId() != null) {
+            var env = dataiConfigEnvironmentService.selectDataiConfigEnvironmentById(snapshotVo.getEnvironmentId());
+            if (env != null) {
+                snapshotVo.setEnvironmentName(env.getEnvironmentName());
+            }
+        }
+        return success(snapshotVo);
     }
 
     /**

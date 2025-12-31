@@ -2,7 +2,7 @@ package com.datai.integration.mapper;
 
 import java.util.List;
 import java.util.Map;
-import com.datai.integration.domain.DataiIntegrationBatchHistory;
+import com.datai.integration.model.domain.DataiIntegrationBatchHistory;
 
 /**
  * 数据批次历史Mapper接口

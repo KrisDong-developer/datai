@@ -2,7 +2,7 @@ package com.datai.integration.service;
 
 import java.util.List;
 import java.util.Map;
-import com.datai.integration.domain.DataiIntegrationMetadataChange;
+import com.datai.integration.model.domain.DataiIntegrationMetadataChange;
 
 /**
  * 对象元数据变更Service接口

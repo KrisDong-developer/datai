@@ -1,6 +1,9 @@
 package com.datai.integration.controller;
 
 import java.util.List;
+import java.util.stream.Collectors;
+
+import com.datai.integration.model.vo.DataiIntegrationFilterLookupVo;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +19,8 @@ import com.datai.common.annotation.Log;
 import com.datai.common.core.controller.BaseController;
 import com.datai.common.core.domain.AjaxResult;
 import com.datai.common.enums.BusinessType;
-import com.datai.integration.domain.DataiIntegrationFilterLookup;
+import com.datai.integration.model.domain.DataiIntegrationFilterLookup;
+import com.datai.integration.model.dto.DataiIntegrationFilterLookupDto;
 import com.datai.integration.service.IDataiIntegrationFilterLookupService;
 import com.datai.common.utils.poi.ExcelUtil;
 import com.datai.common.core.page.TableDataInfo;
@@ -43,11 +47,13 @@ public class DataiIntegrationFilterLookupController extends BaseController
     @Operation(summary = "查询字段过滤查找信息列表")
     @PreAuthorize("@ss.hasPermi('integration:lookup:list')")
     @GetMapping("/list")
-    public TableDataInfo list(DataiIntegrationFilterLookup dataiIntegrationFilterLookup)
+    public TableDataInfo list(DataiIntegrationFilterLookupDto dataiIntegrationFilterLookupDto)
     {
         startPage();
+        DataiIntegrationFilterLookup dataiIntegrationFilterLookup = DataiIntegrationFilterLookupDto.toObj(dataiIntegrationFilterLookupDto);
         List<DataiIntegrationFilterLookup> list = dataiIntegrationFilterLookupService.selectDataiIntegrationFilterLookupList(dataiIntegrationFilterLookup);
-        return getDataTable(list);
+        List<DataiIntegrationFilterLookupVo> voList = list.stream().map(DataiIntegrationFilterLookupVo::objToVo).collect(Collectors.toList());
+        return getDataTable(voList);
     }
 
     /**
@@ -57,8 +63,9 @@ public class DataiIntegrationFilterLookupController extends BaseController
     @PreAuthorize("@ss.hasPermi('integration:lookup:export')")
     @Log(title = "字段过滤查找信息", businessType = BusinessType.EXPORT)
     @PostMapping("/export")
-    public void export(HttpServletResponse response, DataiIntegrationFilterLookup dataiIntegrationFilterLookup)
+    public void export(HttpServletResponse response, DataiIntegrationFilterLookupDto dataiIntegrationFilterLookupDto)
     {
+        DataiIntegrationFilterLookup dataiIntegrationFilterLookup = DataiIntegrationFilterLookupDto.toObj(dataiIntegrationFilterLookupDto);
         List<DataiIntegrationFilterLookup> list = dataiIntegrationFilterLookupService.selectDataiIntegrationFilterLookupList(dataiIntegrationFilterLookup);
         ExcelUtil<DataiIntegrationFilterLookup> util = new ExcelUtil<DataiIntegrationFilterLookup>(DataiIntegrationFilterLookup.class);
         util.exportExcel(response, list, "字段过滤查找信息数据");
@@ -72,7 +79,9 @@ public class DataiIntegrationFilterLookupController extends BaseController
     @GetMapping(value = "/{id}")
     public AjaxResult getInfo(@PathVariable("id") Integer id)
     {
-        return success(dataiIntegrationFilterLookupService.selectDataiIntegrationFilterLookupById(id));
+        DataiIntegrationFilterLookup dataiIntegrationFilterLookup = dataiIntegrationFilterLookupService.selectDataiIntegrationFilterLookupById(id);
+        DataiIntegrationFilterLookupVo vo = DataiIntegrationFilterLookupVo.objToVo(dataiIntegrationFilterLookup);
+        return success(vo);
     }
 
     /**
@@ -82,8 +91,9 @@ public class DataiIntegrationFilterLookupController extends BaseController
     @PreAuthorize("@ss.hasPermi('integration:lookup:add')")
     @Log(title = "字段过滤查找信息", businessType = BusinessType.INSERT)
     @PostMapping
-    public AjaxResult add(@RequestBody DataiIntegrationFilterLookup dataiIntegrationFilterLookup)
+    public AjaxResult add(@RequestBody DataiIntegrationFilterLookupDto dataiIntegrationFilterLookupDto)
     {
+        DataiIntegrationFilterLookup dataiIntegrationFilterLookup = DataiIntegrationFilterLookupDto.toObj(dataiIntegrationFilterLookupDto);
         return toAjax(dataiIntegrationFilterLookupService.insertDataiIntegrationFilterLookup(dataiIntegrationFilterLookup));
     }
 
@@ -94,8 +104,9 @@ public class DataiIntegrationFilterLookupController extends BaseController
     @PreAuthorize("@ss.hasPermi('integration:lookup:edit')")
     @Log(title = "字段过滤查找信息", businessType = BusinessType.UPDATE)
     @PutMapping
-    public AjaxResult edit(@RequestBody DataiIntegrationFilterLookup dataiIntegrationFilterLookup)
+    public AjaxResult edit(@RequestBody DataiIntegrationFilterLookupDto dataiIntegrationFilterLookupDto)
     {
+        DataiIntegrationFilterLookup dataiIntegrationFilterLookup = DataiIntegrationFilterLookupDto.toObj(dataiIntegrationFilterLookupDto);
         return toAjax(dataiIntegrationFilterLookupService.updateDataiIntegrationFilterLookup(dataiIntegrationFilterLookup));
     }
 

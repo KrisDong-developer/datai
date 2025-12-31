@@ -1,7 +1,7 @@
 package com.datai.integration.mapper;
 
 import java.util.List;
-import com.datai.integration.domain.DataiIntegrationFilterLookup;
+import com.datai.integration.model.domain.DataiIntegrationFilterLookup;
 
 /**
  * 字段过滤查找信息Mapper接口

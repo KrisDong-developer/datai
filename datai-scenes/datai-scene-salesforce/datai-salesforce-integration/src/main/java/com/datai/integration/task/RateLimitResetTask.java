@@ -1,11 +1,9 @@
 package com.datai.integration.task;
 
-import com.datai.common.utils.DateUtils;
-import com.datai.integration.domain.DataiIntegrationRateLimit;
+import com.datai.integration.model.domain.DataiIntegrationRateLimit;
 import com.datai.integration.service.IDataiIntegrationRateLimitService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;

@@ -1,7 +1,7 @@
 package com.datai.integration.mapper;
 
 import java.util.List;
-import com.datai.integration.domain.DataiIntegrationBatch;
+import com.datai.integration.model.domain.DataiIntegrationBatch;
 
 /**
  * 数据批次Mapper接口

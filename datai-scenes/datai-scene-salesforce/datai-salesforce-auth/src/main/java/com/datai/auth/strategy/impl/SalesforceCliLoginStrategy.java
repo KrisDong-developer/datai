@@ -1,7 +1,7 @@
 package com.datai.auth.strategy.impl;
 
-import com.datai.auth.domain.SalesforceLoginResult;
-import com.datai.auth.domain.SalesforceLoginRequest;
+import com.datai.auth.model.domain.SalesforceLoginResult;
+import com.datai.auth.model.domain.SalesforceLoginRequest;
 import com.datai.auth.strategy.LoginStrategy;
 import com.datai.salesforce.common.exception.SalesforceCliLoginException;
 import org.slf4j.Logger;

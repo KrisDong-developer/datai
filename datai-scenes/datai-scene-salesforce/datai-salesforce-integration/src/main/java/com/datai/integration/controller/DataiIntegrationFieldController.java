@@ -1,6 +1,9 @@
 package com.datai.integration.controller;
 
 import java.util.List;
+import java.util.stream.Collectors;
+
+import com.datai.integration.model.vo.DataiIntegrationFieldVo;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +19,8 @@ import com.datai.common.annotation.Log;
 import com.datai.common.core.controller.BaseController;
 import com.datai.common.core.domain.AjaxResult;
 import com.datai.common.enums.BusinessType;
-import com.datai.integration.domain.DataiIntegrationField;
+import com.datai.integration.model.domain.DataiIntegrationField;
+import com.datai.integration.model.dto.DataiIntegrationFieldDto;
 import com.datai.integration.service.IDataiIntegrationFieldService;
 import com.datai.common.utils.poi.ExcelUtil;
 import com.datai.common.core.page.TableDataInfo;
@@ -43,11 +47,15 @@ public class DataiIntegrationFieldController extends BaseController
     @Operation(summary = "查询对象字段信息列表")
     @PreAuthorize("@ss.hasPermi('integration:field:list')")
     @GetMapping("/list")
-    public TableDataInfo list(DataiIntegrationField dataiIntegrationField)
+    public TableDataInfo list(DataiIntegrationFieldDto dataiIntegrationFieldDto)
     {
         startPage();
-        List<DataiIntegrationField> list = dataiIntegrationFieldService.selectDataiIntegrationFieldList(dataiIntegrationField);
-        return getDataTable(list);
+        List<DataiIntegrationField> list = dataiIntegrationFieldService.selectDataiIntegrationFieldList(
+            DataiIntegrationFieldDto.toObj(dataiIntegrationFieldDto));
+        List<DataiIntegrationFieldVo> voList = list.stream()
+            .map(DataiIntegrationFieldVo::objToVo)
+            .collect(Collectors.toList());
+        return getDataTable(voList);
     }
 
     /**
@@ -57,9 +65,10 @@ public class DataiIntegrationFieldController extends BaseController
     @PreAuthorize("@ss.hasPermi('integration:field:export')")
     @Log(title = "对象字段信息", businessType = BusinessType.EXPORT)
     @PostMapping("/export")
-    public void export(HttpServletResponse response, DataiIntegrationField dataiIntegrationField)
+    public void export(HttpServletResponse response, DataiIntegrationFieldDto dataiIntegrationFieldDto)
     {
-        List<DataiIntegrationField> list = dataiIntegrationFieldService.selectDataiIntegrationFieldList(dataiIntegrationField);
+        List<DataiIntegrationField> list = dataiIntegrationFieldService.selectDataiIntegrationFieldList(
+            DataiIntegrationFieldDto.toObj(dataiIntegrationFieldDto));
         ExcelUtil<DataiIntegrationField> util = new ExcelUtil<DataiIntegrationField>(DataiIntegrationField.class);
         util.exportExcel(response, list, "对象字段信息数据");
     }
@@ -72,7 +81,8 @@ public class DataiIntegrationFieldController extends BaseController
     @GetMapping(value = "/{id}")
     public AjaxResult getInfo(@PathVariable("id") Integer id)
     {
-        return success(dataiIntegrationFieldService.selectDataiIntegrationFieldById(id));
+        DataiIntegrationField dataiIntegrationField = dataiIntegrationFieldService.selectDataiIntegrationFieldById(id);
+        return success(DataiIntegrationFieldVo.objToVo(dataiIntegrationField));
     }
 
     /**
@@ -82,9 +92,10 @@ public class DataiIntegrationFieldController extends BaseController
     @PreAuthorize("@ss.hasPermi('integration:field:add')")
     @Log(title = "对象字段信息", businessType = BusinessType.INSERT)
     @PostMapping
-    public AjaxResult add(@RequestBody DataiIntegrationField dataiIntegrationField)
+    public AjaxResult add(@RequestBody DataiIntegrationFieldDto dataiIntegrationFieldDto)
     {
-        return toAjax(dataiIntegrationFieldService.insertDataiIntegrationField(dataiIntegrationField));
+        return toAjax(dataiIntegrationFieldService.insertDataiIntegrationField(
+            DataiIntegrationFieldDto.toObj(dataiIntegrationFieldDto)));
     }
 
     /**
@@ -94,9 +105,10 @@ public class DataiIntegrationFieldController extends BaseController
     @PreAuthorize("@ss.hasPermi('integration:field:edit')")
     @Log(title = "对象字段信息", businessType = BusinessType.UPDATE)
     @PutMapping
-    public AjaxResult edit(@RequestBody DataiIntegrationField dataiIntegrationField)
+    public AjaxResult edit(@RequestBody DataiIntegrationFieldDto dataiIntegrationFieldDto)
     {
-        return toAjax(dataiIntegrationFieldService.updateDataiIntegrationField(dataiIntegrationField));
+        return toAjax(dataiIntegrationFieldService.updateDataiIntegrationField(
+            DataiIntegrationFieldDto.toObj(dataiIntegrationFieldDto)));
     }
 
     /**

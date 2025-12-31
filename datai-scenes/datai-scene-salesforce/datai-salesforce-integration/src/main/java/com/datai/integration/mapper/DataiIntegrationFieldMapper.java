@@ -1,7 +1,7 @@
 package com.datai.integration.mapper;
 
 import java.util.List;
-import com.datai.integration.domain.DataiIntegrationField;
+import com.datai.integration.model.domain.DataiIntegrationField;
 
 /**
  * 对象字段信息Mapper接口

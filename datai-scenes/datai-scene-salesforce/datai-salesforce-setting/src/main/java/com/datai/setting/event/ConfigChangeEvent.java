@@ -1,6 +1,6 @@
 package com.datai.setting.event;
 
-import com.datai.setting.domain.DataiConfiguration;
+import com.datai.setting.model.domain.DataiConfiguration;
 import org.springframework.context.ApplicationEvent;
 
 /**

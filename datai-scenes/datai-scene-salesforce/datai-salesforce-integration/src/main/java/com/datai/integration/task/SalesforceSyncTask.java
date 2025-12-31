@@ -1,8 +1,7 @@
 package com.datai.integration.task;
 
 import com.alibaba.fastjson2.JSON;
-import com.datai.integration.domain.param.DataiSyncParam;
-import com.datai.salesforce.common.param.SalesforceParam;
+import com.datai.integration.model.param.DataiSyncParam;
 import com.datai.salesforce.common.utils.ApiListUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;

@@ -1,13 +1,13 @@
 package com.datai.auth.service.impl;
 
 import com.datai.salesforce.common.constant.SalesforceConfigConstants;
-import com.datai.auth.domain.SalesforceLoginResult;
-import com.datai.auth.domain.SalesforceLoginRequest;
+import com.datai.auth.model.domain.SalesforceLoginResult;
+import com.datai.auth.model.domain.SalesforceLoginRequest;
 import com.datai.auth.service.IDataiSfLoginHistoryService;
 import com.datai.auth.strategy.LoginStrategyFactory;
 import com.datai.auth.strategy.LoginStrategy;
-import com.datai.auth.domain.DataiSfLoginSession;
-import com.datai.auth.domain.DataiSfLoginHistory;
+import com.datai.auth.model.domain.DataiSfLoginSession;
+import com.datai.auth.model.domain.DataiSfLoginHistory;
 import com.datai.auth.service.IDataiSfLoginSessionService;
 import com.datai.auth.service.ISalesforceLoginService;
 import com.datai.common.utils.CacheUtils;
@@ -118,8 +118,8 @@ public class SalesforceLoginServiceImpl implements ISalesforceLoginService {
             
             session.setLastActivityTime(LocalDateTime.now());
             session.setSessionId(result.getSessionId());
-            session.setUserId(result.getUserId());
-            session.setOrganizationId(result.getOrganizationId());
+            session.setSfUserId(result.getUserId());
+            session.setSfOrganizationId(result.getOrganizationId());
             session.setInstanceUrl(result.getInstanceUrl());
             
             HttpServletRequest httpRequest = getCurrentRequest();

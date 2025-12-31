@@ -6,7 +6,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.datai.auth.mapper.DataiSfLoginSessionMapper;
-import com.datai.auth.domain.DataiSfLoginSession;
+import com.datai.auth.model.domain.DataiSfLoginSession;
 import com.datai.auth.service.IDataiSfLoginSessionService;
 import com.datai.common.core.domain.model.LoginUser;
 

@@ -2,6 +2,9 @@ package com.datai.integration.controller;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+
+import com.datai.integration.model.vo.DataiIntegrationBatchVo;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,7 +20,8 @@ import com.datai.common.annotation.Log;
 import com.datai.common.core.controller.BaseController;
 import com.datai.common.core.domain.AjaxResult;
 import com.datai.common.enums.BusinessType;
-import com.datai.integration.domain.DataiIntegrationBatch;
+import com.datai.integration.model.domain.DataiIntegrationBatch;
+import com.datai.integration.model.dto.DataiIntegrationBatchDto;
 import com.datai.integration.service.IDataiIntegrationBatchService;
 import com.datai.common.utils.poi.ExcelUtil;
 import com.datai.common.core.page.TableDataInfo;
@@ -44,11 +48,15 @@ public class DataiIntegrationBatchController extends BaseController
     @Operation(summary = "查询数据批次列表")
     @PreAuthorize("@ss.hasPermi('integration:batch:list')")
     @GetMapping("/list")
-    public TableDataInfo list(DataiIntegrationBatch dataiIntegrationBatch)
+    public TableDataInfo list(DataiIntegrationBatchDto dataiIntegrationBatchDto)
     {
         startPage();
-        List<DataiIntegrationBatch> list = dataiIntegrationBatchService.selectDataiIntegrationBatchList(dataiIntegrationBatch);
-        return getDataTable(list);
+        List<DataiIntegrationBatch> list = dataiIntegrationBatchService.selectDataiIntegrationBatchList(
+            DataiIntegrationBatchDto.toObj(dataiIntegrationBatchDto));
+        List<DataiIntegrationBatchVo> voList = list.stream()
+            .map(DataiIntegrationBatchVo::objToVo)
+            .collect(Collectors.toList());
+        return getDataTable(voList);
     }
 
     /**
@@ -58,9 +66,10 @@ public class DataiIntegrationBatchController extends BaseController
     @PreAuthorize("@ss.hasPermi('integration:batch:export')")
     @Log(title = "数据批次", businessType = BusinessType.EXPORT)
     @PostMapping("/export")
-    public void export(HttpServletResponse response, DataiIntegrationBatch dataiIntegrationBatch)
+    public void export(HttpServletResponse response, DataiIntegrationBatchDto dataiIntegrationBatchDto)
     {
-        List<DataiIntegrationBatch> list = dataiIntegrationBatchService.selectDataiIntegrationBatchList(dataiIntegrationBatch);
+        List<DataiIntegrationBatch> list = dataiIntegrationBatchService.selectDataiIntegrationBatchList(
+            DataiIntegrationBatchDto.toObj(dataiIntegrationBatchDto));
         ExcelUtil<DataiIntegrationBatch> util = new ExcelUtil<DataiIntegrationBatch>(DataiIntegrationBatch.class);
         util.exportExcel(response, list, "数据批次数据");
     }
@@ -73,7 +82,8 @@ public class DataiIntegrationBatchController extends BaseController
     @GetMapping(value = "/{id}")
     public AjaxResult getInfo(@PathVariable("id") Integer id)
     {
-        return success(dataiIntegrationBatchService.selectDataiIntegrationBatchById(id));
+        DataiIntegrationBatch dataiIntegrationBatch = dataiIntegrationBatchService.selectDataiIntegrationBatchById(id);
+        return success(DataiIntegrationBatchVo.objToVo(dataiIntegrationBatch));
     }
 
     /**
@@ -83,9 +93,10 @@ public class DataiIntegrationBatchController extends BaseController
     @PreAuthorize("@ss.hasPermi('integration:batch:add')")
     @Log(title = "数据批次", businessType = BusinessType.INSERT)
     @PostMapping
-    public AjaxResult add(@RequestBody DataiIntegrationBatch dataiIntegrationBatch)
+    public AjaxResult add(@RequestBody DataiIntegrationBatchDto dataiIntegrationBatchDto)
     {
-        return toAjax(dataiIntegrationBatchService.insertDataiIntegrationBatch(dataiIntegrationBatch));
+        return toAjax(dataiIntegrationBatchService.insertDataiIntegrationBatch(
+            DataiIntegrationBatchDto.toObj(dataiIntegrationBatchDto)));
     }
 
     /**
@@ -95,9 +106,10 @@ public class DataiIntegrationBatchController extends BaseController
     @PreAuthorize("@ss.hasPermi('integration:batch:edit')")
     @Log(title = "数据批次", businessType = BusinessType.UPDATE)
     @PutMapping
-    public AjaxResult edit(@RequestBody DataiIntegrationBatch dataiIntegrationBatch)
+    public AjaxResult edit(@RequestBody DataiIntegrationBatchDto dataiIntegrationBatchDto)
     {
-        return toAjax(dataiIntegrationBatchService.updateDataiIntegrationBatch(dataiIntegrationBatch));
+        return toAjax(dataiIntegrationBatchService.updateDataiIntegrationBatch(
+            DataiIntegrationBatchDto.toObj(dataiIntegrationBatchDto)));
     }
 
     /**

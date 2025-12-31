@@ -1,7 +1,7 @@
 package com.datai.setting.mapper;
 
 import java.util.List;
-import com.datai.setting.domain.DataiConfigSnapshot;
+import com.datai.setting.model.domain.DataiConfigSnapshot;
 
 /**
  * 配置快照Mapper接口
@@ -17,7 +17,7 @@ public interface DataiConfigSnapshotMapper
      * @param id 配置快照主键
      * @return 配置快照
      */
-    public DataiConfigSnapshot selectDataiConfigSnapshotById(String id);
+    public DataiConfigSnapshot selectDataiConfigSnapshotById(Long id);
 
     /**
      * 查询配置快照列表

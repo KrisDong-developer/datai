@@ -12,7 +12,7 @@ import com.datai.common.utils.SecurityUtils;
 import com.datai.integration.factory.impl.SOAPConnectionFactory;
 import com.datai.integration.mapper.CustomMapper;
 import com.datai.integration.mapper.DataiIntegrationObjectMapper;
-import com.datai.integration.domain.DataiIntegrationObject;
+import com.datai.integration.model.domain.DataiIntegrationObject;
 import com.datai.integration.service.IDataiIntegrationObjectService;
 import com.sforce.soap.partner.DescribeSObjectResult;
 import com.sforce.soap.partner.Field;

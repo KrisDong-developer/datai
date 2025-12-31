@@ -1,6 +1,5 @@
 package com.datai.setting.service.impl;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import com.datai.common.utils.DateUtils;
 import com.datai.common.utils.SecurityUtils;
@@ -8,7 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 import com.datai.setting.mapper.DataiConfigEnvironmentMapper;
-import com.datai.setting.domain.DataiConfigEnvironment;
+import com.datai.setting.model.domain.DataiConfigEnvironment;
 import com.datai.setting.service.IDataiConfigEnvironmentService;
 import com.datai.setting.config.SalesforceConfigCacheManager;
 import com.datai.setting.event.EnvironmentSwitchEvent;

@@ -1,13 +1,12 @@
 package com.datai.setting.service.impl;
 
-import java.time.LocalDateTime;
 import java.util.List;
         import com.datai.common.utils.DateUtils;
         import com.datai.common.utils.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.datai.setting.mapper.DataiConfigAuditLogMapper;
-import com.datai.setting.domain.DataiConfigAuditLog;
+import com.datai.setting.model.domain.DataiConfigAuditLog;
 import com.datai.setting.service.IDataiConfigAuditLogService;
 import com.datai.common.core.domain.model.LoginUser;
 

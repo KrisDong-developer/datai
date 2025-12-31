@@ -1,8 +1,8 @@
 package com.datai.auth.controller;
 
-import com.datai.auth.domain.DataiSfLoginHistory;
-import com.datai.auth.domain.SalesforceLoginRequest;
-import com.datai.auth.domain.SalesforceLoginResult;
+import com.datai.auth.model.domain.DataiSfLoginHistory;
+import com.datai.auth.model.domain.SalesforceLoginRequest;
+import com.datai.auth.model.domain.SalesforceLoginResult;
 import com.datai.auth.service.IDataiSfLoginHistoryService;
 import com.datai.auth.service.ISalesforceLoginService;
 import com.datai.common.core.controller.BaseController;

@@ -1,13 +1,12 @@
 package com.datai.integration.service.impl;
 
-import java.time.LocalDateTime;
 import java.util.List;
         import com.datai.common.utils.DateUtils;
         import com.datai.common.utils.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.datai.integration.mapper.DataiIntegrationFilterLookupMapper;
-import com.datai.integration.domain.DataiIntegrationFilterLookup;
+import com.datai.integration.model.domain.DataiIntegrationFilterLookup;
 import com.datai.integration.service.IDataiIntegrationFilterLookupService;
 import com.datai.common.core.domain.model.LoginUser;
 

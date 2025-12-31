@@ -1,10 +1,9 @@
 package com.datai.setting.event;
 
 import com.datai.common.core.domain.model.LoginUser;
-import com.datai.common.utils.DateUtils;
 import com.datai.common.utils.SecurityUtils;
-import com.datai.setting.domain.DataiConfigAuditLog;
-import com.datai.setting.domain.DataiConfiguration;
+import com.datai.setting.model.domain.DataiConfigAuditLog;
+import com.datai.setting.model.domain.DataiConfiguration;
 import com.datai.setting.service.IDataiConfigAuditLogService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

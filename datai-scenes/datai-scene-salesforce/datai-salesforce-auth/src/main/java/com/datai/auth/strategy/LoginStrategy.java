@@ -1,7 +1,7 @@
 package com.datai.auth.strategy;
 
-import com.datai.auth.domain.SalesforceLoginResult;
-import com.datai.auth.domain.SalesforceLoginRequest;
+import com.datai.auth.model.domain.SalesforceLoginResult;
+import com.datai.auth.model.domain.SalesforceLoginRequest;
 
 /**
  * 登录策略接口，定义不同登录方式的通用方法

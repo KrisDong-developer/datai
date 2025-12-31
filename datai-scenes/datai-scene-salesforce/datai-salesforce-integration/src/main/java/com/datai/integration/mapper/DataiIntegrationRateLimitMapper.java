@@ -1,7 +1,7 @@
 package com.datai.integration.mapper;
 
 import java.util.List;
-import com.datai.integration.domain.DataiIntegrationRateLimit;
+import com.datai.integration.model.domain.DataiIntegrationRateLimit;
 
 /**
  * API限流监控Mapper接口

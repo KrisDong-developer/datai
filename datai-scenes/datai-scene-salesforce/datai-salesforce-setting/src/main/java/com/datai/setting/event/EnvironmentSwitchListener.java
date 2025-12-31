@@ -10,8 +10,8 @@ import org.springframework.stereotype.Component;
 import com.datai.common.utils.DateUtils;
 import com.datai.common.utils.SecurityUtils;
 import com.datai.setting.config.SalesforceConfigCacheManager;
-import com.datai.setting.domain.DataiConfigEnvironment;
-import com.datai.setting.domain.DataiConfiguration;
+import com.datai.setting.model.domain.DataiConfigEnvironment;
+import com.datai.setting.model.domain.DataiConfiguration;
 import com.datai.setting.service.IDataiConfigurationService;
 
 import java.util.List;

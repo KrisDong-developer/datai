@@ -2,7 +2,7 @@ package com.datai.integration.service;
 
 import java.util.List;
 import java.util.Map;
-import com.datai.integration.domain.DataiIntegrationObject;
+import com.datai.integration.model.domain.DataiIntegrationObject;
 
 /**
  * 对象同步控制Service接口

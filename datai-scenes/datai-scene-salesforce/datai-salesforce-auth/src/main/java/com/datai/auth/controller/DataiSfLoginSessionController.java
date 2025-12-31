@@ -1,6 +1,9 @@
 package com.datai.auth.controller;
 
 import java.util.List;
+import java.util.stream.Collectors;
+
+import com.datai.auth.model.vo.DataiSfLoginSessionVo;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +19,8 @@ import com.datai.common.annotation.Log;
 import com.datai.common.core.controller.BaseController;
 import com.datai.common.core.domain.AjaxResult;
 import com.datai.common.enums.BusinessType;
-import com.datai.auth.domain.DataiSfLoginSession;
+import com.datai.auth.model.domain.DataiSfLoginSession;
+import com.datai.auth.model.dto.DataiSfLoginSessionDto;
 import com.datai.auth.service.IDataiSfLoginSessionService;
 import com.datai.common.utils.poi.ExcelUtil;
 import com.datai.common.core.page.TableDataInfo;
@@ -43,11 +47,12 @@ public class DataiSfLoginSessionController extends BaseController
     @Operation(summary = "查询登录会话信息列表")
     @PreAuthorize("@ss.hasPermi('auth:session:list')")
     @GetMapping("/list")
-    public TableDataInfo list(DataiSfLoginSession dataiSfLoginSession)
+    public TableDataInfo list(DataiSfLoginSessionDto dataiSfLoginSessionDto)
     {
         startPage();
-        List<DataiSfLoginSession> list = dataiSfLoginSessionService.selectDataiSfLoginSessionList(dataiSfLoginSession);
-        return getDataTable(list);
+        List<DataiSfLoginSession> list = dataiSfLoginSessionService.selectDataiSfLoginSessionList(DataiSfLoginSessionDto.toObj(dataiSfLoginSessionDto));
+        List<DataiSfLoginSessionVo> voList = list.stream().map(DataiSfLoginSessionVo::objToVo).collect(Collectors.toList());
+        return getDataTable(voList);
     }
 
     /**
@@ -57,9 +62,9 @@ public class DataiSfLoginSessionController extends BaseController
     @PreAuthorize("@ss.hasPermi('auth:session:export')")
     @Log(title = "登录会话信息", businessType = BusinessType.EXPORT)
     @PostMapping("/export")
-    public void export(HttpServletResponse response, DataiSfLoginSession dataiSfLoginSession)
+    public void export(HttpServletResponse response, DataiSfLoginSessionDto dataiSfLoginSessionDto)
     {
-        List<DataiSfLoginSession> list = dataiSfLoginSessionService.selectDataiSfLoginSessionList(dataiSfLoginSession);
+        List<DataiSfLoginSession> list = dataiSfLoginSessionService.selectDataiSfLoginSessionList(DataiSfLoginSessionDto.toObj(dataiSfLoginSessionDto));
         ExcelUtil<DataiSfLoginSession> util = new ExcelUtil<DataiSfLoginSession>(DataiSfLoginSession.class);
         util.exportExcel(response, list, "登录会话信息数据");
     }
@@ -72,7 +77,8 @@ public class DataiSfLoginSessionController extends BaseController
     @GetMapping(value = "/{id}")
     public AjaxResult getInfo(@PathVariable("id") Long id)
     {
-        return success(dataiSfLoginSessionService.selectDataiSfLoginSessionById(id));
+        DataiSfLoginSession dataiSfLoginSession = dataiSfLoginSessionService.selectDataiSfLoginSessionById(id);
+        return success(DataiSfLoginSessionVo.objToVo(dataiSfLoginSession));
     }
 
     /**
@@ -82,9 +88,9 @@ public class DataiSfLoginSessionController extends BaseController
     @PreAuthorize("@ss.hasPermi('auth:session:add')")
     @Log(title = "登录会话信息", businessType = BusinessType.INSERT)
     @PostMapping
-    public AjaxResult add(@RequestBody DataiSfLoginSession dataiSfLoginSession)
+    public AjaxResult add(@RequestBody DataiSfLoginSessionDto dataiSfLoginSessionDto)
     {
-        return toAjax(dataiSfLoginSessionService.insertDataiSfLoginSession(dataiSfLoginSession));
+        return toAjax(dataiSfLoginSessionService.insertDataiSfLoginSession(DataiSfLoginSessionDto.toObj(dataiSfLoginSessionDto)));
     }
 
     /**
@@ -94,9 +100,9 @@ public class DataiSfLoginSessionController extends BaseController
     @PreAuthorize("@ss.hasPermi('auth:session:edit')")
     @Log(title = "登录会话信息", businessType = BusinessType.UPDATE)
     @PutMapping
-    public AjaxResult edit(@RequestBody DataiSfLoginSession dataiSfLoginSession)
+    public AjaxResult edit(@RequestBody DataiSfLoginSessionDto dataiSfLoginSessionDto)
     {
-        return toAjax(dataiSfLoginSessionService.updateDataiSfLoginSession(dataiSfLoginSession));
+        return toAjax(dataiSfLoginSessionService.updateDataiSfLoginSession(DataiSfLoginSessionDto.toObj(dataiSfLoginSessionDto)));
     }
 
     /**

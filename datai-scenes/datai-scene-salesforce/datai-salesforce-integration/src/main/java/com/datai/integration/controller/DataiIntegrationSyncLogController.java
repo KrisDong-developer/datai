@@ -2,6 +2,9 @@ package com.datai.integration.controller;
 
 import java.util.List;
 import java.util.Map;
+
+import com.datai.integration.model.dto.DataiIntegrationSyncLogDto;
+import com.datai.integration.model.dto.LogStatisticsDTO;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,8 +20,7 @@ import com.datai.common.annotation.Log;
 import com.datai.common.core.controller.BaseController;
 import com.datai.common.core.domain.AjaxResult;
 import com.datai.common.enums.BusinessType;
-import com.datai.integration.domain.DataiIntegrationSyncLog;
-import com.datai.integration.domain.dto.LogStatisticsDTO;
+import com.datai.integration.model.domain.DataiIntegrationSyncLog;
 import com.datai.integration.service.IDataiIntegrationSyncLogService;
 import com.datai.common.utils.poi.ExcelUtil;
 import com.datai.common.core.page.TableDataInfo;
@@ -59,8 +61,9 @@ public class DataiIntegrationSyncLogController extends BaseController
     @PreAuthorize("@ss.hasPermi('integration:synclog:export')")
     @Log(title = "数据同步日志", businessType = BusinessType.EXPORT)
     @PostMapping("/export")
-    public void export(HttpServletResponse response, DataiIntegrationSyncLog dataiIntegrationSyncLog)
+    public void export(HttpServletResponse response, DataiIntegrationSyncLogDto dataiIntegrationSyncLogDto)
     {
+        DataiIntegrationSyncLog dataiIntegrationSyncLog = DataiIntegrationSyncLogDto.toObj(dataiIntegrationSyncLogDto);
         List<DataiIntegrationSyncLog> list = dataiIntegrationSyncLogService.selectDataiIntegrationSyncLogList(dataiIntegrationSyncLog);
         ExcelUtil<DataiIntegrationSyncLog> util = new ExcelUtil<DataiIntegrationSyncLog>(DataiIntegrationSyncLog.class);
         util.exportExcel(response, list, "数据同步日志数据");
@@ -96,8 +99,9 @@ public class DataiIntegrationSyncLogController extends BaseController
     @PreAuthorize("@ss.hasPermi('integration:synclog:edit')")
     @Log(title = "数据同步日志", businessType = BusinessType.UPDATE)
     @PutMapping
-    public AjaxResult edit(@RequestBody DataiIntegrationSyncLog dataiIntegrationSyncLog)
+    public AjaxResult edit(@RequestBody DataiIntegrationSyncLogDto dataiIntegrationSyncLogDto)
     {
+        DataiIntegrationSyncLog dataiIntegrationSyncLog = DataiIntegrationSyncLogDto.toObj(dataiIntegrationSyncLogDto);
         return toAjax(dataiIntegrationSyncLogService.updateDataiIntegrationSyncLog(dataiIntegrationSyncLog));
     }
 
@@ -119,30 +123,30 @@ public class DataiIntegrationSyncLogController extends BaseController
     @Operation(summary = "获取日志统计信息")
     @PreAuthorize("@ss.hasPermi('integration:synclog:query')")
     @GetMapping("/statistics")
-    public AjaxResult getLogStatistics(DataiIntegrationSyncLog dataiIntegrationSyncLog)
+    public AjaxResult getLogStatistics(DataiIntegrationSyncLogDto dataiIntegrationSyncLogDto)
     {
         Map<String, Object> params = new java.util.HashMap<>();
-        if (dataiIntegrationSyncLog.getBatchId() != null) {
-            params.put("batchId", dataiIntegrationSyncLog.getBatchId());
+        if (dataiIntegrationSyncLogDto.getBatchId() != null) {
+            params.put("batchId", dataiIntegrationSyncLogDto.getBatchId());
         }
-        if (dataiIntegrationSyncLog.getObjectApi() != null && !dataiIntegrationSyncLog.getObjectApi().isEmpty()) {
-            params.put("objectApi", dataiIntegrationSyncLog.getObjectApi());
+        if (dataiIntegrationSyncLogDto.getObjectApi() != null && !dataiIntegrationSyncLogDto.getObjectApi().isEmpty()) {
+            params.put("objectApi", dataiIntegrationSyncLogDto.getObjectApi());
         }
-        if (dataiIntegrationSyncLog.getOperationType() != null && !dataiIntegrationSyncLog.getOperationType().isEmpty()) {
-            params.put("operationType", dataiIntegrationSyncLog.getOperationType());
+        if (dataiIntegrationSyncLogDto.getOperationType() != null && !dataiIntegrationSyncLogDto.getOperationType().isEmpty()) {
+            params.put("operationType", dataiIntegrationSyncLogDto.getOperationType());
         }
-        if (dataiIntegrationSyncLog.getOperationStatus() != null && !dataiIntegrationSyncLog.getOperationStatus().isEmpty()) {
-            params.put("operationStatus", dataiIntegrationSyncLog.getOperationStatus());
+        if (dataiIntegrationSyncLogDto.getOperationStatus() != null && !dataiIntegrationSyncLogDto.getOperationStatus().isEmpty()) {
+            params.put("operationStatus", dataiIntegrationSyncLogDto.getOperationStatus());
         }
-        if (dataiIntegrationSyncLog.getDeptId() != null) {
-            params.put("deptId", dataiIntegrationSyncLog.getDeptId());
+        if (dataiIntegrationSyncLogDto.getDeptId() != null) {
+            params.put("deptId", dataiIntegrationSyncLogDto.getDeptId());
         }
-        if (dataiIntegrationSyncLog.getParams() != null) {
-            if (dataiIntegrationSyncLog.getParams().get("beginTime") != null) {
-                params.put("startTime", dataiIntegrationSyncLog.getParams().get("beginTime"));
+        if (dataiIntegrationSyncLogDto.getParams() != null) {
+            if (dataiIntegrationSyncLogDto.getParams().get("beginTime") != null) {
+                params.put("startTime", dataiIntegrationSyncLogDto.getParams().get("beginTime"));
             }
-            if (dataiIntegrationSyncLog.getParams().get("endTime") != null) {
-                params.put("endTime", dataiIntegrationSyncLog.getParams().get("endTime"));
+            if (dataiIntegrationSyncLogDto.getParams().get("endTime") != null) {
+                params.put("endTime", dataiIntegrationSyncLogDto.getParams().get("endTime"));
             }
         }
         LogStatisticsDTO statistics = dataiIntegrationSyncLogService.getLogStatistics(params);

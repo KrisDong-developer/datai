@@ -1,8 +1,7 @@
 package com.datai.integration.aspect;
 
-import com.datai.common.utils.DateUtils;
-import com.datai.integration.domain.DataiIntegrationApiCallLog;
-import com.datai.integration.domain.DataiIntegrationRateLimit;
+import com.datai.integration.model.domain.DataiIntegrationApiCallLog;
+import com.datai.integration.model.domain.DataiIntegrationRateLimit;
 import com.datai.salesforce.common.exception.RateLimitExceededException;
 import com.datai.integration.service.IDataiIntegrationApiCallLogService;
 import com.datai.integration.service.IDataiIntegrationRateLimitService;

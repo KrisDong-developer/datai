@@ -1,7 +1,7 @@
 package com.datai.setting.service;
 
 import java.util.List;
-import com.datai.setting.domain.DataiConfigAuditLog;
+import com.datai.setting.model.domain.DataiConfigAuditLog;
 
 /**
  * 配置审计日志Service接口

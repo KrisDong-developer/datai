@@ -1,6 +1,5 @@
 package com.datai.integration.service.impl;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
@@ -9,10 +8,10 @@ import java.util.HashMap;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.datai.integration.mapper.DataiIntegrationBatchMapper;
-import com.datai.integration.domain.DataiIntegrationBatch;
+import com.datai.integration.model.domain.DataiIntegrationBatch;
 import com.datai.integration.service.IDataiIntegrationBatchService;
 import com.datai.common.core.domain.model.LoginUser;
-import com.datai.integration.domain.DataiIntegrationBatchHistory;
+import com.datai.integration.model.domain.DataiIntegrationBatchHistory;
 import com.datai.integration.service.IDataiIntegrationBatchHistoryService;
 import com.datai.integration.service.ISalesforceDataPullService;
 import lombok.extern.slf4j.Slf4j;

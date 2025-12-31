@@ -1,7 +1,7 @@
 package com.datai.auth.mapper;
 
 import java.util.List;
-import com.datai.auth.domain.DataiSfLoginHistory;
+import com.datai.auth.model.domain.DataiSfLoginHistory;
 
 /**
  * 登录历史信息Mapper接口

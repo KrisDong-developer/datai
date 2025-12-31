@@ -2,7 +2,7 @@ package com.datai.integration.service;
 
 import java.util.List;
 import java.util.Map;
-import com.datai.integration.domain.DataiIntegrationApiCallLog;
+import com.datai.integration.model.domain.DataiIntegrationApiCallLog;
 
 /**
  * API调用日志Service接口

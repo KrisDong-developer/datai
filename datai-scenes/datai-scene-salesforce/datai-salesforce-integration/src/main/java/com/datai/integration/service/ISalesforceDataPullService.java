@@ -1,9 +1,6 @@
 package com.datai.integration.service;
 
-import com.datai.integration.domain.DataiIntegrationObject;
-
 import java.util.List;
-import java.util.Map;
 
 /**
  * Salesforce数据拉取服务接口

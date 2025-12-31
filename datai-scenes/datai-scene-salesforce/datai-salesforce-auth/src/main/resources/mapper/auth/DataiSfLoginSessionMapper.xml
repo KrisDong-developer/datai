@@ -16,10 +16,9 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="deviceInfo" column="device_info" />
         <result property="browserInfo" column="browser_info" />
         <result property="sessionId" column="session_id" />
-        <result property="tokenId" column="token_id" />
         <result property="deptId" column="dept_id" />
-        <result property="userId" column="user_id" />
-        <result property="organizationId" column="organization_id" />
+        <result property="sfUserId" column="sf_user_id" />
+        <result property="sfOrganizationId" column="sf_organization_id" />
         <result property="instanceUrl" column="instance_url" />
         <result property="createBy" column="create_by" />
         <result property="createTime" column="create_time" />
@@ -40,10 +39,9 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             dsls.device_info,
             dsls.browser_info,
             dsls.session_id,
-            dsls.token_id,
             dsls.dept_id,
-            dsls.user_id,
-            dsls.organization_id,
+            dsls.sf_user_id,
+            dsls.sf_organization_id,
             dsls.instance_url,
             dsls.create_by,
             dsls.create_time,
@@ -65,7 +63,6 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="deviceInfo != null  and deviceInfo != ''"> and dsls.device_info = #{deviceInfo}</if>
             <if test="browserInfo != null  and browserInfo != ''"> and dsls.browser_info = #{browserInfo}</if>
             <if test="sessionId != null  and sessionId != ''"> and dsls.session_id = #{sessionId}</if>
-            <if test="tokenId != null "> and dsls.token_id = #{tokenId}</if>
             <if test="deptId != null "> and dsls.dept_id = #{deptId}</if>
         </where>
     </select>
@@ -95,10 +92,9 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="deviceInfo != null">device_info,</if>
             <if test="browserInfo != null">browser_info,</if>
             <if test="sessionId != null">session_id,</if>
-            <if test="tokenId != null">token_id,</if>
             <if test="deptId != null">dept_id,</if>
-            <if test="userId != null">user_id,</if>
-            <if test="organizationId != null">organization_id,</if>
+            <if test="sfUserId != null">sf_user_id,</if>
+            <if test="sfOrganizationId != null">sf_organization_id,</if>
             <if test="instanceUrl != null">instance_url,</if>
             <if test="createBy != null">create_by,</if>
             <if test="createTime != null">create_time,</if>
@@ -118,8 +114,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="sessionId != null">#{sessionId},</if>
             <if test="tokenId != null">#{tokenId},</if>
             <if test="deptId != null">#{deptId},</if>
-            <if test="userId != null">#{userId},</if>
-            <if test="organizationId != null">#{organizationId},</if>
+            <if test="sfUserId != null">#{sfUserId},</if>
+            <if test="sfOrganizationId != null">#{sfOrganizationId},</if>
             <if test="instanceUrl != null">#{instanceUrl},</if>
             <if test="createBy != null">#{createBy},</if>
             <if test="createTime != null">#{createTime},</if>
@@ -141,10 +137,9 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="deviceInfo != null">device_info = #{deviceInfo},</if>
             <if test="browserInfo != null">browser_info = #{browserInfo},</if>
             <if test="sessionId != null">session_id = #{sessionId},</if>
-            <if test="tokenId != null">token_id = #{tokenId},</if>
             <if test="deptId != null">dept_id = #{deptId},</if>
-            <if test="userId != null">user_id = #{userId},</if>
-            <if test="organizationId != null">organization_id = #{organizationId},</if>
+            <if test="sfUserId != null">sf_user_id = #{sfUserId},</if>
+            <if test="sfOrganizationId != null">sf_organization_id = #{sfOrganizationId},</if>
             <if test="instanceUrl != null">instance_url = #{instanceUrl},</if>
             <if test="createBy != null">create_by = #{createBy},</if>
             <if test="createTime != null">create_time = #{createTime},</if>

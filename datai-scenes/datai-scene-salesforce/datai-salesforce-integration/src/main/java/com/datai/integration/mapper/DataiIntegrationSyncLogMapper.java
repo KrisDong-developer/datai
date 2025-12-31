@@ -2,8 +2,8 @@ package com.datai.integration.mapper;
 
 import java.util.List;
 import java.util.Map;
-import com.datai.integration.domain.DataiIntegrationSyncLog;
-import com.datai.integration.domain.dto.LogStatisticsDTO;
+import com.datai.integration.model.domain.DataiIntegrationSyncLog;
+import com.datai.integration.model.dto.LogStatisticsDTO;
 
 /**
  * 数据同步日志Mapper接口
