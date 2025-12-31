@@ -181,4 +181,39 @@ public class DataiIntegrationMetadataChangeController extends BaseController
         Map<String, Object> statistics = dataiIntegrationMetadataChangeService.getChangeStatistics(params);
         return success(statistics);
     }
+
+    /**
+     * 同步元数据变更到本地数据库
+     */
+    @Operation(summary = "同步元数据变更到本地数据库")
+    @PreAuthorize("@ss.hasPermi('integration:change:sync')")
+    @Log(title = "同步元数据变更", businessType = BusinessType.UPDATE)
+    @PostMapping("/{id}/sync")
+    public AjaxResult syncToLocalDatabase(@PathVariable("id") Long id)
+    {
+        try {
+            Map<String, Object> result = dataiIntegrationMetadataChangeService.syncToLocalDatabase(id);
+            return success(result);
+        } catch (Exception e) {
+            return error("同步失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 批量同步元数据变更到本地数据库
+     */
+    @Operation(summary = "批量同步元数据变更到本地数据库")
+    @PreAuthorize("@ss.hasPermi('integration:change:syncBatch')")
+    @Log(title = "批量同步元数据变更", businessType = BusinessType.UPDATE)
+    @PostMapping("/syncBatch")
+    public AjaxResult syncBatchToLocalDatabase(@RequestBody java.util.Map<String, Object> params)
+    {
+        try {
+            Long[] ids = ((java.util.List<Long>) params.get("ids")).toArray(new Long[0]);
+            Map<String, Object> result = dataiIntegrationMetadataChangeService.syncBatchToLocalDatabase(ids);
+            return success(result);
+        } catch (Exception e) {
+            return error("批量同步失败: " + e.getMessage());
+        }
+    }
 }

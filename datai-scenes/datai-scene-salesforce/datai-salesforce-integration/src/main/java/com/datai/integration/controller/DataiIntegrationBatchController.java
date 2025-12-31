@@ -1,6 +1,7 @@
 package com.datai.integration.controller;
 
 import java.util.List;
+import java.util.Map;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -132,5 +133,22 @@ public class DataiIntegrationBatchController extends BaseController
     public AjaxResult getSyncStatistics(@PathVariable("id") Integer id)
     {
         return success(dataiIntegrationBatchService.getSyncStatistics(id));
+    }
+
+    /**
+     * 同步批次数据
+     */
+    @Operation(summary = "同步批次数据")
+    @PreAuthorize("@ss.hasPermi('integration:batch:sync')")
+    @Log(title = "数据批次", businessType = BusinessType.UPDATE)
+    @PostMapping("/{id}/sync")
+    public AjaxResult syncBatchData(@PathVariable("id") Integer id)
+    {
+        Map<String, Object> result = dataiIntegrationBatchService.syncBatchData(id);
+        if ((Boolean) result.get("success")) {
+            return success(result);
+        } else {
+            return error((String) result.get("message"));
+        }
     }
 }

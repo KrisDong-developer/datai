@@ -117,4 +117,25 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             #{id}
         </foreach>
     </delete>
+
+    <select id="getApiCallLogStatistics" parameterType="map" resultType="java.util.HashMap">
+        select 
+            COUNT(*) as totalCount,
+            SUM(CASE WHEN status = 'SUCCESS' THEN 1 ELSE 0 END) as successCount,
+            SUM(CASE WHEN status = 'FAILURE' THEN 1 ELSE 0 END) as failureCount,
+            SUM(CASE WHEN status = 'SUCCESS' THEN 1 ELSE 0 END) * 100.0 / COUNT(*) as successRate,
+            AVG(execution_time) as avgExecutionTime,
+            MIN(execution_time) as minExecutionTime,
+            MAX(execution_time) as maxExecutionTime,
+            SUM(execution_time) as totalExecutionTime
+        from datai_integration_api_call_log
+        <where>
+            <if test="apiType != null and apiType != ''"> and api_type = #{apiType}</if>
+            <if test="connectionClass != null and connectionClass != ''"> and connection_class = #{connectionClass}</if>
+            <if test="methodName != null and methodName != ''"> and method_name like concat('%', #{methodName}, '%')</if>
+            <if test="status != null and status != ''"> and status = #{status}</if>
+            <if test="startTime != null"> and call_time &gt;= #{startTime}</if>
+            <if test="endTime != null"> and call_time &lt;= #{endTime}</if>
+        </where>
+    </select>
 </mapper>

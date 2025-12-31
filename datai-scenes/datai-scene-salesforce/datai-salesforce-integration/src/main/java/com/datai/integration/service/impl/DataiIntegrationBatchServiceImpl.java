@@ -1,5 +1,6 @@
 package com.datai.integration.service.impl;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
@@ -254,5 +255,51 @@ public class DataiIntegrationBatchServiceImpl implements IDataiIntegrationBatchS
         }
 
         return statistics;
+    }
+
+    @Override
+    public Map<String, Object> syncBatchData(Integer id) {
+        Map<String, Object> result = new HashMap<>();
+
+        try {
+            log.info("开始同步批次数据，批次ID: {}", id);
+
+            DataiIntegrationBatch batch = selectDataiIntegrationBatchById(id);
+            if (batch == null) {
+                log.error("批次不存在，批次ID: {}", id);
+                result.put("success", false);
+                result.put("message", "批次不存在");
+                return result;
+            }
+
+            String objectApi = batch.getApi();
+            String batchId = id.toString();
+
+            log.info("准备同步对象 {} 的批次 {} 数据", objectApi, batchId);
+
+            boolean syncResult = salesforceDataPullService.syncObjectDataByBatch(objectApi, batchId);
+
+            if (syncResult) {
+                log.info("批次 {} 数据同步成功", id);
+                result.put("success", true);
+                result.put("message", "批次数据同步成功");
+                result.put("batchId", id);
+                result.put("api", objectApi);
+                result.put("label", batch.getLabel());
+            } else {
+                log.error("批次 {} 数据同步失败", id);
+                result.put("success", false);
+                result.put("message", "批次数据同步失败");
+                result.put("batchId", id);
+                result.put("api", objectApi);
+            }
+
+        } catch (Exception e) {
+            log.error("同步批次 {} 数据时发生异常", id, e);
+            result.put("success", false);
+            result.put("message", "同步批次数据失败: " + e.getMessage());
+        }
+
+        return result;
     }
 }

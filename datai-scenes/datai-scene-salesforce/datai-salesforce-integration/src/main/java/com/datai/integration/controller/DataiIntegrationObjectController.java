@@ -135,4 +135,71 @@ public class DataiIntegrationObjectController extends BaseController
         List<Map<String, Object>> dependencies = dataiIntegrationObjectService.getObjectDependencies(id);
         return success(dependencies);
     }
+
+    /**
+     * 创建对象表结构
+     */
+    @Operation(summary = "创建对象表结构")
+    @PreAuthorize("@ss.hasPermi('integration:object:createStructure')")
+    @Log(title = "对象同步控制", businessType = BusinessType.INSERT)
+    @PostMapping("/{id}/createStructure")
+    public AjaxResult createObjectStructure(@PathVariable("id") Integer id)
+    {
+        Map<String, Object> result = dataiIntegrationObjectService.createObjectStructure(id);
+        if ((Boolean) result.get("success")) {
+            return success(result);
+        } else {
+            return error((String) result.get("message"));
+        }
+    }
+
+    /**
+     * 变更对象启用同步状态
+     */
+    @Operation(summary = "变更对象启用同步状态")
+    @PreAuthorize("@ss.hasPermi('integration:object:updateWorkStatus')")
+    @Log(title = "对象同步控制", businessType = BusinessType.UPDATE)
+    @PutMapping("/{id}/workStatus")
+    public AjaxResult updateWorkStatus(@PathVariable("id") Integer id, @org.springframework.web.bind.annotation.RequestParam("isWork") Boolean isWork)
+    {
+        Map<String, Object> result = dataiIntegrationObjectService.updateWorkStatus(id, isWork);
+        if ((Boolean) result.get("success")) {
+            return success(result);
+        } else {
+            return error((String) result.get("message"));
+        }
+    }
+
+    /**
+     * 变更对象增量更新状态
+     */
+    @Operation(summary = "变更对象增量更新状态")
+    @PreAuthorize("@ss.hasPermi('integration:object:updateIncrementalStatus')")
+    @Log(title = "对象同步控制", businessType = BusinessType.UPDATE)
+    @PutMapping("/{id}/incrementalStatus")
+    public AjaxResult updateIncrementalStatus(@PathVariable("id") Integer id, @org.springframework.web.bind.annotation.RequestParam("isIncremental") Boolean isIncremental)
+    {
+        Map<String, Object> result = dataiIntegrationObjectService.updateIncrementalStatus(id, isIncremental);
+        if ((Boolean) result.get("success")) {
+            return success(result);
+        } else {
+            return error((String) result.get("message"));
+        }
+    }
+
+    /**
+     * 获取对象整体统计信息
+     */
+    @Operation(summary = "获取对象整体统计信息")
+    @PreAuthorize("@ss.hasPermi('integration:object:statistics')")
+    @GetMapping("/statistics")
+    public AjaxResult getObjectStatistics()
+    {
+        Map<String, Object> statistics = dataiIntegrationObjectService.getObjectStatistics();
+        if ((Boolean) statistics.get("success")) {
+            return success(statistics);
+        } else {
+            return error((String) statistics.get("message"));
+        }
+    }
 }

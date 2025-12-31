@@ -52,13 +52,6 @@ public class DataiConfigSnapshot extends BaseEntity
     @Excel(name = "快照状态")
     private String status;
 
-    /** 版本ID */
-    @Schema(title = "版本ID")
-    private Long versionId;
-
-    /** 快照时间 */
-    @Schema(title = "快照时间")
-    private java.util.Date snapshotTime;
 
     /** 部门ID */
     @Schema(title = "部门ID")
@@ -140,26 +133,6 @@ public class DataiConfigSnapshot extends BaseEntity
     }
 
 
-    public void setVersionId(Long versionId) 
-    {
-        this.versionId = versionId;
-    }
-
-    public Long getVersionId() 
-    {
-        return versionId;
-    }
-
-
-    public void setSnapshotTime(java.util.Date snapshotTime) 
-    {
-        this.snapshotTime = snapshotTime;
-    }
-
-    public java.util.Date getSnapshotTime() 
-    {
-        return snapshotTime;
-    }
 
 
     public void setDeptId(Long deptId) 
@@ -184,8 +157,6 @@ public class DataiConfigSnapshot extends BaseEntity
             .append("snapshotContent", getSnapshotContent())
             .append("configCount", getConfigCount())
             .append("status", getStatus())
-            .append("versionId", getVersionId())
-            .append("snapshotTime", getSnapshotTime())
             .append("remark", getRemark())
             .append("deptId", getDeptId())
             .append("createBy", getCreateBy())

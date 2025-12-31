@@ -1,5 +1,6 @@
 package com.datai.setting.service.impl;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import com.alibaba.fastjson2.JSON;
@@ -141,7 +142,6 @@ public class DataiConfigSnapshotServiceImpl implements IDataiConfigSnapshotServi
             snapshot.setSnapshotNumber(snapshotName);
             snapshot.setEnvironmentId(environmentId);
             snapshot.setSnapshotDesc(description);
-            snapshot.setSnapshotTime(DateUtils.getNowDate());
             snapshot.setSnapshotContent(snapshotContent);
             snapshot.setConfigCount(configs.size());
             
@@ -291,9 +291,9 @@ public class DataiConfigSnapshotServiceImpl implements IDataiConfigSnapshotServi
             result.append("快照差异比较报告\n");
             result.append("====================\n");
             result.append("快照1: ").append(snapshot1.getSnapshotNumber())
-                  .append(" (").append(snapshot1.getSnapshotTime()).append(")\n");
+                  .append(" (").append(snapshot1.getCreateTime()).append(")\n");
             result.append("快照2: ").append(snapshot2.getSnapshotNumber())
-                  .append(" (").append(snapshot2.getSnapshotTime()).append(")\n");
+                  .append(" (").append(snapshot2.getCreateTime()).append(")\n");
             result.append("====================\n\n");
             
             java.util.Map<String, DataiConfiguration> map1 = new java.util.HashMap<>();

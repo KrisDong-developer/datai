@@ -75,4 +75,37 @@ public interface IDataiIntegrationObjectService
      * @return 依赖关系列表
      */
     public List<Map<String, Object>> getObjectDependencies(Integer id);
+
+    /**
+     * 创建对象表结构
+     * 
+     * @param id 对象ID
+     * @return 创建结果
+     */
+    public Map<String, Object> createObjectStructure(Integer id);
+
+    /**
+     * 变更对象启用同步状态
+     * 
+     * @param id 对象ID
+     * @param isWork 启用同步状态
+     * @return 变更结果
+     */
+    public Map<String, Object> updateWorkStatus(Integer id, Boolean isWork);
+
+    /**
+     * 变更对象增量更新状态
+     * 
+     * @param id 对象ID
+     * @param isIncremental 增量更新状态
+     * @return 变更结果
+     */
+    public Map<String, Object> updateIncrementalStatus(Integer id, Boolean isIncremental);
+
+    /**
+     * 获取对象整体统计信息
+     * 
+     * @return 统计信息
+     */
+    public Map<String, Object> getObjectStatistics();
 }

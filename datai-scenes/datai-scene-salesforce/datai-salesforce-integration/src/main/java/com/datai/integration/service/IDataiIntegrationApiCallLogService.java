@@ -1,6 +1,7 @@
 package com.datai.integration.service;
 
 import java.util.List;
+import java.util.Map;
 import com.datai.integration.domain.DataiIntegrationApiCallLog;
 
 /**
@@ -58,4 +59,12 @@ public interface IDataiIntegrationApiCallLogService
      * @return 结果
      */
     public int deleteDataiIntegrationApiCallLogById(Long id);
+
+    /**
+     * 获取API调用日志统计信息
+     * 
+     * @param params 查询参数
+     * @return 统计信息
+     */
+    public Map<String, Object> getApiCallLogStatistics(Map<String, Object> params);
 }

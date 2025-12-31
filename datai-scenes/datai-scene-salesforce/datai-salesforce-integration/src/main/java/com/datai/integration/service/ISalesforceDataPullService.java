@@ -51,4 +51,17 @@ public interface ISalesforceDataPullService {
      */
     boolean autoSyncObjects();
 
+    /**
+     * 同步元数据变更到元数据变更信息表
+     * 表的变更新增需要满足以下任一条件：
+     * - isQueryable (可查询)
+     * - isCreateable (可创建)
+     * - isUpdateable (可更新)
+     * - isDeletable (可删除)
+     * 字段的变更新增无限制
+     * 
+     * @return 同步操作是否成功
+     */
+    boolean syncMetadataChanges();
+
 }

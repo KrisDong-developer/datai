@@ -1,6 +1,7 @@
 package com.datai.integration.controller;
 
 import java.util.List;
+import java.util.Map;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -109,5 +110,35 @@ public class DataiIntegrationApiCallLogController extends BaseController
     public AjaxResult remove(@PathVariable( name = "ids" ) Long[] ids) 
     {
         return toAjax(dataiIntegrationApiCallLogService.deleteDataiIntegrationApiCallLogByIds(ids));
+    }
+
+    /**
+     * 获取API调用日志统计信息
+     */
+    @Operation(summary = "获取API调用日志统计信息")
+    @PreAuthorize("@ss.hasPermi('integration:apilog:statistics')")
+    @GetMapping("/statistics")
+    public AjaxResult getStatistics(DataiIntegrationApiCallLog dataiIntegrationApiCallLog)
+    {
+        Map<String, Object> params = new java.util.HashMap<>();
+        if (dataiIntegrationApiCallLog.getApiType() != null) {
+            params.put("apiType", dataiIntegrationApiCallLog.getApiType());
+        }
+        if (dataiIntegrationApiCallLog.getConnectionClass() != null) {
+            params.put("connectionClass", dataiIntegrationApiCallLog.getConnectionClass());
+        }
+        if (dataiIntegrationApiCallLog.getMethodName() != null) {
+            params.put("methodName", dataiIntegrationApiCallLog.getMethodName());
+        }
+        if (dataiIntegrationApiCallLog.getStatus() != null) {
+            params.put("status", dataiIntegrationApiCallLog.getStatus());
+        }
+        
+        Map<String, Object> result = dataiIntegrationApiCallLogService.getApiCallLogStatistics(params);
+        if ((Boolean) result.get("success")) {
+            return success(result);
+        } else {
+            return error((String) result.get("message"));
+        }
     }
 }

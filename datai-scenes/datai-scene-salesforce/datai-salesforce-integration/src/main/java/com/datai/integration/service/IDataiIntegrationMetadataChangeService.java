@@ -85,4 +85,20 @@ public interface IDataiIntegrationMetadataChangeService
      * @return 统计信息
      */
     public Map<String, Object> getChangeStatistics(Map<String, Object> params);
+
+    /**
+     * 同步元数据变更到本地数据库
+     * 
+     * @param id 元数据变更ID
+     * @return 同步结果
+     */
+    public Map<String, Object> syncToLocalDatabase(Long id);
+
+    /**
+     * 批量同步元数据变更到本地数据库
+     * 
+     * @param ids 元数据变更ID集合
+     * @return 同步结果
+     */
+    public Map<String, Object> syncBatchToLocalDatabase(Long[] ids);
 }
