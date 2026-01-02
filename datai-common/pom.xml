@@ -15,7 +15,10 @@
     </description>
 
     <dependencies>
-
+        <dependency>
+            <groupId>eu.bitwalker</groupId>
+            <artifactId>UserAgentUtils</artifactId>
+        </dependency>
         <!-- SpringWeb模块 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

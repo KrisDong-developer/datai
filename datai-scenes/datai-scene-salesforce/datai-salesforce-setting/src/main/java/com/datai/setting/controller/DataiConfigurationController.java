@@ -1,9 +1,11 @@
 package com.datai.setting.controller;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.datai.setting.model.vo.DataiConfigurationVo;
+import com.datai.setting.service.IDataiConfigEnvironmentService;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,6 +43,9 @@ public class DataiConfigurationController extends BaseController
     @Autowired
     private IDataiConfigurationService dataiConfigurationService;
 
+    @Autowired
+    private IDataiConfigEnvironmentService dataiConfigEnvironmentService;
+
     /**
      * 查询配置列表
      */
@@ -52,7 +57,29 @@ public class DataiConfigurationController extends BaseController
         startPage();
         DataiConfiguration dataiConfiguration = DataiConfigurationDto.toObj(dataiConfigurationDto);
         List<DataiConfiguration> list = dataiConfigurationService.selectDataiConfigurationList(dataiConfiguration);
-        List<DataiConfigurationVo> voList = list.stream().map(DataiConfigurationVo::objToVo).collect(Collectors.toList());
+        
+        List<Long> environmentIds = list.stream()
+            .map(DataiConfiguration::getEnvironmentId)
+            .distinct()
+            .collect(Collectors.toList());
+        
+        Map<Long, String> environmentNameMap = environmentIds.stream()
+            .collect(Collectors.toMap(
+                id -> id,
+                id -> {
+                    var env = dataiConfigEnvironmentService.selectDataiConfigEnvironmentById(id);
+                    return env != null ? env.getEnvironmentName() : null;
+                }
+            ));
+        
+        List<DataiConfigurationVo> voList = list.stream()
+            .map(config -> {
+                DataiConfigurationVo vo = DataiConfigurationVo.objToVo(config);
+                vo.setEnvironmentName(environmentNameMap.get(config.getEnvironmentId()));
+                return vo;
+            })
+            .collect(Collectors.toList());
+        
         return getDataTable(voList);
     }
 
@@ -81,6 +108,12 @@ public class DataiConfigurationController extends BaseController
     {
         DataiConfiguration dataiConfiguration = dataiConfigurationService.selectDataiConfigurationById(id);
         DataiConfigurationVo dataiConfigurationVo = DataiConfigurationVo.objToVo(dataiConfiguration);
+        if (dataiConfigurationVo != null && dataiConfigurationVo.getEnvironmentId() != null) {
+            var env = dataiConfigEnvironmentService.selectDataiConfigEnvironmentById(dataiConfigurationVo.getEnvironmentId());
+            if (env != null) {
+                dataiConfigurationVo.setEnvironmentName(env.getEnvironmentName());
+            }
+        }
         return success(dataiConfigurationVo);
     }
 

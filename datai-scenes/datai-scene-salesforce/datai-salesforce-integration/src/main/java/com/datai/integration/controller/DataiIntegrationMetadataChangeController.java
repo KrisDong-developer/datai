@@ -1,11 +1,12 @@
 package com.datai.integration.controller;
 
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
+import com.datai.integration.model.domain.DataiIntegrationMetadataChange;
 import com.datai.integration.model.vo.DataiIntegrationMetadataChangeVo;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,7 +22,6 @@ import com.datai.common.annotation.Log;
 import com.datai.common.core.controller.BaseController;
 import com.datai.common.core.domain.AjaxResult;
 import com.datai.common.enums.BusinessType;
-import com.datai.integration.model.domain.DataiIntegrationMetadataChange;
 import com.datai.integration.model.dto.DataiIntegrationMetadataChangeDto;
 import com.datai.integration.service.IDataiIntegrationMetadataChangeService;
 import com.datai.common.utils.poi.ExcelUtil;
@@ -33,11 +33,11 @@ import io.swagger.v3.oas.annotations.Operation;
  * 对象元数据变更Controller
  * 
  * @author datai
- * @date 2025-12-27
- */
+ * @date 2025-12-27 */
 @RestController
 @RequestMapping("/integration/change")
 @Tag(name = "【对象元数据变更】管理")
+@Slf4j
 public class DataiIntegrationMetadataChangeController extends BaseController
 {
     @Autowired
@@ -227,6 +227,31 @@ public class DataiIntegrationMetadataChangeController extends BaseController
             return success(result);
         } catch (Exception e) {
             return error("批量同步失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 全对象元数据变更拉取
+     * 从Salesforce拉取所有对象的元数据变更信息并记录到元数据变更表中
+     * 表的变更新增需要满足以下任一条件：
+     * - isQueryable (可查询)
+     * - isCreateable (可创建)
+     * - isUpdateable (可更新)
+     * - isDeletable (可删除)
+     * 字段的变更新增无限制
+     */
+    @Operation(summary = "全对象元数据变更拉取")
+    @PreAuthorize("@ss.hasPermi('integration:change:pullAll')")
+    @Log(title = "全对象元数据变更拉取", businessType = BusinessType.OTHER)
+    @PostMapping("/pullAll")
+    public AjaxResult pullAllMetadataChanges()
+    {
+        try {
+            Map<String, Object> result = dataiIntegrationMetadataChangeService.pullAllMetadataChanges();
+            return success(result);
+        } catch (Exception e) {
+            log.error("全对象元数据变更拉取时发生异常", e);
+            return error("全对象元数据变更拉取失败: " + e.getMessage());
         }
     }
 }

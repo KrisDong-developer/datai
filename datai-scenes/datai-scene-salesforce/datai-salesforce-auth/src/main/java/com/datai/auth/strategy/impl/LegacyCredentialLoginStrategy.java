@@ -18,6 +18,7 @@ import com.datai.setting.config.SalesforceConfigCacheManager;
 
 import java.io.*;
 import java.net.HttpURLConnection;
+import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
@@ -29,41 +30,54 @@ import java.util.Optional;
  * 传统账密凭证登录策略实现
  * 支持使用用户名、密码和安全令牌进行登录
  * 支持SOAP登录方式
- * 
+ *
  * @author datai
  * @date 2025-12-14
  */
 @Component
 public class LegacyCredentialLoginStrategy implements LoginStrategy {
-    
+
     @Resource
     private SalesforceConfigCacheManager salesforceConfigCacheManager;
-    
+
     private static final Logger logger = LoggerFactory.getLogger(LegacyCredentialLoginStrategy.class);
+
+    private static final Map<String, String> ERROR_MESSAGE_MAP = new HashMap<>();
+
+    static {
+        ERROR_MESSAGE_MAP.put("LOGIN_MUST_USE_SECURITY_TOKEN", "用户名、密码或安全标记无效，或用户被锁定");
+        ERROR_MESSAGE_MAP.put("INVALID_LOGIN", "用户名或密码错误");
+        ERROR_MESSAGE_MAP.put("INVALID_OPERATION_WITH_EXPIRED_PASSWORD", "密码已过期，请重置密码");
+        ERROR_MESSAGE_MAP.put("USER_LOCKED_OUT", "用户已被锁定，请联系管理员");
+        ERROR_MESSAGE_MAP.put("PASSWORD_EXPIRED", "密码已过期");
+        ERROR_MESSAGE_MAP.put("SERVER_UNAVAILABLE", "服务器暂时不可用，请稍后重试");
+        ERROR_MESSAGE_MAP.put("API_DISABLED_FOR_ORG", "组织的API访问已禁用");
+        ERROR_MESSAGE_MAP.put("UNKNOWN_EXCEPTION", "登录失败，请检查凭据或联系管理员");
+    }
 
     @Override
     public SalesforceLoginResult login(SalesforceLoginRequest request) {
         logger.info("执行传统账密凭证登录，登录类型：{}", request.getLoginType());
-        
+
         SalesforceLoginResult result = new SalesforceLoginResult();
-        
+
         try {
             // 1. 验证请求参数
             validateRequest(request);
-            
+
             // 2. 获取Salesforce配置
             Map<String, String> config = getSalesforceConfig(request.getLoginUrl());
-            
+
             // 3. 构建SOAP请求
             String soapRequest = buildSoapLoginRequest(request, config);
-            
+
             // 4. 发送SOAP请求
             String soapResponse = sendSoapRequest(soapRequest, config.get("endpointUrl"));
-            
+
             // 5. 解析SOAP响应
             result = parseSoapResponse(soapResponse);
             result.setSuccess(true);
-            
+
             logger.info("传统账密凭证登录成功，用户名: {}", request.getUsername());
         } catch (Exception e) {
             logger.error("传统账密凭证登录失败: {}", e.getMessage(), e);
@@ -76,59 +90,59 @@ public class LegacyCredentialLoginStrategy implements LoginStrategy {
                 result.setErrorCode("LEGACY_LOGIN_FAILED");
             }
         }
-        
+
         return result;
     }
-    
+
     @Override
     public SalesforceLoginResult refreshToken(String refreshToken, String loginType) {
         logger.info("执行传统账密凭证刷新Session操作");
-        
+
         // 传统账密登录方式不支持刷新Session，需要重新登录
         SalesforceLoginResult result = new SalesforceLoginResult();
         result.setSuccess(false);
         result.setErrorMessage("Legacy credential login does not support session refresh");
         result.setErrorCode("REFRESH_NOT_SUPPORTED");
-        
+
         return result;
     }
-    
+
     @Override
     public boolean logout(String sessionId, String loginType) {
         logger.info("执行传统账密凭证登出操作");
-        
+
         // 传统账密登录方式的登出操作主要是清理本地状态和调用Salesforce登出API
         try {
             // 1. 获取Salesforce配置
             Map<String, String> config = getSalesforceConfig(null);
-            
+
             // 2. 调用Salesforce登出API
             boolean logoutSuccess = executeSoapLogout(sessionId, config);
-            
+
             // 3. 清理本地缓存
             cleanupLocalCache(sessionId);
-            
+
             if (logoutSuccess) {
                 logger.info("传统账密凭证登出成功");
             } else {
                 logger.warn("传统账密凭证登出失败");
             }
-            
+
             return logoutSuccess;
         } catch (Exception e) {
             logger.error("传统账密凭证登出失败: {}", e.getMessage(), e);
             return false;
         }
     }
-    
+
     @Override
     public String getLoginType() {
         return "legacy_credential";
     }
-    
+
     /**
      * 验证登录请求参数
-     * 
+     *
      * @param request 登录请求
      * @throws SalesforceLegacyCredentialLoginException 参数验证失败时抛出
      */
@@ -140,60 +154,70 @@ public class LegacyCredentialLoginStrategy implements LoginStrategy {
             throw new SalesforceLegacyCredentialLoginException("MISSING_PASSWORD", "Password is required");
         }
     }
-    
+
     /**
      * 获取Salesforce配置信息
-     * 
+     *
      * @param customLoginUrl 自定义登录URL，可为null
      * @return 配置信息Map
      * @throws SalesforceLegacyCredentialLoginException 配置获取失败时抛出
      */
     private Map<String, String> getSalesforceConfig(String customLoginUrl) throws SalesforceLegacyCredentialLoginException {
-        Cache cache = CacheUtils.getCache(SalesforceConfigConstants.SALESFORCE_CONFIG_CACHE_KEY);
-        if (cache == null) {
-            throw new SalesforceLegacyCredentialLoginException("CONFIG_NOT_FOUND", "Salesforce config cache not found");
-        }
-        
-        String apiVersion = CacheUtils.get(salesforceConfigCacheManager.getEnvironmentCacheKey(), "salesforce.api.version", String.class);
-        String environmentType = CacheUtils.get(salesforceConfigCacheManager.getEnvironmentCacheKey(), "salesforce.environment.type", String.class);
-        String endpointUrl;
-        
-        if (customLoginUrl != null && !customLoginUrl.trim().isEmpty()) {
-            endpointUrl = customLoginUrl;
-            logger.info("使用自定义登录地址: {}", endpointUrl);
-        } else {
-            endpointUrl = getEndpointUrl(environmentType);
-        }
-        
-        String namespace = CacheUtils.get(salesforceConfigCacheManager.getEnvironmentCacheKey(), "salesforce.api.namespace", String.class);
-        String bindingName = CacheUtils.get(salesforceConfigCacheManager.getEnvironmentCacheKey(), "salesforce.api.binding", String.class);
-        String portType = CacheUtils.get(salesforceConfigCacheManager.getEnvironmentCacheKey(), "salesforce.api.port_type", String.class);
-        String serviceName = CacheUtils.get(salesforceConfigCacheManager.getEnvironmentCacheKey(), "salesforce.api.service_name", String.class);
-        
-        // 验证必要配置
-        if (apiVersion == null) {
-            apiVersion = "65.0"; // 默认值
-        }
-        if (namespace == null) {
-            namespace = "http://soap.sforce.com/2006/08/apex"; // 默认值
-        }
-        
-        // 使用HashMap替代Map.of()以允许null值
+        // 1. 获取基础环境配置（建议统一从一个配置对象读取，减少重复的 CacheUtils.get 调用）
+        String envCacheKey = salesforceConfigCacheManager.getEnvironmentCacheKey();
+
+        // 提取配置，同时提供默认值处理
+        String apiVersion = getCacheValue(envCacheKey, "salesforce.api.version", "65.0");
+        String environmentType = getCacheValue(envCacheKey, "salesforce.environment.type", "production");
+        String namespace = getCacheValue(envCacheKey, "salesforce.api.namespace", "urn:partner.soap.sforce.com"); // 修正：Partner API 通常使用这个命名空间
+
+        // 2. 核心优化：处理 Endpoint URL
+        String rawEndpoint = (StringUtils.isNotBlank(customLoginUrl))
+                ? customLoginUrl.trim()
+                : getEndpointUrl(environmentType);
+
+        // 自动补全 Salesforce SOAP 路径 (核心修复)
+        String finalEndpoint = formatSalesforceSoapEndpoint(rawEndpoint, apiVersion);
+
+        logger.info("Final Salesforce SOAP Endpoint: {}", finalEndpoint);
+
+        // 3. 构建配置结果
         Map<String, String> configMap = new HashMap<>();
         configMap.put("apiVersion", apiVersion);
-        configMap.put("environmentType", environmentType);
-        configMap.put("endpointUrl", endpointUrl);
+        configMap.put("endpointUrl", finalEndpoint);
         configMap.put("namespace", namespace);
-        configMap.put("bindingName", bindingName);
-        configMap.put("portType", portType);
-        configMap.put("serviceName", serviceName);
-        
+        configMap.put("environmentType", environmentType);
+        configMap.put("bindingName", getCacheValue(envCacheKey, "salesforce.api.binding", null));
+        configMap.put("portType", getCacheValue(envCacheKey, "salesforce.api.port_type", null));
+        configMap.put("serviceName", getCacheValue(envCacheKey, "salesforce.api.service_name", null));
+
         return configMap;
     }
-    
+
+    /**
+     * 辅助方法：确保 URL 包含正确的 SOAP 服务路径
+     */
+    private String formatSalesforceSoapEndpoint(String url, String version) {
+        if (StringUtils.isBlank(url)) return url;
+
+        // 如果只有域名，或者没有包含 services/Soap 路径
+        if (!url.contains("/services/Soap/u/")) {
+            // 去除结尾的反斜杠
+            String baseUrl = url.endsWith("/") ? url.substring(0, url.length() - 1) : url;
+            // 自动拼装 Partner API 路径 (/u/ 代表 partner)
+            return String.format("%s/services/Soap/u/%s", baseUrl, version);
+        }
+        return url;
+    }
+
+    private String getCacheValue(String key, String item, String defaultValue) {
+        String val = CacheUtils.get(key, item, String.class);
+        return (val != null) ? val : defaultValue;
+    }
+
     /**
      * 获取Salesforce API端点URL
-     * 
+     *
      * @param environmentType 环境类型
      * @return 端点URL
      * @throws SalesforceLegacyCredentialLoginException 配置获取失败时抛出
@@ -203,11 +227,11 @@ public class LegacyCredentialLoginStrategy implements LoginStrategy {
         if (cache == null) {
             throw new SalesforceLegacyCredentialLoginException("CONFIG_NOT_FOUND", "Salesforce config cache not found");
         }
-        
+
         if (environmentType == null) {
             return CacheUtils.get(salesforceConfigCacheManager.getEnvironmentCacheKey(), "salesforce.api.endpoint.production", String.class);
         }
-        
+
         switch (environmentType) {
             case "sandbox":
                 return CacheUtils.get(salesforceConfigCacheManager.getEnvironmentCacheKey(), "salesforce.api.endpoint.sandbox", String.class);
@@ -255,69 +279,96 @@ public class LegacyCredentialLoginStrategy implements LoginStrategy {
         return String.format(soapTemplate, safeUsername, safePassword);
     }
 
+
     private String sendSoapRequest(String soapRequest, String endpointUrl) throws Exception {
-        if (StringUtils.isBlank(endpointUrl)) {
-            throw new IllegalArgumentException("Endpoint URL is required");
+        if (StringUtils.isBlank(endpointUrl) || StringUtils.isBlank(soapRequest)) {
+            throw new IllegalArgumentException("Endpoint URL and SOAP request body are required");
         }
 
-        logger.debug("Sending SOAP request to: {}", endpointUrl);
+        logger.debug("Sending SOAP request to: {}. Payload size: {} bytes", endpointUrl, soapRequest.length());
 
-        URL url = new URL(endpointUrl);
-        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-
+        HttpURLConnection connection = null;
         try {
-            // 1. 设置关键 Header
+            URL url = new URL(endpointUrl);
+            connection = (HttpURLConnection) url.openConnection();
+
+            // 配置请求参数
             connection.setRequestMethod("POST");
-            // 核心修复：Salesforce Partner API 要求 SOAPAction 为空字符串双引号
-            connection.setRequestProperty("SOAPAction", "\"\"");
-            connection.setRequestProperty("Content-Type", "text/xml; charset=utf-8");
-            connection.setRequestProperty("Accept", "text/xml");
-
-            // 2. 增加超时控制 (防止网络抖动挂死应用)
-            connection.setConnectTimeout(10000); // 10s
-            connection.setReadTimeout(30000);    // 30s
-
+            connection.setConnectTimeout(10000);
+            connection.setReadTimeout(30000);
             connection.setDoOutput(true);
-            connection.setDoInput(true);
 
-            // 3. 发送请求
+            // 设置 Header
+            connection.setRequestProperty("Content-Type", "text/xml; charset=utf-8");
+            connection.setRequestProperty("SOAPAction", "\"\"");
+            connection.setRequestProperty("Accept", "text/xml");
+            // 显式开启 Keep-Alive
+            connection.setRequestProperty("Connection", "Keep-Alive");
+
+            // 发送数据
+            byte[] requestBytes = soapRequest.getBytes(StandardCharsets.UTF_8);
+            connection.setFixedLengthStreamingMode(requestBytes.length); // 明确告知长度，提高性能
             try (OutputStream os = connection.getOutputStream()) {
-                os.write(soapRequest.getBytes(StandardCharsets.UTF_8));
-                os.flush();
+                os.write(requestBytes);
             }
 
             int responseCode = connection.getResponseCode();
 
-            // 4. 读取响应 (统一处理正常和错误流)
-            boolean isSuccess = (responseCode >= 200 && responseCode < 300);
-            try (InputStream is = isSuccess ? connection.getInputStream() : connection.getErrorStream()) {
+            // 读取响应
+            try (InputStream is = (responseCode >= 200 && responseCode < 300)
+                    ? connection.getInputStream()
+                    : connection.getErrorStream()) {
+
                 if (is == null) {
-                    throw new SalesforceLegacyCredentialLoginException("HTTP_" + responseCode, "Server returned no content.");
+                    throw new SalesforceLegacyCredentialLoginException("HTTP_" + responseCode, "Empty response body from Salesforce");
                 }
 
-                String response = new String(is.readAllBytes(), StandardCharsets.UTF_8);
+                // 使用包装后的读取方法，防止内存溢出或乱码
+                String response = readStream(is);
 
-                if (!isSuccess) {
-                    // --- 核心优化点：提取结构化错误信息 ---
-                    SalesforceLoginResult errorDetail = parseErrorResponse(response);
-
-                    logger.error("Salesforce SOAP Login Failed. Status: {}, Code: {}, Message: {}",
-                            responseCode, errorDetail.getErrorCode(), errorDetail.getErrorMessage());
-
-                    // 抛出带有“易读消息”的自定义异常
-                    throw new SalesforceLegacyCredentialLoginException(
-                            errorDetail.getErrorCode(),
-                            errorDetail.getErrorMessage()
-                    );
+                if (responseCode >= 300) {
+                    handleErrorResponse(responseCode, response);
                 }
 
                 return response;
             }
+        } catch (SocketTimeoutException e) {
+            logger.error("Timeout connecting to Salesforce at {}", endpointUrl);
+            throw new Exception("Salesforce connection timed out", e);
         } finally {
-            connection.disconnect();
+            if (connection != null) {
+                connection.disconnect();
+            }
         }
     }
 
+    /**
+     * 提取辅助方法：流读取
+     */
+    private String readStream(InputStream is) throws IOException {
+        StringBuilder sb = new StringBuilder();
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                sb.append(line);
+            }
+        }
+        return sb.toString();
+    }
+
+    /**
+     * 提取辅助方法：解析错误逻辑
+     */
+    private void handleErrorResponse(int statusCode, String responseBody) throws SalesforceLegacyCredentialLoginException {
+        SalesforceLoginResult errorDetail = parseErrorResponse(responseBody);
+        logger.error("Salesforce SOAP Error. Status: {}, Code: {}, Message: {}",
+                statusCode, errorDetail.getErrorCode(), errorDetail.getErrorMessage());
+
+        throw new SalesforceLegacyCredentialLoginException(
+                errorDetail.getErrorCode(),
+                errorDetail.getErrorMessage()
+        );
+    }
     /**
      * 从 SOAP 错误响应中解析具体的异常信息
      */
@@ -325,7 +376,7 @@ public class LegacyCredentialLoginStrategy implements LoginStrategy {
         SalesforceLoginResult errorResult = new SalesforceLoginResult();
         errorResult.setSuccess(false);
         errorResult.setErrorCode("UNKNOWN_SOAP_ERROR");
-        errorResult.setErrorMessage(errorXml); // 默认放全文，防止解析失败
+        errorResult.setErrorMessage("登录失败，请检查凭据或联系管理员");
 
         try {
             MessageFactory messageFactory = MessageFactory.newInstance(SOAPConstants.DYNAMIC_SOAP_PROTOCOL);
@@ -335,19 +386,50 @@ public class LegacyCredentialLoginStrategy implements LoginStrategy {
 
                 if (body.hasFault()) {
                     SOAPFault fault = body.getFault();
-                    // 1. 尝试获取 exceptionCode (通常在 detail 节点下)
                     String detailCode = extractDetailValue(fault, "exceptionCode");
-                    // 2. 尝试获取 exceptionMessage
                     String detailMsg = extractDetailValue(fault, "exceptionMessage");
 
-                    errorResult.setErrorCode(detailCode != null ? detailCode : fault.getFaultCode());
-                    errorResult.setErrorMessage(detailMsg != null ? detailMsg : fault.getFaultString());
+                    String errorCode = detailCode != null ? detailCode : fault.getFaultCode();
+                    errorResult.setErrorCode(errorCode);
+
+                    String friendlyMessage = getFriendlyErrorMessage(errorCode);
+                    errorResult.setErrorMessage(friendlyMessage);
+
+                    logger.error("Salesforce SOAP Login Failed. Code: {}, Original Message: {}, Friendly Message: {}",
+                            errorCode, detailMsg, friendlyMessage);
                 }
             }
         } catch (Exception e) {
-            logger.warn("Failed to parse SOAP Fault detail, falling back to raw response.");
+            logger.warn("Failed to parse SOAP Fault detail, falling back to default error message.");
         }
         return errorResult;
+    }
+
+    /**
+     * 获取友好的错误消息
+     *
+     * @param errorCode 错误代码
+     * @return 友好的中文错误消息
+     */
+    private String getFriendlyErrorMessage(String errorCode) {
+        if (errorCode == null) {
+            return "登录失败，请检查凭据或联系管理员";
+        }
+
+        String message = ERROR_MESSAGE_MAP.get(errorCode);
+        if (message != null) {
+            return message;
+        }
+
+        if (errorCode.startsWith("sf:")) {
+            String codeWithoutPrefix = errorCode.substring(3);
+            message = ERROR_MESSAGE_MAP.get(codeWithoutPrefix);
+            if (message != null) {
+                return message;
+            }
+        }
+
+        return "登录失败，请检查凭据或联系管理员";
     }
 
     /**
@@ -554,7 +636,7 @@ public class LegacyCredentialLoginStrategy implements LoginStrategy {
     }
     /**
      * 执行SOAP登出操作
-     * 
+     *
      * @param sessionId Session ID
      * @param config 配置信息
      * @return 登出是否成功
@@ -563,17 +645,17 @@ public class LegacyCredentialLoginStrategy implements LoginStrategy {
     private boolean executeSoapLogout(String sessionId, Map<String, String> config) throws Exception {
         // 构建登出SOAP请求
         String soapLogoutRequest = buildSoapLogoutRequest(sessionId);
-        
+
         // 发送登出请求
         String soapResponse = sendSoapRequest(soapLogoutRequest, config.get("endpointUrl"));
-        
+
         // 解析登出响应
         return parseSoapLogoutResponse(soapResponse);
     }
-    
+
     /**
      * 构建SOAP登出请求
-     * 
+     *
      * @param sessionId Session ID
      * @return SOAP登出请求字符串
      */
@@ -659,7 +741,7 @@ public class LegacyCredentialLoginStrategy implements LoginStrategy {
     }
     /**
      * 清理本地缓存
-     * 
+     *
      * @param sessionId Session ID
      */
     private void cleanupLocalCache(String sessionId) {

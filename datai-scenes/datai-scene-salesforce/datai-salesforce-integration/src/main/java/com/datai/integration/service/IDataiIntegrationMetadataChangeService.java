@@ -101,4 +101,18 @@ public interface IDataiIntegrationMetadataChangeService
      * @return 同步结果
      */
     public Map<String, Object> syncBatchToLocalDatabase(Long[] ids);
+
+    /**
+     * 全对象元数据变更拉取
+     * 从Salesforce拉取所有对象的元数据变更信息并记录到元数据变更表中
+     * 表的变更新增需要满足以下任一条件：
+     * - isQueryable (可查询)
+     * - isCreateable (可创建)
+     * - isUpdateable (可更新)
+     * - isDeletable (可删除)
+     * 字段的变更新增无限制
+     * 
+     * @return 拉取结果，包含对象变更数量和字段变更数量
+     */
+    public Map<String, Object> pullAllMetadataChanges();
 }

@@ -508,7 +508,6 @@ CREATE TABLE `datai_sf_login_session`  (
   `device_info` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '设备信息',
   `browser_info` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '浏览器信息',
   `session_id` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '会话ID',
-  `token_id` bigint NULL DEFAULT NULL COMMENT '令牌ID',
   `dept_id` bigint NULL DEFAULT NULL COMMENT '部门ID',
   `create_by` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '创建人',
   `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -518,8 +517,7 @@ CREATE TABLE `datai_sf_login_session`  (
   INDEX `idx_username`(`username` ASC) USING BTREE,
   INDEX `idx_login_type`(`login_type` ASC) USING BTREE,
   INDEX `idx_status`(`status` ASC) USING BTREE,
-  INDEX `idx_expire_time`(`expire_time` ASC) USING BTREE,
-  INDEX `idx_token_id`(`token_id` ASC) USING BTREE
+  INDEX `idx_expire_time`(`expire_time` ASC) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 7 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '登录会话信息表' ROW_FORMAT = DYNAMIC;
 
 SET FOREIGN_KEY_CHECKS = 1;

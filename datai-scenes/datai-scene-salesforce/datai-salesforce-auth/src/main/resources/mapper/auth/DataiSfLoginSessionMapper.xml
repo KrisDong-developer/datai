@@ -112,7 +112,6 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="deviceInfo != null">#{deviceInfo},</if>
             <if test="browserInfo != null">#{browserInfo},</if>
             <if test="sessionId != null">#{sessionId},</if>
-            <if test="tokenId != null">#{tokenId},</if>
             <if test="deptId != null">#{deptId},</if>
             <if test="sfUserId != null">#{sfUserId},</if>
             <if test="sfOrganizationId != null">#{sfOrganizationId},</if>

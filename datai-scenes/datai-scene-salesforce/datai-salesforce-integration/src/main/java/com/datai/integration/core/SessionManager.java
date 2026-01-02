@@ -32,7 +32,7 @@ public class SessionManager {
         log.info("获取当前Salesforce会话信息");
 
         try {
-            SalesforceLoginResult loginResult = (SalesforceLoginResult) CacheUtils.get(SalesforceConfigConstants.CACHE_NAME, SalesforceConfigConstants.CURRENT_RESULT);
+            SalesforceLoginResult loginResult = CacheUtils.get(SalesforceConfigConstants.CACHE_NAME, SalesforceConfigConstants.CURRENT_RESULT, SalesforceLoginResult.class);
 
             if (loginResult != null && loginResult.isSuccess() && !loginResult.isSessionExpired()) {
                 log.info("获取会话信息成功，访问令牌前缀: {}", 
@@ -126,10 +126,7 @@ public class SessionManager {
         log.info("检查当前Salesforce会话信息是否有效");
 
         try {
-            SalesforceLoginResult loginResult = (SalesforceLoginResult) CacheUtils.get(
-                    SalesforceConfigConstants.CACHE_NAME, 
-                    SalesforceConfigConstants.CURRENT_RESULT
-            );
+            SalesforceLoginResult loginResult = CacheUtils.get(SalesforceConfigConstants.CACHE_NAME, SalesforceConfigConstants.CURRENT_RESULT, SalesforceLoginResult.class);
 
             if (loginResult == null) {
                 log.warn("会话信息为null，会话无效");

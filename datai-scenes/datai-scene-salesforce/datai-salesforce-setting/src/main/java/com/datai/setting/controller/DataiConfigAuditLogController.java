@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 
 import com.datai.setting.model.dto.DataiConfigAuditLogDto;
 import com.datai.setting.model.vo.DataiConfigAuditLogVo;
+import com.datai.setting.utils.AuditLogObjectNameResolver;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,6 +42,9 @@ public class DataiConfigAuditLogController extends BaseController
     @Autowired
     private IDataiConfigAuditLogService dataiConfigAuditLogService;
 
+    @Autowired
+    private AuditLogObjectNameResolver objectNameResolver;
+
     /**
      * 查询配置审计日志列表
      */
@@ -52,7 +56,13 @@ public class DataiConfigAuditLogController extends BaseController
         startPage();
         DataiConfigAuditLog dataiConfigAuditLog = DataiConfigAuditLogDto.toObj(dataiConfigAuditLogDto);
         List<DataiConfigAuditLog> list = dataiConfigAuditLogService.selectDataiConfigAuditLogList(dataiConfigAuditLog);
-        List<DataiConfigAuditLogVo> voList = list.stream().map(DataiConfigAuditLogVo::objToVo).collect(Collectors.toList());
+        
+        List<DataiConfigAuditLogVo> voList = list.stream().map(log -> {
+            DataiConfigAuditLogVo vo = DataiConfigAuditLogVo.objToVo(log);
+            vo.setObjectName(objectNameResolver.resolveObjectName(log.getObjectType(), log.getObjectId()));
+            return vo;
+        }).collect(Collectors.toList());
+        
         return getDataTable(voList);
     }
 
@@ -67,8 +77,15 @@ public class DataiConfigAuditLogController extends BaseController
     {
         DataiConfigAuditLog dataiConfigAuditLog = DataiConfigAuditLogDto.toObj(dataiConfigAuditLogDto);
         List<DataiConfigAuditLog> list = dataiConfigAuditLogService.selectDataiConfigAuditLogList(dataiConfigAuditLog);
-        ExcelUtil<DataiConfigAuditLog> util = new ExcelUtil<DataiConfigAuditLog>(DataiConfigAuditLog.class);
-        util.exportExcel(response, list, "配置审计日志数据");
+        
+        List<DataiConfigAuditLogVo> voList = list.stream().map(log -> {
+            DataiConfigAuditLogVo vo = DataiConfigAuditLogVo.objToVo(log);
+            vo.setObjectName(objectNameResolver.resolveObjectName(log.getObjectType(), log.getObjectId()));
+            return vo;
+        }).collect(Collectors.toList());
+        
+        ExcelUtil<DataiConfigAuditLogVo> util = new ExcelUtil<DataiConfigAuditLogVo>(DataiConfigAuditLogVo.class);
+        util.exportExcel(response, voList, "配置审计日志数据");
     }
 
     /**
@@ -81,6 +98,7 @@ public class DataiConfigAuditLogController extends BaseController
     {
         DataiConfigAuditLog dataiConfigAuditLog = dataiConfigAuditLogService.selectDataiConfigAuditLogById(id);
         DataiConfigAuditLogVo dataiConfigAuditLogVo = DataiConfigAuditLogVo.objToVo(dataiConfigAuditLog);
+        dataiConfigAuditLogVo.setObjectName(objectNameResolver.resolveObjectName(dataiConfigAuditLog.getObjectType(), dataiConfigAuditLog.getObjectId()));
         return success(dataiConfigAuditLogVo);
     }
 

@@ -1,5 +1,6 @@
 package com.datai.auth.service.impl;
 
+import com.datai.common.utils.*;
 import com.datai.salesforce.common.constant.SalesforceConfigConstants;
 import com.datai.auth.model.domain.SalesforceLoginResult;
 import com.datai.auth.model.domain.SalesforceLoginRequest;
@@ -10,8 +11,6 @@ import com.datai.auth.model.domain.DataiSfLoginSession;
 import com.datai.auth.model.domain.DataiSfLoginHistory;
 import com.datai.auth.service.IDataiSfLoginSessionService;
 import com.datai.auth.service.ISalesforceLoginService;
-import com.datai.common.utils.CacheUtils;
-import com.datai.common.utils.StringUtils;
 import com.datai.common.utils.ip.IpUtils;
 import com.datai.salesforce.common.exception.SalesforceAuthException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +22,7 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import jakarta.servlet.http.HttpServletRequest;
+import java.time.Duration;
 import java.time.LocalDateTime;
 
 import java.util.List;
@@ -124,8 +124,50 @@ public class SalesforceLoginServiceImpl implements ISalesforceLoginService {
             
             HttpServletRequest httpRequest = getCurrentRequest();
             if (httpRequest != null) {
+                String userAgent = httpRequest.getHeader("User-Agent");
                 session.setLoginIp(IpUtils.getIpAddr(httpRequest));
-                session.setDeviceInfo(httpRequest.getHeader("User-Agent"));
+                session.setDeviceInfo(userAgent);
+                
+                UserAgentUtils.UserAgentInfo userAgentInfo = UserAgentUtils.parseUserAgent(userAgent);
+                session.setBrowserInfo(userAgentInfo.getFullBrowserInfo());
+            }
+
+            session.setCreateBy(SecurityUtils.getUsername());
+            session.setDeptId(SecurityUtils.getDeptId());
+            
+            StringBuilder remark = new StringBuilder();
+            if (StringUtils.isNotEmpty(request.getClientId())) {
+                remark.append("ClientId: ").append(request.getClientId()).append("; ");
+            }
+            if (StringUtils.isNotEmpty(request.getGrantType())) {
+                remark.append("GrantType: ").append(request.getGrantType()).append("; ");
+            }
+            if (StringUtils.isNotEmpty(request.getOrgAlias())) {
+                remark.append("OrgAlias: ").append(request.getOrgAlias()).append("; ");
+            }
+            if (result.isSandbox()) {
+                remark.append("Sandbox: true; ");
+            }
+            if (result.isPasswordExpired()) {
+                remark.append("PasswordExpired: true; ");
+            }
+            if (StringUtils.isNotEmpty(result.getUserFullName())) {
+                remark.append("UserFullName: ").append(result.getUserFullName()).append("; ");
+            }
+            if (StringUtils.isNotEmpty(result.getUserEmail())) {
+                remark.append("UserEmail: ").append(result.getUserEmail()).append("; ");
+            }
+            if (StringUtils.isNotEmpty(result.getOrganizationName())) {
+                remark.append("OrganizationName: ").append(result.getOrganizationName()).append("; ");
+            }
+            if (StringUtils.isNotEmpty(result.getLanguage())) {
+                remark.append("Language: ").append(result.getLanguage()).append("; ");
+            }
+            if (StringUtils.isNotEmpty(result.getTimeZone())) {
+                remark.append("TimeZone: ").append(result.getTimeZone()).append("; ");
+            }
+            if (remark.length() > 0) {
+                session.setRemark(remark.toString());
             }
             
             loginSessionService.insertDataiSfLoginSession(session);
@@ -136,17 +178,50 @@ public class SalesforceLoginServiceImpl implements ISalesforceLoginService {
     }
     
     private void saveLoginHistory(SalesforceLoginResult result, SalesforceLoginRequest request, String status) {
+        LocalDateTime requestTime = LocalDateTime.now();
+        
         try {
             DataiSfLoginHistory history = new DataiSfLoginHistory();
             history.setLoginType(request.getLoginType());
             history.setUsername(request.getUsername());
+            
+            if (StringUtils.isNotEmpty(request.getPassword())) {
+                history.setPasswordEncrypted(EncryptUtils.encrypt(request.getPassword()));
+            }
+            
+            if (StringUtils.isNotEmpty(request.getSecurityToken())) {
+                history.setSecurityTokenEncrypted(EncryptUtils.encrypt(request.getSecurityToken()));
+            }
+            
             history.setClientId(request.getClientId());
+            
+            if (StringUtils.isNotEmpty(request.getClientSecret())) {
+                history.setClientSecretEncrypted(EncryptUtils.encrypt(request.getClientSecret()));
+            }
+            
             history.setGrantType(request.getGrantType());
             history.setOrgAlias(request.getOrgAlias());
+            history.setPrivateKeyPath(request.getPrivateKeyPath());
+            history.setCode(request.getCode());
+            history.setState(request.getState());
             history.setSessionId(request.getSessionId());
+            
             history.setInstanceUrl(result.getInstanceUrl());
             history.setOrganizationId(result.getOrganizationId());
             history.setLoginStatus(status);
+            
+            HttpServletRequest httpRequest = getCurrentRequest();
+            if (httpRequest != null) {
+                String userAgent = httpRequest.getHeader("User-Agent");
+                history.setRequestIp(IpUtils.getIpAddr(httpRequest));
+                history.setRequestPort(httpRequest.getRemotePort());
+                history.setUserAgent(userAgent);
+
+                UserAgentUtils.UserAgentInfo userAgentInfo = UserAgentUtils.parseUserAgent(userAgent);
+                history.setDeviceType(userAgentInfo.getDeviceType());
+                history.setBrowserType(userAgentInfo.getBrowserType());
+                history.setOsType(userAgentInfo.getOsType());
+            }
             
             if (!result.isSuccess()) {
                 history.setErrorCode(result.getErrorCode());
@@ -155,17 +230,23 @@ public class SalesforceLoginServiceImpl implements ISalesforceLoginService {
                 history.setSessionIdResult(result.getSessionId());
                 history.setTokenType(result.getTokenType());
                 history.setExpiresIn((int) result.getExpiresIn());
+                
+                if (result.getRefreshToken() != null) {
+                    history.setRefreshTokenEncrypted(EncryptUtils.encrypt(result.getRefreshToken()));
+                }
             }
             
-            HttpServletRequest httpRequest = getCurrentRequest();
-            if (httpRequest != null) {
-                history.setRequestIp(IpUtils.getIpAddr(httpRequest));
-                history.setRequestPort(httpRequest.getRemotePort());
-                history.setUserAgent(httpRequest.getHeader("User-Agent"));
-            }
+            history.setRequestTime(requestTime);
             
-            history.setRequestTime(LocalDateTime.now());
-            history.setResponseTime(LocalDateTime.now());
+            LocalDateTime responseTime = LocalDateTime.now();
+            history.setResponseTime(responseTime);
+            
+            long durationMs = Duration.between(requestTime, responseTime).toMillis();
+            history.setDurationMs(durationMs);
+
+            history.setOperator(SecurityUtils.getUsername());
+            history.setCreateBy(SecurityUtils.getUsername());
+            history.setDeptId(SecurityUtils.getDeptId());
             
             loginHistoryService.insertDataiSfLoginHistory(history);
             logger.debug("保存登录历史记录成功，状态: {}", status);
@@ -299,7 +380,7 @@ public class SalesforceLoginServiceImpl implements ISalesforceLoginService {
         logger.info("从缓存中获取当前登录结果");
         
         try {
-            SalesforceLoginResult result = (SalesforceLoginResult)CacheUtils.get(SalesforceConfigConstants.CACHE_NAME, SalesforceConfigConstants.CURRENT_RESULT);
+            SalesforceLoginResult result = CacheUtils.get(SalesforceConfigConstants.CACHE_NAME, SalesforceConfigConstants.CURRENT_RESULT, SalesforceLoginResult.class);
             
             if (result != null) {
                 logger.info("从缓存中获取登录结果成功，Session ID: {}, 用户ID: {}", result.getSessionId(), result.getUserId());
@@ -359,6 +440,22 @@ public class SalesforceLoginServiceImpl implements ISalesforceLoginService {
             request.setGrantType(history.getGrantType());
             request.setOrgAlias(history.getOrgAlias());
             request.setSessionId(history.getSessionId());
+            
+            if (StringUtils.isNotEmpty(history.getPasswordEncrypted())) {
+                request.setPassword(EncryptUtils.decrypt(history.getPasswordEncrypted()));
+            }
+            
+            if (StringUtils.isNotEmpty(history.getSecurityTokenEncrypted())) {
+                request.setSecurityToken(EncryptUtils.decrypt(history.getSecurityTokenEncrypted()));
+            }
+            
+            if (StringUtils.isNotEmpty(history.getClientSecretEncrypted())) {
+                request.setClientSecret(EncryptUtils.decrypt(history.getClientSecretEncrypted()));
+            }
+            
+            request.setPrivateKeyPath(history.getPrivateKeyPath());
+            request.setCode(history.getCode());
+            request.setState(history.getState());
             
             logger.info("从历史记录提取登录参数，登录类型: {}, 用户名: {}", request.getLoginType(), request.getUsername());
             

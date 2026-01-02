@@ -35,6 +35,9 @@ public class DataiConfigurationVo implements Serializable {
         /** 环境ID */
     private Long environmentId;
 
+        /** 环境名称 */
+    private String environmentName;
+
         /** 是否敏感配置 */
     private Boolean isSensitive;
 
