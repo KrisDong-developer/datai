@@ -88,9 +88,17 @@ public interface IDataiIntegrationMetadataChangeService
 
     /**
      * 同步元数据变更到本地数据库
+     * 根据元数据变更ID将指定的元数据变更同步到本地数据库
+     * 
+     * 该方法会：
+     * 1. 根据ID查询元数据变更记录
+     * 2. 根据变更类型（OBJECT或FIELD）执行相应的同步操作
+     * 3. 对于对象变更：执行对象的创建、修改或删除操作
+     * 4. 对于字段变更：执行字段的创建、修改或删除操作
+     * 5. 更新元数据变更记录的同步状态
      * 
      * @param id 元数据变更ID
-     * @return 同步结果
+     * @return 同步结果，包含success（是否成功）和message（消息）字段
      */
     public Map<String, Object> syncToLocalDatabase(Long id);
 

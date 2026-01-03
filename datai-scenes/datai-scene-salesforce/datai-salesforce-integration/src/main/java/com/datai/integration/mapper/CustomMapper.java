@@ -78,6 +78,44 @@ public interface CustomMapper {
     int createField(@Param("tableName") String tableName, @Param("fieldName") String fieldName);
 
     /**
+     * 添加字段（通用方法，支持字段类型和约束）
+     *
+     * @param tableName  表名
+     * @param fieldName  字段名
+     * @param fieldType  字段类型
+     * @param isNullable 是否可为空
+     * @return 影响行数
+     */
+    int addField(@Param("tableName") String tableName, 
+                 @Param("fieldName") String fieldName, 
+                 @Param("fieldType") String fieldType, 
+                 @Param("isNullable") Boolean isNullable);
+
+    /**
+     * 修改字段（通用方法，支持字段类型和约束）
+     *
+     * @param tableName  表名
+     * @param fieldName  字段名
+     * @param fieldType  字段类型
+     * @param isNullable 是否可为空
+     * @return 影响行数
+     */
+    int modifyField(@Param("tableName") String tableName, 
+                    @Param("fieldName") String fieldName, 
+                    @Param("fieldType") String fieldType, 
+                    @Param("isNullable") Boolean isNullable);
+
+    /**
+     * 删除字段（通用方法）
+     *
+     * @param tableName 表名
+     * @param fieldName 字段名
+     * @return 影响行数
+     */
+    int dropField(@Param("tableName") String tableName, 
+                  @Param("fieldName") String fieldName);
+
+    /**
      * 根据ID更新记录
      *
      * @param tableName 表名

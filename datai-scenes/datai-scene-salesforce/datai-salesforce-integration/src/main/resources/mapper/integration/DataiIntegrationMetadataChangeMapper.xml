@@ -241,4 +241,21 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="endTime != null"> and change_time &lt;= #{endTime}</if>
         </where>
     </select>
+
+    <select id="countSimilarChanges" resultType="int">
+        select count(*) from datai_integration_metadata_change
+        where change_type = #{changeType}
+          and operation_type = #{operationType}
+          and object_api = #{objectApi}
+          <if test="fieldApi != null and fieldApi != ''">
+              and field_api = #{fieldApi}
+          </if>
+          <if test="fieldApi == null or fieldApi == ''">
+              and field_api is null
+          </if>
+          and change_reason = #{changeReason}
+          and sync_status = false
+        order by change_time desc
+        limit 1
+    </select>
 </mapper>

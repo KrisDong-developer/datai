@@ -36,6 +36,23 @@
         ALTER TABLE `${tableName}` ADD COLUMN `${fieldName}` varchar(255)
     </update>
 
+    <!-- 添加字段（通用方法，支持字段类型和约束） -->
+    <update id="addField">
+        ALTER TABLE `${tableName}` ADD COLUMN `${fieldName}` ${fieldType}
+        <if test="!isNullable"> NOT NULL</if>
+    </update>
+
+    <!-- 修改字段（通用方法，支持字段类型和约束） -->
+    <update id="modifyField">
+        ALTER TABLE `${tableName}` MODIFY COLUMN `${fieldName}` ${fieldType}
+        <if test="!isNullable"> NOT NULL</if>
+    </update>
+
+    <!-- 删除字段（通用方法） -->
+    <update id="dropField">
+        ALTER TABLE `${tableName}` DROP COLUMN `${fieldName}`
+    </update>
+
     <!-- 获取存在的ID列表 -->
     <select id="getIds" resultType="String">
         SELECT id

@@ -86,4 +86,16 @@ public interface DataiIntegrationMetadataChangeMapper
      * @return 统计信息
      */
     public Map<String, Object> selectChangeStatistics(Map<String, Object> params);
+
+    /**
+     * 查询是否存在相同的元数据变更记录
+     * 
+     * @param changeType 变更类型
+     * @param operationType 操作类型
+     * @param objectApi 对象API
+     * @param fieldApi 字段API（可为null）
+     * @param changeReason 变更原因
+     * @return 存在的记录数
+     */
+    public int countSimilarChanges(String changeType, String operationType, String objectApi, String fieldApi, String changeReason);
 }
