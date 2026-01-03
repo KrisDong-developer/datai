@@ -20,7 +20,8 @@ public class SalesforceLoginResult implements Serializable {
     private String refreshToken;  // 仅在 OAuth 流程中存在
     private String tokenType = "Bearer";
     private long expiresIn;       // 过期时间(秒)
-    private long loginTimestamp = System.currentTimeMillis(); // 记录登录时间点
+    private long loginTimestamp; // 记录登录时间点
+    private long expirationTimestamp; // 记录过期时间点（登录时间 + 过期时长）
 
     /** 环境信息 */
     private String instanceUrl;       // API 访问基础地址
@@ -49,9 +50,10 @@ public class SalesforceLoginResult implements Serializable {
      * 提前 5 分钟判断为过期，以预留网络传输时间
      */
     public boolean isSessionExpired() {
-        if (expiresIn <= 0) return false; // 如果永不过期
-        long bufferMillis = 300 * 1000; // 5分钟缓冲
-        return System.currentTimeMillis() > (loginTimestamp + (expiresIn * 1000) - bufferMillis);
+        if (expiresIn <= 0) return false;
+        if (expirationTimestamp <= 0) return false;
+        long bufferMillis = 300 * 1000;
+        return System.currentTimeMillis() > (expirationTimestamp - bufferMillis);
     }
 
     // --- 增强的 Getter 和 Setter ---
@@ -109,6 +111,12 @@ public class SalesforceLoginResult implements Serializable {
 
     public String getTimeZone() { return timeZone; }
     public void setTimeZone(String timeZone) { this.timeZone = timeZone; }
+
+    public long getLoginTimestamp() { return loginTimestamp; }
+    public void setLoginTimestamp(long loginTimestamp) { this.loginTimestamp = loginTimestamp; }
+
+    public long getExpirationTimestamp() { return expirationTimestamp; }
+    public void setExpirationTimestamp(long expirationTimestamp) { this.expirationTimestamp = expirationTimestamp; }
 
     @Override
     public String toString() {

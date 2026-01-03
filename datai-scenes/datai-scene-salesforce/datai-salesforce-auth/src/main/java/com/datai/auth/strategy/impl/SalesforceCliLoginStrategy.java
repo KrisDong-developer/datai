@@ -56,6 +56,11 @@ public class SalesforceCliLoginStrategy implements LoginStrategy {
             // 3. 解析CLI输出，获取Session信息
             result = parseCliOutput(output);
             result.setSuccess(true);
+            
+            // 4. 设置登录时间戳和过期时间点
+            long currentTimestamp = System.currentTimeMillis();
+            result.setLoginTimestamp(currentTimestamp);
+            result.setExpirationTimestamp(currentTimestamp + (result.getExpiresIn() * 1000));
         } catch (Exception e) {
             logger.error("Salesforce CLI登录失败: {}", e.getMessage(), e);
             result.setSuccess(false);

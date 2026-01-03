@@ -3,6 +3,7 @@ package com.datai.integration.controller;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.datai.common.utils.PageUtils;
 import com.datai.integration.model.vo.DataiIntegrationFilterLookupVo;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -53,7 +54,7 @@ public class DataiIntegrationFilterLookupController extends BaseController
         DataiIntegrationFilterLookup dataiIntegrationFilterLookup = DataiIntegrationFilterLookupDto.toObj(dataiIntegrationFilterLookupDto);
         List<DataiIntegrationFilterLookup> list = dataiIntegrationFilterLookupService.selectDataiIntegrationFilterLookupList(dataiIntegrationFilterLookup);
         List<DataiIntegrationFilterLookupVo> voList = list.stream().map(DataiIntegrationFilterLookupVo::objToVo).collect(Collectors.toList());
-        return getDataTable(voList);
+        return getDataTableByPage(voList,PageUtils.getTotal(list));
     }
 
     /**

@@ -3,6 +3,7 @@ package com.datai.integration.controller;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.datai.common.utils.PageUtils;
 import com.datai.integration.model.vo.DataiIntegrationPicklistVo;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -53,7 +54,7 @@ public class DataiIntegrationPicklistController extends BaseController
         DataiIntegrationPicklist dataiIntegrationPicklist = DataiIntegrationPicklistDto.toObj(dataiIntegrationPicklistDto);
         List<DataiIntegrationPicklist> list = dataiIntegrationPicklistService.selectDataiIntegrationPicklistList(dataiIntegrationPicklist);
         List<DataiIntegrationPicklistVo> voList = list.stream().map(DataiIntegrationPicklistVo::objToVo).collect(Collectors.toList());
-        return getDataTable(voList);
+        return getDataTableByPage(voList,PageUtils.getTotal(list));
     }
 
     /**

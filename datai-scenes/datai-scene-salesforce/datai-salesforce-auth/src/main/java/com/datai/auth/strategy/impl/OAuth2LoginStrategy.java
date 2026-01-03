@@ -340,6 +340,11 @@ public class OAuth2LoginStrategy implements LoginStrategy {
             result.setRefreshToken(jsonResponse.get("refresh_token").asText());
         }
         
+        // 设置登录时间戳和过期时间点
+        long currentTimestamp = System.currentTimeMillis();
+        result.setLoginTimestamp(currentTimestamp);
+        result.setExpirationTimestamp(currentTimestamp + (result.getExpiresIn() * 1000));
+        
         return result;
     }
     
@@ -376,6 +381,11 @@ public class OAuth2LoginStrategy implements LoginStrategy {
         if (jsonResponse.has("organization_id")) {
             result.setOrganizationId(jsonResponse.get("organization_id").asText());
         }
+        
+        // 设置登录时间戳和过期时间点
+        long currentTimestamp = System.currentTimeMillis();
+        result.setLoginTimestamp(currentTimestamp);
+        result.setExpirationTimestamp(currentTimestamp + (result.getExpiresIn() * 1000));
         
         return result;
     }
@@ -460,6 +470,11 @@ public class OAuth2LoginStrategy implements LoginStrategy {
         // 10. 清理已使用的state
         STATE_CODE_VERIFIER_MAP.remove(state);
         STATE_TIMESTAMP_MAP.remove(state);
+        
+        // 设置登录时间戳和过期时间点
+        long currentTimestamp = System.currentTimeMillis();
+        result.setLoginTimestamp(currentTimestamp);
+        result.setExpirationTimestamp(currentTimestamp + (result.getExpiresIn() * 1000));
         
         return result;
     }

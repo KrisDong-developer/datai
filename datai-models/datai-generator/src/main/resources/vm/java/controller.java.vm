@@ -55,7 +55,7 @@ public class ${ClassName}Controller extends BaseController
         startPage();
         List<${ClassName}> list = ${className}Service.select${ClassName}List(${ClassName}Dto.toObj(${className}Dto));
         List<${ClassName}Vo> voList = list.stream().map(${ClassName}Vo::objToVo).collect(Collectors.toList());
-        return getDataTable(voList);
+        return getDataTable(voList,PageUtils.getTotal(list));
     }
 #elseif($table.tree)
     public AjaxResult list(${ClassName}Dto ${className}Dto)

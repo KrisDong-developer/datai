@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.stream.Collectors;
 
+import com.datai.common.utils.PageUtils;
 import com.datai.integration.model.vo.DataiIntegrationBatchHistoryVo;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -57,7 +58,7 @@ public class DataiIntegrationBatchHistoryController extends BaseController
         List<DataiIntegrationBatchHistoryVo> voList = list.stream()
             .map(DataiIntegrationBatchHistoryVo::objToVo)
             .collect(Collectors.toList());
-        return getDataTable(voList);
+        return getDataTableByPage(voList,PageUtils.getTotal(list));
     }
 
     /**

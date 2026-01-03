@@ -692,17 +692,21 @@ public class DataiIntegrationMetadataChangeServiceImpl implements IDataiIntegrat
 
     @Override
     public Map<String, Object> pullAllMetadataChanges() {
+        // 初始化返回结果
         Map<String, Object> result = new HashMap<>();
         
         try {
             log.info("开始执行全对象元数据变更拉取");
             
+            // 建立与Salesforce的连接，使用重试机制确保连接成功
             PartnerConnection connection = retryOperation(() -> soapConnectionFactory.getConnection(), 3, 1000);
             log.info("成功获取Salesforce SOAP连接");
 
+            // 获取Salesforce中所有对象的全局描述信息
             DescribeGlobalResult globalDescribe = connection.describeGlobal();
             DescribeGlobalSObjectResult[] sObjects = globalDescribe.getSobjects();
 
+            // 检查是否获取到任何对象
             if (sObjects == null || sObjects.length == 0) {
                 log.warn("未获取到任何Salesforce对象");
                 result.put("success", true);
@@ -714,68 +718,93 @@ public class DataiIntegrationMetadataChangeServiceImpl implements IDataiIntegrat
 
             log.info("从Salesforce获取到 {} 个对象", sObjects.length);
 
+            // 用于存储已同步的对象API名称，以便后续检测删除的对象
             Set<String> syncedObjectApis = new HashSet<>();
-            int objectChangeCount = 0;
-            int fieldChangeCount = 0;
+            int objectChangeCount = 0; // 记录对象变更数量
+            int fieldChangeCount = 0;  // 记录字段变更数量
 
+            // 遍历所有Salesforce对象
             for (DescribeGlobalSObjectResult sObject : sObjects) {
                 try {
                     String objectApi = sObject.getName();
                     
+                    // 检查对象是否需要同步（满足查询、创建、更新或删除任一条件）
                     if (shouldSyncObject(sObject)) {
+                        // 获取对象的详细描述信息
                         DescribeSObjectResult objDetail = connection.describeSObject(objectApi);
                         
+                        // 查询数据库中是否已存在该对象
                         DataiIntegrationObject queryObject = new DataiIntegrationObject();
                         queryObject.setApi(objectApi);
                         List<DataiIntegrationObject> existingObjects = dataiIntegrationObjectService.selectDataiIntegrationObjectList(queryObject);
                         
+                        // 构建当前对象的元数据信息
                         DataiIntegrationObject newObject = buildObjectMetadata(objDetail);
-                        boolean hasFieldChange = false;
+                        boolean hasFieldChange = false; // 标记该对象是否有字段变更
                         
+                        // 判断对象是否为新增
                         if (existingObjects.isEmpty()) {
+                            // 新增对象到数据库
                             dataiIntegrationObjectService.insertDataiIntegrationObject(newObject);
+                            // 记录对象新增变更
                             recordObjectChange(newObject, null, "INSERT");
                             objectChangeCount++;
                             log.info("新增对象并记录变更: {}", objectApi);
+                            // 重新查询以获取新插入对象的ID
                             existingObjects = dataiIntegrationObjectService.selectDataiIntegrationObjectList(queryObject);
                             if (!existingObjects.isEmpty()) {
                                 newObject.setId(existingObjects.get(0).getId());
                             }
-                        } else {
-                            DataiIntegrationObject existingObject = existingObjects.get(0);
-                            newObject.setId(existingObject.getId());
-                            List<String> changedFields = compareObjects(existingObject, newObject);
-                            if (!changedFields.isEmpty()) {
-                                recordObjectChange(newObject, existingObject, "UPDATE");
-                                objectChangeCount++;
-                                log.debug("记录对象更新: {} - 变更: {}", objectApi, String.join(", ", changedFields));
-                            }
+                            // 将对象API添加到已同步集合中
+                            syncedObjectApis.add(objectApi);
+                            // 对象新增后直接跳过字段比较
+                            continue;
                         }
                         
+                        // 对象已存在，比较新旧对象的差异
+                        DataiIntegrationObject existingObject = existingObjects.get(0);
+                        newObject.setId(existingObject.getId());
+                        List<String> changedFields = compareObjects(existingObject, newObject);
+                        if (!changedFields.isEmpty()) {
+                            // 记录对象更新变更
+                            recordObjectChange(newObject, existingObject, "UPDATE");
+                            objectChangeCount++;
+                            log.debug("记录对象更新: {} - 变更: {}", objectApi, String.join(", ", changedFields));
+                        }
+                        
+                        // 将对象API添加到已同步集合中
                         syncedObjectApis.add(objectApi);
                         
+                        // 查询数据库中该对象的现有字段
                         DataiIntegrationField queryField = new DataiIntegrationField();
                         queryField.setApi(objectApi);
                         List<DataiIntegrationField> existingFields = dataiIntegrationFieldService.selectDataiIntegrationFieldList(queryField);
                         
+                        // 将现有字段转换为Map，便于快速查找
                         Map<String, DataiIntegrationField> existingFieldMap = new HashMap<>();
                         for (DataiIntegrationField existingField : existingFields) {
                             existingFieldMap.put(existingField.getField(), existingField);
                         }
                         
+                        // 遍历Salesforce中的所有字段
                         for (Field field : objDetail.getFields()) {
+                            // 构建当前字段的元数据信息
                             DataiIntegrationField newField = buildFieldMetadata(objectApi, field);
+                            // 检查字段是否已存在
                             DataiIntegrationField existingField = existingFieldMap.get(field.getName());
                             
                             if (existingField == null) {
+                                // 字段为新增
                                 recordFieldChange(objectApi, newObject.getLabel(), newField.getField(), 
                                                 newField.getLabel(), null, "INSERT", "新增字段", newObject.getIsCustom());
                                 fieldChangeCount++;
                                 hasFieldChange = true;
                                 log.debug("记录字段新增: {}.{}", objectApi, field.getName());
                             } else {
+                                // 字段已存在，比较新旧字段的差异
                                 List<String> changedFieldProps = compareFields(existingField, newField);
                                 if (!changedFieldProps.isEmpty()) {
+                                    // 记录字段更新变更
                                     recordFieldChange(objectApi, newObject.getLabel(), newField.getField(), 
                                                     newField.getLabel(), "字段属性变更: " + String.join(", ", changedFieldProps), 
                                                     "UPDATE", "字段属性更新", newObject.getIsCustom());
@@ -787,6 +816,7 @@ public class DataiIntegrationMetadataChangeServiceImpl implements IDataiIntegrat
                             }
                         }
                         
+                        // 检查是否有已删除的字段（在数据库中存在但在Salesforce中不存在）
                         for (DataiIntegrationField existingField : existingFields) {
                             boolean fieldExists = false;
                             for (Field field : objDetail.getFields()) {
@@ -796,6 +826,7 @@ public class DataiIntegrationMetadataChangeServiceImpl implements IDataiIntegrat
                                 }
                             }
                             if (!fieldExists) {
+                                // 记录字段删除变更
                                 recordFieldChange(objectApi, newObject.getLabel(), existingField.getField(), 
                                                 existingField.getLabel(), "字段已从Salesforce中删除", 
                                                 "DELETE", "字段删除", newObject.getIsCustom());
@@ -805,23 +836,27 @@ public class DataiIntegrationMetadataChangeServiceImpl implements IDataiIntegrat
                             }
                         }
                         
+                        // 如果该对象有字段变更，禁用其增量更新状态
                         if (hasFieldChange && newObject.getId() != null) {
                             DataiIntegrationObject updateObject = new DataiIntegrationObject();
                             updateObject.setId(newObject.getId());
-                            updateObject.setIsIncremental(false);
+                            updateObject.setIsIncremental(false); // 禁用增量更新
                             dataiIntegrationObjectService.updateDataiIntegrationObject(updateObject);
                             log.info("检测到字段变更，已禁用对象 {} 的增量更新状态", objectApi);
                         }
                     }
                 } catch (Exception e) {
+                    // 记录处理单个对象时的错误，但继续处理其他对象
                     log.error("处理对象 {} 时出错: {}", sObject.getName(), e.getMessage(), e);
                 }
             }
             
+            // 检查并记录已从Salesforce中删除的对象
             checkDeletedObjectsForMetadata(syncedObjectApis);
 
             log.info("全对象元数据变更拉取完成，对象变更: {} 个，字段变更: {} 个", objectChangeCount, fieldChangeCount);
             
+            // 设置返回结果
             result.put("success", true);
             result.put("objectChangeCount", objectChangeCount);
             result.put("fieldChangeCount", fieldChangeCount);
@@ -829,6 +864,7 @@ public class DataiIntegrationMetadataChangeServiceImpl implements IDataiIntegrat
             
             return result;
         } catch (Exception e) {
+            // 记录整个拉取过程中的异常
             log.error("全对象元数据变更拉取时发生异常", e);
             result.put("success", false);
             result.put("message", "全对象元数据变更拉取失败: " + e.getMessage());
@@ -836,114 +872,218 @@ public class DataiIntegrationMetadataChangeServiceImpl implements IDataiIntegrat
         }
     }
 
+    /**
+     * 判断对象是否需要同步
+     * 只有满足以下任一条件的对象才需要同步：
+     * - 可查询 (isQueryable)
+     * - 可创建 (isCreateable)
+     * - 可更新 (isUpdateable)
+     * - 可删除 (isDeletable)
+     * 
+     * @param sObject Salesforce对象描述信息
+     * @return 如果对象需要同步返回true，否则返回false
+     */
     private boolean shouldSyncObject(DescribeGlobalSObjectResult sObject) {
         return sObject.isQueryable() || sObject.isCreateable() || sObject.isUpdateable() || sObject.isDeletable();
     }
 
+    /**
+     * 根据Salesforce对象描述信息构建对象元数据实体
+     * 将Salesforce的DescribeSObjectResult转换为DataiIntegrationObject实体
+     * 
+     * @param objDetail Salesforce对象的详细描述信息
+     * @return 构建的DataiIntegrationObject实体，如果构建失败返回null
+     */
     private DataiIntegrationObject buildObjectMetadata(DescribeSObjectResult objDetail) {
         try {
+            // 创建对象元数据实体
             DataiIntegrationObject object = new DataiIntegrationObject();
+            // 设置对象API名称
             object.setApi(objDetail.getName());
+            // 设置对象标签名称
             object.setLabel(objDetail.getLabel());
+            // 设置对象复数标签名称
             object.setLabelPlural(objDetail.getLabelPlural());
+            // 设置对象键前缀
             object.setKeyPrefix(objDetail.getKeyPrefix());
+            // 设置是否为自定义对象
             object.setIsCustom(objDetail.isCustom());
+            // 设置是否为自定义设置对象
             object.setIsCustomSetting(objDetail.isCustomSetting());
+            // 设置是否可查询
             object.setIsQueryable(objDetail.isQueryable());
+            // 设置是否可创建
             object.setIsCreateable(objDetail.isCreateable());
+            // 设置是否可更新
             object.setIsUpdateable(objDetail.isUpdateable());
+            // 设置是否可删除
             object.setIsDeletable(objDetail.isDeletable());
+            // 设置是否可复制
             object.setIsReplicateable(objDetail.isReplicateable());
+            // 设置是否可检索
             object.setIsRetrieveable(objDetail.isRetrieveable());
+            // 设置是否可搜索
             object.setIsSearchable(objDetail.isSearchable());
-            object.setIsWork(true);
-            object.setIsIncremental(true);
+            // 设置是否工作状态（启用）
+            object.setIsWork(false);
+            // 设置是否启用增量更新
+            object.setIsIncremental(false);
+            // 设置最后同步时间
             object.setLastSyncDate(LocalDateTime.now());
             return object;
         } catch (Exception e) {
+            // 记录构建对象元数据时的错误
             log.error("构建对象 {} 元数据时出错: {}", objDetail.getName(), e.getMessage(), e);
             return null;
         }
     }
 
+    /**
+     * 根据Salesforce字段描述信息构建字段元数据实体
+     * 将Salesforce的Field对象转换为DataiIntegrationField实体
+     * 
+     * @param objectApi 所属对象的API名称
+     * @param field Salesforce字段描述信息
+     * @return 构建的DataiIntegrationField实体
+     */
     private DataiIntegrationField buildFieldMetadata(String objectApi, Field field) {
+        // 创建字段元数据实体
         DataiIntegrationField fieldEntity = new DataiIntegrationField();
+        // 设置所属对象API名称
         fieldEntity.setApi(objectApi);
+        // 设置字段名称
         fieldEntity.setField(field.getName());
+        // 设置字段标签
         fieldEntity.setLabel(field.getLabel());
+        // 设置是否可创建
         fieldEntity.setIsCreateable(field.isCreateable());
+        // 设置是否可为空
         fieldEntity.setIsNillable(field.isNillable());
+        // 设置是否可更新
         fieldEntity.setIsUpdateable(field.isUpdateable());
+        // 设置是否在创建时有默认值
         fieldEntity.setIsDefaultedOnCreate(field.isDefaultedOnCreate());
+        // 设置是否唯一
         fieldEntity.setIsUnique(field.isUnique());
+        // 设置是否可过滤
         fieldEntity.setIsFilterable(field.isFilterable());
+        // 设置是否可排序
         fieldEntity.setIsSortable(field.isSortable());
+        // 设置是否可聚合
         fieldEntity.setIsAggregatable(field.isAggregatable());
+        // 设置是否可分组
         fieldEntity.setIsGroupable(field.isGroupable());
+        // 设置是否为多态外键
         fieldEntity.setIsPolymorphicForeignKey(field.isPolymorphicForeignKey());
+        // 设置多态外键类型字段
         fieldEntity.setPolymorphicForeignField(field.getName() + "_type");
+        // 设置是否为外部ID
         fieldEntity.setIsExternalId(field.isExternalId());
+        // 设置是否为自定义字段
         fieldEntity.setIsCustom(field.isCustom());
+        // 设置是否为计算字段
         fieldEntity.setIsCalculated(field.isCalculated());
+        // 设置是否为自动编号字段
         fieldEntity.setIsAutoNumber(field.isAutoNumber());
+        // 设置是否区分大小写
         fieldEntity.setIsCaseSensitive(field.isCaseSensitive());
+        // 设置是否为加密字段
         fieldEntity.setIsEncrypted(field.isEncrypted());
+        // 设置是否为HTML格式化字段
         fieldEntity.setIsHtmlFormatted(field.isHtmlFormatted());
+        // 设置是否为ID查找字段
         fieldEntity.setIsIdLookup(field.isIdLookup());
+        // 设置是否为权限字段
         fieldEntity.setIsPermissionable(field.isPermissionable());
+        // 设置是否为受限选择列表
         fieldEntity.setIsRestrictedPicklist(field.isRestrictedPicklist());
+        // 设置是否为受限删除
         fieldEntity.setIsRestrictedDelete(field.isRestrictedDelete());
+        // 设置写入是否需要主记录读取权限
         fieldEntity.setIsWriteRequiresMasterRead(field.isWriteRequiresMasterRead());
+        // 设置字段数据类型
         fieldEntity.setFieldDataType(field.getType() != null ? field.getType().toString() : null);
+        // 设置字段长度
         fieldEntity.setFieldLength(field.getLength());
+        // 设置字段精度
         fieldEntity.setFieldPrecision(field.getPrecision());
+        // 设置字段小数位数
         fieldEntity.setFieldScale(field.getScale());
+        // 设置字段字节长度
         fieldEntity.setFieldByteLength(field.getByteLength());
+        // 设置默认值公式
         fieldEntity.setDefaultValue(field.getDefaultValueFormula());
+        // 设置计算公式
         fieldEntity.setCalculatedFormula(field.getCalculatedFormula());
+        // 设置内联帮助文本
         fieldEntity.setInlineHelpText(field.getInlineHelpText());
+        // 设置关系名称
         fieldEntity.setRelationshipName(field.getRelationshipName());
+        // 设置关系顺序
         fieldEntity.setRelationshipOrder(field.getRelationshipOrder());
+        // 设置引用目标字段
         fieldEntity.setReferenceTargetField(field.getReferenceTo() != null && field.getReferenceTo().length > 0 ? field.getReferenceTo()[0] : null);
         
+        // 如果字段有引用目标，则设置引用目标
         if (field.getReferenceTo() != null && field.getReferenceTo().length > 0) {
+            // 设置引用目标（多个引用目标用逗号分隔）
             fieldEntity.setReferenceTo(String.join(",", field.getReferenceTo()));
+            // 设置第一个引用目标字段
             fieldEntity.setReferenceTargetField(field.getReferenceTo()[0]);
         }
         
         return fieldEntity;
     }
 
+    /**
+     * 比较两个对象元数据的差异
+     * 检查新旧对象元数据之间的不同属性，并返回有变化的属性列表
+     * 
+     * @param oldObject 旧的对象元数据
+     * @param newObject 新的对象元数据
+     * @return 有变化的属性名称列表
+     */
     private List<String> compareObjects(DataiIntegrationObject oldObject, DataiIntegrationObject newObject) {
+        // 初始化变更字段列表
         List<String> changedFields = new ArrayList<>();
         
+        // 比较标签名称
         if (!Objects.equals(oldObject.getLabel(), newObject.getLabel())) {
             changedFields.add("label");
         }
+        // 比较复数标签名称
         if (!Objects.equals(oldObject.getLabelPlural(), newObject.getLabelPlural())) {
             changedFields.add("labelPlural");
         }
+        // 比较键前缀
         if (!Objects.equals(oldObject.getKeyPrefix(), newObject.getKeyPrefix())) {
             changedFields.add("keyPrefix");
         }
+        // 比较是否可查询状态
         if (!Objects.equals(oldObject.getIsQueryable(), newObject.getIsQueryable())) {
             changedFields.add("isQueryable");
         }
+        // 比较是否可创建状态
         if (!Objects.equals(oldObject.getIsCreateable(), newObject.getIsCreateable())) {
             changedFields.add("isCreateable");
         }
+        // 比较是否可更新状态
         if (!Objects.equals(oldObject.getIsUpdateable(), newObject.getIsUpdateable())) {
             changedFields.add("isUpdateable");
         }
+        // 比较是否可删除状态
         if (!Objects.equals(oldObject.getIsDeletable(), newObject.getIsDeletable())) {
             changedFields.add("isDeletable");
         }
+        // 比较是否可复制状态
         if (!Objects.equals(oldObject.getIsReplicateable(), newObject.getIsReplicateable())) {
             changedFields.add("isReplicateable");
         }
+        // 比较是否可检索状态
         if (!Objects.equals(oldObject.getIsRetrieveable(), newObject.getIsRetrieveable())) {
             changedFields.add("isRetrieveable");
         }
+        // 比较是否可搜索状态
         if (!Objects.equals(oldObject.getIsSearchable(), newObject.getIsSearchable())) {
             changedFields.add("isSearchable");
         }
@@ -951,105 +1091,147 @@ public class DataiIntegrationMetadataChangeServiceImpl implements IDataiIntegrat
         return changedFields;
     }
 
+    /**
+     * 比较两个字段元数据的差异
+     * 检查新旧字段元数据之间的不同属性，并返回有变化的属性列表
+     * 
+     * @param oldField 旧的字段元数据
+     * @param newField 新的字段元数据
+     * @return 有变化的属性名称列表
+     */
     private List<String> compareFields(DataiIntegrationField oldField, DataiIntegrationField newField) {
+        // 初始化变更字段列表
         List<String> changedFields = new ArrayList<>();
         
+        // 比较标签名称
         if (!Objects.equals(oldField.getLabel(), newField.getLabel())) {
             changedFields.add("label");
         }
+        // 比较是否可创建状态
         if (!Objects.equals(oldField.getIsCreateable(), newField.getIsCreateable())) {
             changedFields.add("isCreateable");
         }
+        // 比较是否可为空状态
         if (!Objects.equals(oldField.getIsNillable(), newField.getIsNillable())) {
             changedFields.add("isNillable");
         }
+        // 比较是否可更新状态
         if (!Objects.equals(oldField.getIsUpdateable(), newField.getIsUpdateable())) {
             changedFields.add("isUpdateable");
         }
+        // 比较是否在创建时有默认值状态
         if (!Objects.equals(oldField.getIsDefaultedOnCreate(), newField.getIsDefaultedOnCreate())) {
             changedFields.add("isDefaultedOnCreate");
         }
+        // 比较是否唯一状态
         if (!Objects.equals(oldField.getIsUnique(), newField.getIsUnique())) {
             changedFields.add("isUnique");
         }
+        // 比较是否可过滤状态
         if (!Objects.equals(oldField.getIsFilterable(), newField.getIsFilterable())) {
             changedFields.add("isFilterable");
         }
+        // 比较是否可排序状态
         if (!Objects.equals(oldField.getIsSortable(), newField.getIsSortable())) {
             changedFields.add("isSortable");
         }
+        // 比较是否可聚合状态
         if (!Objects.equals(oldField.getIsAggregatable(), newField.getIsAggregatable())) {
             changedFields.add("isAggregatable");
         }
+        // 比较是否可分组状态
         if (!Objects.equals(oldField.getIsGroupable(), newField.getIsGroupable())) {
             changedFields.add("isGroupable");
         }
+        // 比较是否为多态外键状态
         if (!Objects.equals(oldField.getIsPolymorphicForeignKey(), newField.getIsPolymorphicForeignKey())) {
             changedFields.add("isPolymorphicForeignKey");
         }
+        // 比较是否为外部ID状态
         if (!Objects.equals(oldField.getIsExternalId(), newField.getIsExternalId())) {
             changedFields.add("isExternalId");
         }
+        // 比较是否为自定义字段状态
         if (!Objects.equals(oldField.getIsCustom(), newField.getIsCustom())) {
             changedFields.add("isCustom");
         }
+        // 比较是否为计算字段状态
         if (!Objects.equals(oldField.getIsCalculated(), newField.getIsCalculated())) {
             changedFields.add("isCalculated");
         }
+        // 比较是否为自动编号字段状态
         if (!Objects.equals(oldField.getIsAutoNumber(), newField.getIsAutoNumber())) {
             changedFields.add("isAutoNumber");
         }
+        // 比较是否区分大小写状态
         if (!Objects.equals(oldField.getIsCaseSensitive(), newField.getIsCaseSensitive())) {
             changedFields.add("isCaseSensitive");
         }
+        // 比较是否为加密字段状态
         if (!Objects.equals(oldField.getIsEncrypted(), newField.getIsEncrypted())) {
             changedFields.add("isEncrypted");
         }
+        // 比较是否为HTML格式化字段状态
         if (!Objects.equals(oldField.getIsHtmlFormatted(), newField.getIsHtmlFormatted())) {
             changedFields.add("isHtmlFormatted");
         }
+        // 比较是否为ID查找字段状态
         if (!Objects.equals(oldField.getIsIdLookup(), newField.getIsIdLookup())) {
             changedFields.add("isIdLookup");
         }
+        // 比较是否为权限字段状态
         if (!Objects.equals(oldField.getIsPermissionable(), newField.getIsPermissionable())) {
             changedFields.add("isPermissionable");
         }
+        // 比较是否为受限选择列表状态
         if (!Objects.equals(oldField.getIsRestrictedPicklist(), newField.getIsRestrictedPicklist())) {
             changedFields.add("isRestrictedPicklist");
         }
+        // 比较是否为受限删除状态
         if (!Objects.equals(oldField.getIsRestrictedDelete(), newField.getIsRestrictedDelete())) {
             changedFields.add("isRestrictedDelete");
         }
+        // 比较写入是否需要主记录读取权限状态
         if (!Objects.equals(oldField.getIsWriteRequiresMasterRead(), newField.getIsWriteRequiresMasterRead())) {
             changedFields.add("isWriteRequiresMasterRead");
         }
+        // 比较字段数据类型
         if (!Objects.equals(oldField.getFieldDataType(), newField.getFieldDataType())) {
             changedFields.add("fieldDataType");
         }
+        // 比较字段长度
         if (!Objects.equals(oldField.getFieldLength(), newField.getFieldLength())) {
             changedFields.add("fieldLength");
         }
+        // 比较字段精度
         if (!Objects.equals(oldField.getFieldPrecision(), newField.getFieldPrecision())) {
             changedFields.add("fieldPrecision");
         }
+        // 比较字段小数位数
         if (!Objects.equals(oldField.getFieldScale(), newField.getFieldScale())) {
             changedFields.add("fieldScale");
         }
+        // 比较字段字节长度
         if (!Objects.equals(oldField.getFieldByteLength(), newField.getFieldByteLength())) {
             changedFields.add("fieldByteLength");
         }
+        // 比较默认值公式
         if (!Objects.equals(oldField.getDefaultValue(), newField.getDefaultValue())) {
             changedFields.add("defaultValue");
         }
+        // 比较计算公式
         if (!Objects.equals(oldField.getCalculatedFormula(), newField.getCalculatedFormula())) {
             changedFields.add("calculatedFormula");
         }
+        // 比较内联帮助文本
         if (!Objects.equals(oldField.getInlineHelpText(), newField.getInlineHelpText())) {
             changedFields.add("inlineHelpText");
         }
+        // 比较关系名称
         if (!Objects.equals(oldField.getRelationshipName(), newField.getRelationshipName())) {
             changedFields.add("relationshipName");
         }
+        // 比较引用目标
         if (!Objects.equals(oldField.getReferenceTo(), newField.getReferenceTo())) {
             changedFields.add("referenceTo");
         }
@@ -1057,102 +1239,189 @@ public class DataiIntegrationMetadataChangeServiceImpl implements IDataiIntegrat
         return changedFields;
     }
 
+    /**
+     * 记录对象元数据变更
+     * 将对象级别的变更（新增、修改、删除）记录到元数据变更表中
+     * 
+     * @param newObject 新的对象元数据
+     * @param oldObject 旧的对象元数据（新增操作时为null）
+     * @param operationType 操作类型（INSERT、UPDATE、DELETE）
+     */
     private void recordObjectChange(DataiIntegrationObject newObject, DataiIntegrationObject oldObject, String operationType) {
         try {
+            // 创建元数据变更记录实体
             DataiIntegrationMetadataChange metadataChange = new DataiIntegrationMetadataChange();
+            // 设置变更类型为对象
             metadataChange.setChangeType("OBJECT");
+            // 设置操作类型（INSERT、UPDATE、DELETE）
             metadataChange.setOperationType(operationType);
+            // 设置对象API名称
             metadataChange.setObjectApi(newObject.getApi());
+            // 设置对象标签名称
             metadataChange.setObjectLabel(newObject.getLabel());
+            // 设置变更时间
             metadataChange.setChangeTime(LocalDateTime.now());
+            // 设置同步状态为未同步
             metadataChange.setSyncStatus(false);
+            // 设置是否为自定义对象
             metadataChange.setIsCustom(newObject.getIsCustom());
 
+            // 如果是更新操作（oldObject不为null），则比较新旧对象的差异
             if (oldObject != null) {
                 List<String> changedFields = compareObjects(oldObject, newObject);
                 if (!changedFields.isEmpty()) {
+                    // 如果有具体变更字段，则记录详细变更信息
                     metadataChange.setChangeReason("对象属性变更: " + String.join(", ", changedFields));
                 } else {
+                    // 如果没有具体变更字段，则记录通用更新信息
                     metadataChange.setChangeReason("对象属性更新");
                 }
             } else {
+                // 如果是新增操作，则记录为新增对象
                 metadataChange.setChangeReason("新增对象");
             }
+            // 设置变更用户为系统
             metadataChange.setChangeUser("SYSTEM");
 
+            // 插入元数据变更记录
             insertDataiIntegrationMetadataChange(metadataChange);
             log.debug("记录对象变更成功: {} - {}", newObject.getApi(), operationType);
         } catch (Exception e) {
+            // 记录记录对象变更时的错误
             log.error("记录对象变更失败: {} - {}", newObject.getApi(), e.getMessage(), e);
         }
     }
 
+    /**
+     * 记录字段元数据变更
+     * 将字段级别的变更（新增、修改、删除）记录到元数据变更表中
+     * 
+     * @param objectApi 所属对象的API名称
+     * @param objectLabel 所属对象的标签名称
+     * @param fieldApi 字段API名称
+     * @param fieldLabel 字段标签名称
+     * @param changeReason 变更原因（可为null，使用defaultReason）
+     * @param operationType 操作类型（INSERT、UPDATE、DELETE）
+     * @param defaultReason 默认变更原因
+     * @param isCustom 是否为自定义对象
+     */
     private void recordFieldChange(String objectApi, String objectLabel, String fieldApi, String fieldLabel, 
                                    String changeReason, String operationType, String defaultReason, Boolean isCustom) {
         try {
+            // 创建元数据变更记录实体
             DataiIntegrationMetadataChange metadataChange = new DataiIntegrationMetadataChange();
+            // 设置变更类型为字段
             metadataChange.setChangeType("FIELD");
+            // 设置操作类型（INSERT、UPDATE、DELETE）
             metadataChange.setOperationType(operationType);
+            // 设置对象API名称
             metadataChange.setObjectApi(objectApi);
+            // 设置对象标签名称
             metadataChange.setObjectLabel(objectLabel);
+            // 设置字段API名称
             metadataChange.setFieldApi(fieldApi);
+            // 设置字段标签名称
             metadataChange.setFieldLabel(fieldLabel);
+            // 设置变更时间
             metadataChange.setChangeTime(LocalDateTime.now());
+            // 设置同步状态为未同步
             metadataChange.setSyncStatus(false);
+            // 设置是否为自定义对象
             metadataChange.setIsCustom(isCustom);
+            // 设置变更原因，如果changeReason不为null则使用它，否则使用默认原因
             metadataChange.setChangeReason(changeReason != null ? changeReason : defaultReason);
+            // 设置变更用户为系统
             metadataChange.setChangeUser("SYSTEM");
 
+            // 插入元数据变更记录
             insertDataiIntegrationMetadataChange(metadataChange);
             log.debug("记录字段变更成功: {}.{} - {}", objectApi, fieldApi, operationType);
         } catch (Exception e) {
+            // 记录记录字段变更时的错误
             log.error("记录字段变更失败: {}.{} - {}", objectApi, fieldApi, e.getMessage(), e);
         }
     }
 
+    /**
+     * 检查并记录已从Salesforce中删除的对象
+     * 通过比较数据库中存储的对象与从Salesforce获取的对象列表，
+     * 识别出已从Salesforce中删除的对象并记录相应的删除变更
+     * 
+     * @param syncedObjectApis 从Salesforce获取到的已同步对象API名称集合
+     */
     private void checkDeletedObjectsForMetadata(Set<String> syncedObjectApis) {
         try {
+            // 查询数据库中所有对象
             DataiIntegrationObject queryObject = new DataiIntegrationObject();
-            queryObject.setIsWork(true);
             List<DataiIntegrationObject> allObjects = dataiIntegrationObjectService.selectDataiIntegrationObjectList(queryObject);
             
+            // 遍历数据库中的所有对象，检查哪些对象已不在Salesforce中
             for (DataiIntegrationObject object : allObjects) {
                 if (!syncedObjectApis.contains(object.getApi())) {
+                    // 创建元数据变更记录，标记为删除操作
                     DataiIntegrationMetadataChange metadataChange = new DataiIntegrationMetadataChange();
+                    // 设置变更类型为对象
                     metadataChange.setChangeType("OBJECT");
+                    // 设置操作类型为删除
                     metadataChange.setOperationType("DELETE");
+                    // 设置对象API名称
                     metadataChange.setObjectApi(object.getApi());
+                    // 设置对象标签名称
                     metadataChange.setObjectLabel(object.getLabel());
+                    // 设置变更时间
                     metadataChange.setChangeTime(LocalDateTime.now());
+                    // 设置同步状态为未同步
                     metadataChange.setSyncStatus(false);
+                    // 设置是否为自定义对象
                     metadataChange.setIsCustom(object.getIsCustom());
+                    // 设置变更原因
                     metadataChange.setChangeReason("对象已从Salesforce中删除");
+                    // 设置变更用户为系统
                     metadataChange.setChangeUser("SYSTEM");
                     
+                    // 插入元数据变更记录
                     insertDataiIntegrationMetadataChange(metadataChange);
                     log.warn("检测到对象已删除: {}", object.getApi());
                 }
             }
         } catch (Exception e) {
+            // 记录检查已删除对象时的错误
             log.error("检查已删除对象时出错: {}", e.getMessage(), e);
         }
     }
 
+    /**
+     * 重试操作执行
+     * 对指定的操作执行重试机制，在操作失败时进行重试，直到达到最大重试次数
+     * 
+     * @param <T> 操作返回值类型
+     * @param operation 需要执行的操作（Supplier函数式接口）
+     * @param maxRetries 最大重试次数
+     * @param delayMs 每次重试前的延迟时间（毫秒）
+     * @return 操作执行结果
+     */
     private <T> T retryOperation(java.util.function.Supplier<T> operation, int maxRetries, long delayMs) {
+        // 初始化重试计数器
         int retries = 0;
+        // 无限循环直到操作成功或达到最大重试次数
         while (true) {
             try {
+                // 执行操作并返回结果
                 return operation.get();
             } catch (Exception e) {
+                // 增加重试计数
                 retries++;
                 if (retries >= maxRetries) {
+                    // 如果达到最大重试次数，记录错误并抛出异常
                     log.error("操作失败，已达到最大重试次数: {}", maxRetries, e);
                     throw e;
                 }
                 try {
+                    // 记录重试日志并延迟指定时间
                     log.warn("操作失败，将在 {} 毫秒后重试，当前重试次数: {}", delayMs, retries);
                     Thread.sleep(delayMs);
                 } catch (InterruptedException ie) {
+                    // 如果线程在延迟期间被中断，恢复中断状态并抛出运行时异常
                     Thread.currentThread().interrupt();
                     log.error("重试延迟时线程被中断", ie);
                     throw new RuntimeException(ie);

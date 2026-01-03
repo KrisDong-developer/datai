@@ -3,6 +3,7 @@ package com.datai.setting.controller;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.datai.common.utils.PageUtils;
 import com.datai.setting.model.vo.DataiConfigEnvironmentVo;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -55,7 +56,7 @@ public class DataiConfigEnvironmentController extends BaseController
         DataiConfigEnvironment dataiConfigEnvironment = DataiConfigEnvironmentDto.toObj(dataiConfigEnvironmentDto);
         List<DataiConfigEnvironment> list = dataiConfigEnvironmentService.selectDataiConfigEnvironmentList(dataiConfigEnvironment);
         List<DataiConfigEnvironmentVo> voList = list.stream().map(DataiConfigEnvironmentVo::objToVo).collect(Collectors.toList());
-        return getDataTable(voList);
+        return getDataTableByPage(voList,PageUtils.getTotal(list));
     }
 
     /**

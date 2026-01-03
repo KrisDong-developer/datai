@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.datai.auth.model.vo.DataiSfLoginSessionVo;
+import com.datai.common.utils.PageUtils;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,7 +53,7 @@ public class DataiSfLoginSessionController extends BaseController
         startPage();
         List<DataiSfLoginSession> list = dataiSfLoginSessionService.selectDataiSfLoginSessionList(DataiSfLoginSessionDto.toObj(dataiSfLoginSessionDto));
         List<DataiSfLoginSessionVo> voList = list.stream().map(DataiSfLoginSessionVo::objToVo).collect(Collectors.toList());
-        return getDataTable(voList);
+        return getDataTableByPage(voList,PageUtils.getTotal(list));
     }
 
     /**

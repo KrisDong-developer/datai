@@ -30,10 +30,18 @@ public abstract class AbstractConnectionFactory<T> implements ISalesforceConnect
         String configKey = getConfigKey();
 
         T connection = connectionCache.get(configKey);
+        
+        if (connection != null && !sessionManager.isSessionValid()) {
+            log.warn("检测到Session已过期，清除缓存的{}连接", getConnectionType());
+            connectionCache.remove(configKey);
+            connection = null;
+        }
+        
         if (connection == null) {
             lock.lock();
             try {
                 connection = connectionCache.get(configKey);
+                
                 if (connection == null) {
                     connection = createConnection();
                     connectionCache.put(configKey, connection);

@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.datai.common.utils.PageUtils;
 import com.datai.integration.model.vo.DataiIntegrationApiCallLogVo;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -56,7 +57,7 @@ public class DataiIntegrationApiCallLogController extends BaseController
         List<DataiIntegrationApiCallLogVo> voList = list.stream()
             .map(DataiIntegrationApiCallLogVo::objToVo)
             .collect(Collectors.toList());
-        return getDataTable(voList);
+        return getDataTableByPage(voList,PageUtils.getTotal(list));
     }
 
     /**

@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.datai.common.utils.PageUtils;
 import com.datai.integration.model.vo.DataiIntegrationObjectVo;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -54,7 +55,7 @@ public class DataiIntegrationObjectController extends BaseController
         DataiIntegrationObject dataiIntegrationObject = DataiIntegrationObjectDto.toObj(dataiIntegrationObjectDto);
         List<DataiIntegrationObject> list = dataiIntegrationObjectService.selectDataiIntegrationObjectList(dataiIntegrationObject);
         List<DataiIntegrationObjectVo> voList = list.stream().map(DataiIntegrationObjectVo::objToVo).collect(Collectors.toList());
-        return getDataTable(voList);
+        return getDataTableByPage(voList,PageUtils.getTotal(list));
     }
 
     /**

@@ -3,6 +3,7 @@ package com.datai.integration.controller;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.datai.common.utils.PageUtils;
 import com.datai.integration.model.domain.DataiIntegrationMetadataChange;
 import com.datai.integration.model.vo.DataiIntegrationMetadataChangeVo;
 import jakarta.servlet.http.HttpServletResponse;
@@ -55,7 +56,7 @@ public class DataiIntegrationMetadataChangeController extends BaseController
         DataiIntegrationMetadataChange dataiIntegrationMetadataChange = DataiIntegrationMetadataChangeDto.toObj(dataiIntegrationMetadataChangeDto);
         List<DataiIntegrationMetadataChange> list = dataiIntegrationMetadataChangeService.selectDataiIntegrationMetadataChangeList(dataiIntegrationMetadataChange);
         List<DataiIntegrationMetadataChangeVo> voList = list.stream().map(DataiIntegrationMetadataChangeVo::objToVo).collect(Collectors.toList());
-        return getDataTable(voList);
+        return getDataTableByPage(voList,PageUtils.getTotal(list));
     }
 
     /**
@@ -70,7 +71,7 @@ public class DataiIntegrationMetadataChangeController extends BaseController
         DataiIntegrationMetadataChange dataiIntegrationMetadataChange = DataiIntegrationMetadataChangeDto.toObj(dataiIntegrationMetadataChangeDto);
         List<DataiIntegrationMetadataChange> list = dataiIntegrationMetadataChangeService.selectUnsyncedMetadataChangeList(dataiIntegrationMetadataChange);
         List<DataiIntegrationMetadataChangeVo> voList = list.stream().map(DataiIntegrationMetadataChangeVo::objToVo).collect(Collectors.toList());
-        return getDataTable(voList);
+        return getDataTableByPage(voList,PageUtils.getTotal(list));
     }
 
     /**
@@ -233,12 +234,21 @@ public class DataiIntegrationMetadataChangeController extends BaseController
     /**
      * 全对象元数据变更拉取
      * 从Salesforce拉取所有对象的元数据变更信息并记录到元数据变更表中
+     * 该方法会：
+     * 1. 连接到Salesforce获取所有对象的元数据
+     * 2. 比较现有数据库中的对象元数据
+     * 3. 记录对象级别的变更（新增、修改、删除）
+     * 4. 记录字段级别的变更（新增、修改、删除）
+     * 5. 检测并记录已从Salesforce中删除的对象
+     * 
      * 表的变更新增需要满足以下任一条件：
      * - isQueryable (可查询)
      * - isCreateable (可创建)
      * - isUpdateable (可更新)
      * - isDeletable (可删除)
      * 字段的变更新增无限制
+     * 
+     * @return 包含拉取结果的AjaxResult，包含对象变更数量和字段变更数量
      */
     @Operation(summary = "全对象元数据变更拉取")
     @PreAuthorize("@ss.hasPermi('integration:change:pullAll')")
@@ -247,9 +257,11 @@ public class DataiIntegrationMetadataChangeController extends BaseController
     public AjaxResult pullAllMetadataChanges()
     {
         try {
+            // 调用服务层方法执行全对象元数据变更拉取
             Map<String, Object> result = dataiIntegrationMetadataChangeService.pullAllMetadataChanges();
             return success(result);
         } catch (Exception e) {
+            // 记录拉取过程中发生的异常
             log.error("全对象元数据变更拉取时发生异常", e);
             return error("全对象元数据变更拉取失败: " + e.getMessage());
         }

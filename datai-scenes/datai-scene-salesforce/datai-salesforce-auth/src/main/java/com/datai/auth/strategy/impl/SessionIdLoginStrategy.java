@@ -80,6 +80,11 @@ public class SessionIdLoginStrategy implements LoginStrategy {
             result.setTokenType("Bearer");
             result.setExpiresIn(getSessionTimeout(config));
             
+            // 设置登录时间戳和过期时间点
+            long currentTimestamp = System.currentTimeMillis();
+            result.setLoginTimestamp(currentTimestamp);
+            result.setExpirationTimestamp(currentTimestamp + (result.getExpiresIn() * 1000));
+            
             logger.info("Session ID登录成功，用户ID: {}", userInfo.get("user_id"));
             
         } catch (Exception e) {

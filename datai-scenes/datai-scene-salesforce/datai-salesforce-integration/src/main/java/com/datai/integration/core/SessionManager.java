@@ -1,5 +1,8 @@
 package com.datai.integration.core;
 
+import com.datai.auth.model.domain.DataiSfLoginHistory;
+import com.datai.auth.service.IDataiSfLoginHistoryService;
+import com.datai.common.core.domain.AjaxResult;
 import com.datai.salesforce.common.constant.SalesforceConfigConstants;
 import com.datai.auth.model.domain.SalesforceLoginResult;
 import com.datai.auth.service.ISalesforceLoginService;
@@ -21,6 +24,9 @@ public class SessionManager {
     @Autowired
     private ISalesforceLoginService salesforceLoginService;
 
+    @Autowired
+    private IDataiSfLoginHistoryService dataiSfLoginHistoryService;
+
     /**
      * 获取当前Salesforce会话信息
      * 如果会话无效，则自动尝试重新登录
@@ -34,20 +40,13 @@ public class SessionManager {
         try {
             SalesforceLoginResult loginResult = CacheUtils.get(SalesforceConfigConstants.CACHE_NAME, SalesforceConfigConstants.CURRENT_RESULT, SalesforceLoginResult.class);
 
-            if (loginResult != null && loginResult.isSuccess() && !loginResult.isSessionExpired()) {
+            if (isLoginResultValid(loginResult)) {
                 log.info("获取会话信息成功，访问令牌前缀: {}", 
                         loginResult.getSessionId() != null ? loginResult.getSessionId().substring(0, Math.min(10, loginResult.getSessionId().length())) : "null");
                 return loginResult;
             }
 
-            if (loginResult == null) {
-                log.warn("会话信息为null，尝试自动重新登录");
-            } else if (!loginResult.isSuccess()) {
-                log.warn("登录状态为失败，尝试自动重新登录，错误信息: {}", loginResult.getErrorMessage());
-            } else if (loginResult.isSessionExpired()) {
-                log.warn("Session已过期，尝试自动重新登录");
-            }
-
+            logSessionStatus(loginResult);
             return autoLogin();
 
         } catch (Exception e) {
@@ -66,7 +65,15 @@ public class SessionManager {
         log.info("开始执行自动重新登录");
 
         try {
-            SalesforceLoginResult result = salesforceLoginService.autoLogin(null);
+            DataiSfLoginHistory latestLoginHistory = dataiSfLoginHistoryService.selectLatestSuccessLoginHistory();
+
+            if (latestLoginHistory == null) {
+                throw new RuntimeException("未找到登录历史记录" );
+            }
+
+            Long historyId = latestLoginHistory.getId();
+
+            SalesforceLoginResult result = salesforceLoginService.autoLogin(historyId);
 
             if (result == null || !result.isSuccess()) {
                 String errorMsg = result != null ? result.getErrorMessage() : "登录结果为空";
@@ -126,36 +133,39 @@ public class SessionManager {
         log.info("检查当前Salesforce会话信息是否有效");
 
         try {
-            SalesforceLoginResult loginResult = CacheUtils.get(SalesforceConfigConstants.CACHE_NAME, SalesforceConfigConstants.CURRENT_RESULT, SalesforceLoginResult.class);
-
-            if (loginResult == null) {
-                log.warn("会话信息为null，会话无效");
-                return false;
-            }
-
-            if (!loginResult.isSuccess()) {
-                log.warn("登录状态为失败，会话无效");
-                return false;
-            }
-
-            if (loginResult.getSessionId() == null || loginResult.getSessionId().trim().isEmpty()) {
-                log.warn("Session ID为空，会话无效");
-                return false;
-            }
-
-            if (loginResult.isSessionExpired()) {
-                log.warn("Session已过期，会话无效");
-                return false;
-            }
-
-            log.info("会话信息有效，Session ID前缀: {}", 
-                    loginResult.getSessionId() != null ? 
-                            loginResult.getSessionId().substring(0, Math.min(10, loginResult.getSessionId().length())) : "null");
-            return true;
+            SalesforceLoginResult loginResult = getCurrentLoginResult();
+            return isLoginResultValid(loginResult);
 
         } catch (Exception e) {
             log.error("检查会话信息有效性时发生异常: {}", e.getMessage(), e);
             return false;
+        }
+    }
+
+    /**
+     * 判断登录结果是否有效
+     *
+     * @param loginResult 登录结果
+     * @return 如果有效返回true，否则返回false
+     */
+    private boolean isLoginResultValid(SalesforceLoginResult loginResult) {
+        return loginResult != null 
+                && loginResult.isSuccess() 
+                && !loginResult.isSessionExpired();
+    }
+
+    /**
+     * 记录会话状态日志
+     *
+     * @param loginResult 登录结果
+     */
+    private void logSessionStatus(SalesforceLoginResult loginResult) {
+        if (loginResult == null) {
+            log.warn("会话信息为null，尝试自动重新登录");
+        } else if (!loginResult.isSuccess()) {
+            log.warn("登录状态为失败，尝试自动重新登录，错误信息: {}", loginResult.getErrorMessage());
+        } else if (loginResult.isSessionExpired()) {
+            log.warn("Session已过期，尝试自动重新登录");
         }
     }
 }

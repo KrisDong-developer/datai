@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.datai.common.utils.PageUtils;
 import com.datai.setting.model.vo.DataiConfigurationVo;
 import com.datai.setting.service.IDataiConfigEnvironmentService;
 import jakarta.servlet.http.HttpServletResponse;
@@ -80,7 +81,7 @@ public class DataiConfigurationController extends BaseController
             })
             .collect(Collectors.toList());
         
-        return getDataTable(voList);
+        return getDataTableByPage(voList,PageUtils.getTotal(list));
     }
 
     /**

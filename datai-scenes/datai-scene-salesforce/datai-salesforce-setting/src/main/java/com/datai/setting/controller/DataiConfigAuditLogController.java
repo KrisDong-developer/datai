@@ -3,6 +3,7 @@ package com.datai.setting.controller;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.datai.common.utils.PageUtils;
 import com.datai.setting.model.dto.DataiConfigAuditLogDto;
 import com.datai.setting.model.vo.DataiConfigAuditLogVo;
 import com.datai.setting.utils.AuditLogObjectNameResolver;
@@ -63,7 +64,7 @@ public class DataiConfigAuditLogController extends BaseController
             return vo;
         }).collect(Collectors.toList());
         
-        return getDataTable(voList);
+        return getDataTableByPage(voList,PageUtils.getTotal(list));
     }
 
     /**

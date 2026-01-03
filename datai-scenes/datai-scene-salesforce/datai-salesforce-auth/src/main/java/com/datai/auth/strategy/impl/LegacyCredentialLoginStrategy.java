@@ -550,6 +550,12 @@ public class LegacyCredentialLoginStrategy implements LoginStrategy {
 
         // 4. 后置处理：设置默认过期时间和 Token 类型
         fillDefaultExpiration(result);
+        
+        // 5. 设置登录时间戳和过期时间点
+        long currentTimestamp = System.currentTimeMillis();
+        result.setLoginTimestamp(currentTimestamp);
+        result.setExpirationTimestamp(currentTimestamp + (result.getExpiresIn() * 1000));
+        
         return result;
     }
 
@@ -617,7 +623,7 @@ public class LegacyCredentialLoginStrategy implements LoginStrategy {
             result.setTokenType("Bearer");
         }
 
-        long expiresIn = 7200L; // 默认值
+        long expiresIn = 6900L; // 默认值
 
         if (result.getExpiresIn() == 0) {
             try {
@@ -627,7 +633,7 @@ public class LegacyCredentialLoginStrategy implements LoginStrategy {
                         .map(c -> CacheUtils.get(salesforceConfigCacheManager.getEnvironmentCacheKey(), "salesforce.session.timeout", String.class))
                         .filter(StringUtils::isNumeric) // 确保是数字
                         .map(Long::parseLong)
-                        .orElse(7200L);
+                        .orElse(6900L);
             } catch (Exception e) {
                 logger.warn("读取Salesforce会话超时配置失败，使用默认值: 7200", e);
             }
