@@ -5,11 +5,14 @@ import java.util.*;
 
 import com.datai.common.utils.DateUtils;
 import com.datai.common.utils.SecurityUtils;
+import com.datai.common.utils.CacheUtils;
 import com.datai.integration.factory.impl.SOAPConnectionFactory;
 import com.datai.integration.mapper.CustomMapper;
+import com.datai.integration.model.domain.DataiIntegrationBatch;
 import com.sforce.soap.partner.*;
 import com.sforce.soap.partner.sobject.SObject;
 import com.sforce.ws.ConnectionException;
+import com.datai.setting.config.SalesforceConfigCacheManager;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -23,6 +26,9 @@ import com.datai.integration.service.IDataiIntegrationObjectService;
 import com.datai.integration.service.IDataiIntegrationFieldService;
 import com.datai.integration.service.IDataiIntegrationPicklistService;
 import com.datai.integration.service.IDataiIntegrationFilterLookupService;
+import com.datai.integration.service.IDataiIntegrationBatchService;
+import com.datai.setting.service.IDataiConfigurationService;
+import com.datai.salesforce.common.constant.SalesforceConfigConstants;
 import com.datai.common.core.domain.model.LoginUser;
 
 /**
@@ -53,6 +59,15 @@ public class DataiIntegrationMetadataChangeServiceImpl implements IDataiIntegrat
 
     @Autowired
     private IDataiIntegrationFilterLookupService dataiIntegrationFilterLookupService;
+
+    @Autowired
+    private IDataiIntegrationBatchService dataiIntegrationBatchService;
+
+    @Autowired
+    private IDataiConfigurationService dataiConfigurationService;
+
+    @Autowired
+    private SalesforceConfigCacheManager salesforceConfigCacheManager;
 
     @Autowired
     private SOAPConnectionFactory soapConnectionFactory;
@@ -328,11 +343,13 @@ public class DataiIntegrationMetadataChangeServiceImpl implements IDataiIntegrat
                         
                         if (objectNum > LARGE_OBJECT_THRESHOLD) {
                             log.info("对象 {} 是大数据量对象，数据量大于五百万，创建分区表", objectApi);
-                            createOrUpdateDatabaseTable(objectApi, metadataChange.getObjectLabel(), result);
+                            createDatabaseTable(objectApi, metadataChange.getObjectLabel(), objDetail, true, result);
                         } else {
                             log.info("对象 {} 是普通对象，数据量少于五百万，创建正常表", objectApi);
-                            createOrUpdateDatabaseTable(objectApi, metadataChange.getObjectLabel(), result);
+                            createDatabaseTable(objectApi, metadataChange.getObjectLabel(), objDetail, false, result);
                         }
+
+                        createBatchesForNewObject(objectApi, metadataChange.getObjectLabel(), connection);
                         
                         log.info("同步对象 {} 成功", objectApi);
                     }
@@ -503,53 +520,176 @@ public class DataiIntegrationMetadataChangeServiceImpl implements IDataiIntegrat
         updateDataiIntegrationMetadataChange(metadataChange);
     }
 
-    private void createOrUpdateDatabaseTable(String objectApi, String objectLabel, Map<String, Object> result) {
-        PartnerConnection connection = null;
+    private void createDatabaseTable(String objectApi, String objectLabel, DescribeSObjectResult objDetail, boolean isPartitioned, Map<String, Object> result) {
         try {
-            connection = soapConnectionFactory.getConnection();
-            DescribeSObjectResult objDetail = connection.describeSObject(objectApi);
-            
-            if (objDetail == null) {
-                result.put("success", false);
-                result.put("message", "无法获取对象元数据");
+            // 检查表是否存在
+            if (customMapper.checkTable(objectApi) != null) {
+                log.info("表 {} 已存在，跳过创建表", objectApi);
+                result.put("success", true);
+                result.put("message", "表已存在");
                 return;
             }
 
-            List<Map<String, Object>> fieldMaps = new ArrayList<>();
-            List<Map<String, Object>> indexMaps = new ArrayList<>();
-            
+            // 构建表字段定义
+            List<Map<String, Object>> fieldDefinitions = new ArrayList<>();
+            List<String> fields = new ArrayList<>();
+
+            // 遍历所有字段
             for (com.sforce.soap.partner.Field field : objDetail.getFields()) {
-                Map<String, Object> fieldMap = new HashMap<>();
-                fieldMap.put("fieldName", field.getName());
-                fieldMap.put("fieldType", convertSalesforceTypeToMySQL(field.getType() != null ? field.getType().toString() : null));
-                fieldMap.put("fieldLength", field.getLength());
-                fieldMap.put("fieldPrecision", field.getPrecision());
-                fieldMap.put("fieldScale", field.getScale());
-                fieldMap.put("isNullable", field.isNillable());
-                fieldMap.put("isUnique", field.isUnique());
-                fieldMap.put("isPrimaryKey", field.isIdLookup());
-                fieldMaps.add(fieldMap);
-                
-                if (field.isIdLookup()) {
-                    Map<String, Object> indexMap = new HashMap<>();
-                    indexMap.put("indexName", "idx_" + field.getName());
-                    indexMap.put("indexField", field.getName());
-                    indexMap.put("indexType", "PRIMARY");
-                    indexMaps.add(indexMap);
+                Map<String, Object> fieldDef = new HashMap<>();
+                fieldDef.put("name", field.getName());
+                fieldDef.put("type", convertSalesforceTypeToMySQL(field.getType() != null ? field.getType().toString() : null));
+                fieldDef.put("comment", field.getLabel() != null ? field.getLabel().replaceAll("'", "\\\\'") : "");
+                fieldDefinitions.add(fieldDef);
+                fields.add(field.getName());
+
+                // 如果字段类型是base64，新增文件路径、是否下载、是否上传三个字段
+                if ("base64".equalsIgnoreCase(field.getType().toString())) {
+                    Map<String, Object> filePathField = new HashMap<>();
+                    filePathField.put("name", "file_path");
+                    filePathField.put("type", "text");
+                    filePathField.put("comment", (field.getLabel() != null ? field.getLabel() : field.getName()) + "文件路径");
+                    fieldDefinitions.add(filePathField);
+
+                    Map<String, Object> isDownloadField = new HashMap<>();
+                    isDownloadField.put("name", "is_download");
+                    isDownloadField.put("type", "tinyint(1) DEFAULT 0");
+                    isDownloadField.put("comment", (field.getLabel() != null ? field.getLabel() : field.getName()) + "是否下载");
+                    fieldDefinitions.add(isDownloadField);
+
+                    Map<String, Object> isUploadField = new HashMap<>();
+                    isUploadField.put("name", "is_upload");
+                    isUploadField.put("type", "tinyint(1) DEFAULT 0");
+                    isUploadField.put("comment", (field.getLabel() != null ? field.getLabel() : field.getName()) + "是否上传");
+                    fieldDefinitions.add(isUploadField);
+                }
+
+                // 处理多态外键字段
+                if (field.isPolymorphicForeignKey()) {
+                    Map<String, Object> polymorphicField = new HashMap<>();
+                    polymorphicField.put("name", field.getName() + "_type");
+                    polymorphicField.put("type", "varchar(255)");
+                    polymorphicField.put("comment", (field.getLabel() != null ? field.getLabel() : field.getName()) + "关联对象");
+                    fieldDefinitions.add(polymorphicField);
                 }
             }
-            
-            customMapper.createTable(objectApi, objectLabel, fieldMaps, indexMaps);
-            log.info("成功创建或更新表: {}", objectApi);
-            
-        } catch (ConnectionException e) {
-            result.put("success", false);
-            result.put("message", "获取Salesforce连接失败: " + e.getMessage());
-            log.error("获取Salesforce连接失败: {}", e.getMessage(), e);
+
+            // 添加new_id字段
+            Map<String, Object> newIdField = new HashMap<>();
+            newIdField.put("name", "new_id");
+            newIdField.put("type", "varchar(255)");
+            newIdField.put("comment", "新SFID");
+            fieldDefinitions.add(newIdField);
+
+            // 添加is_update字段
+            Map<String, Object> isUpdateField = new HashMap<>();
+            isUpdateField.put("name", "is_update");
+            isUpdateField.put("type", "tinyint(1) DEFAULT 0");
+            isUpdateField.put("comment", "是否更新");
+            fieldDefinitions.add(isUpdateField);
+
+            // 添加fail_reason字段
+            Map<String, Object> failReasonField = new HashMap<>();
+            failReasonField.put("name", "fail_reason");
+            failReasonField.put("type", "text");
+            failReasonField.put("comment", "失败原因");
+            fieldDefinitions.add(failReasonField);
+
+            // 构建索引定义
+            List<Map<String, Object>> indexDefinitions = new ArrayList<>();
+            for (String field : fields) {
+                Map<String, Object> indexMap = new HashMap<>();
+                indexMap.put("field", field);
+                indexMap.put("name", "IDX_" + objectApi + "_" + field);
+                indexDefinitions.add(indexMap);
+            }
+
+            // 根据是否分区创建不同的表
+            if (isPartitioned) {
+                // 创建分区表
+                createPartitionTable(objectApi, objectLabel, fieldDefinitions, indexDefinitions, result);
+            } else {
+                // 创建普通表
+                customMapper.createTable(objectApi, objectLabel, fieldDefinitions, indexDefinitions);
+                log.info("成功创建表结构: {}", objectApi);
+                result.put("success", true);
+                result.put("message", "表创建成功");
+            }
+
         } catch (Exception e) {
             result.put("success", false);
-            result.put("message", "创建或更新表失败: " + e.getMessage());
-            log.error("创建或更新表失败: {}", e.getMessage(), e);
+            result.put("message", "创建表失败: " + e.getMessage());
+            log.error("创建表 {} 失败: {}", objectApi, e.getMessage(), e);
+        }
+    }
+
+    private void createPartitionTable(String objectApi, String objectLabel, List<Map<String, Object>> fieldDefinitions, List<Map<String, Object>> indexDefinitions, Map<String, Object> result) {
+        try {
+            // 获取批处理字段（日期字段）
+            DataiIntegrationObject queryObject = new DataiIntegrationObject();
+            queryObject.setApi(objectApi);
+            List<DataiIntegrationObject> objects = dataiIntegrationObjectService.selectDataiIntegrationObjectList(queryObject);
+            
+            String partitionKey = null;
+            if (!objects.isEmpty()) {
+                partitionKey = objects.get(0).getBatchField();
+            }
+
+            // 从缓存获取系统数据开始时间
+            String systemDataStartTimeStr = CacheUtils.get(salesforceConfigCacheManager.getEnvironmentCacheKey(), "system.data.start.time", String.class);
+            int startYear = SalesforceConfigConstants.DEFAULT_SYSTEM_DATA_START_YEAR;
+            
+            if (systemDataStartTimeStr != null && !systemDataStartTimeStr.trim().isEmpty()) {
+                try {
+                    java.time.LocalDate startDate = java.time.LocalDate.parse(systemDataStartTimeStr.trim());
+                    startYear = startDate.getYear();
+                    log.info("从缓存获取系统数据开始时间: {}, 年份: {}", systemDataStartTimeStr, startYear);
+                } catch (Exception e) {
+                    log.warn("解析系统数据开始时间配置失败: {}, 使用默认年份: {}", systemDataStartTimeStr, startYear, e);
+                }
+            } else {
+                log.warn("未找到系统数据开始时间配置，使用默认年份: {}", startYear);
+            }
+
+            // 构建分区结构，按年份进行分区
+            List<Map<String, Object>> partitions = new ArrayList<>();
+            
+            // 获取当前年份
+            java.util.Calendar calendar = java.util.Calendar.getInstance();
+            int currentYear = calendar.get(java.util.Calendar.YEAR);
+
+            // 从系统数据开始年份创建分区到当前年份
+            for (int year = startYear; year <= currentYear; year++) {
+                Map<String, Object> partition = new HashMap<>();
+                partition.put("name", "p" + year);
+                partition.put("value", year + 1);
+                partitions.add(partition);
+            }
+
+            // 添加未来一年的分区
+            Map<String, Object> futurePartition = new HashMap<>();
+            futurePartition.put("name", "p" + (currentYear + 1));
+            futurePartition.put("value", (currentYear + 2));
+            partitions.add(futurePartition);
+
+            // 创建RANGE分区表
+            customMapper.createRangePartitionTable(
+                objectApi,
+                objectLabel,
+                fieldDefinitions,
+                indexDefinitions,
+                partitionKey,
+                partitions
+            );
+
+            log.info("成功创建分区表结构: {}, 分区起始年份: {}", objectApi, startYear);
+            result.put("success", true);
+            result.put("message", "分区表创建成功");
+
+        } catch (Exception e) {
+            result.put("success", false);
+            result.put("message", "创建分区表失败: " + e.getMessage());
+            log.error("创建分区表 {} 失败: {}", objectApi, e.getMessage(), e);
         }
     }
 
@@ -1454,12 +1594,8 @@ public class DataiIntegrationMetadataChangeServiceImpl implements IDataiIntegrat
             object.setIsSearchable(objDetail.isSearchable());
             
             // 同步设置
-            object.setIsWork(true);
-            object.setIsIncremental(true);
-            
-            // 同步时间
-            object.setLastSyncDate(LocalDateTime.now());
-            
+            object.setIsWork(false);
+            object.setIsIncremental(false);
             return object;
         } catch (Exception e) {
             log.error("构建对象 {} 元数据时出错: {}", objDetail.getName(), e.getMessage(), e);
@@ -1697,18 +1833,285 @@ public class DataiIntegrationMetadataChangeServiceImpl implements IDataiIntegrat
             
             if (!objects.isEmpty()) {
                 DataiIntegrationObject object = objects.get(0);
-                object.setLastSyncDate(LocalDateTime.now());
-                
+                object.setBatchField(dateField);
+                object.setTotalRows(objectNum);
+
                 int updateResult = dataiIntegrationObjectService.updateDataiIntegrationObject(object);
                 
                 if (updateResult > 0) {
-                    log.debug("成功更新对象 {} 的最后同步时间", objectApi);
+                    log.debug("成功更新对象 {} 的字段信息", objectApi);
                 } else {
-                    log.warn("更新对象 {} 的最后同步时间失败", objectApi);
+                    log.warn("更新对象 {} 的字段信息失败", objectApi);
                 }
             }
         } catch (Exception e) {
             log.error("处理对象 {} 的字段信息时出错: {}", objectApi, e.getMessage(), e);
         }
+    }
+
+    /**
+     * 为新对象创建批次记录
+     *
+     * @param objectApi 对象API名称
+     * @param objectLabel 对象标签
+     * @param connection Salesforce连接
+     */
+    private void createBatchesForNewObject(String objectApi, String objectLabel, PartnerConnection connection) {
+        try {
+            DataiIntegrationObject queryObject = new DataiIntegrationObject();
+            queryObject.setApi(objectApi);
+            List<DataiIntegrationObject> objects = dataiIntegrationObjectService.selectDataiIntegrationObjectList(queryObject);
+            
+            if (objects.isEmpty()) {
+                log.warn("对象 {} 不存在，无法创建批次", objectApi);
+                return;
+            }
+            
+            DataiIntegrationObject object = objects.get(0);
+            String batchField = object.getBatchField();
+            
+            if (batchField == null || batchField.trim().isEmpty()) {
+                log.warn("对象 {} 没有设置批次字段，跳过批次创建", objectApi);
+                return;
+            }
+            
+            String systemDataStartTimeStr = CacheUtils.get(salesforceConfigCacheManager.getEnvironmentCacheKey(), "system.data.start.time", String.class);
+            java.time.LocalDate startDate = java.time.LocalDate.now().minusYears(5);
+            
+            if (systemDataStartTimeStr != null && !systemDataStartTimeStr.trim().isEmpty()) {
+                try {
+                    startDate = java.time.LocalDate.parse(systemDataStartTimeStr.trim());
+                    log.info("从缓存获取系统数据开始时间: {}", systemDataStartTimeStr);
+                } catch (Exception e) {
+                    log.warn("解析系统数据开始时间配置失败: {}, 使用默认值", systemDataStartTimeStr, e);
+                }
+            }
+            
+            java.time.LocalDate endDate = java.time.LocalDate.now();
+            
+            DataiIntegrationBatch batchTemplate = new DataiIntegrationBatch();
+            batchTemplate.setApi(objectApi);
+            batchTemplate.setLabel(objectLabel);
+            batchTemplate.setBatchField(batchField);
+            batchTemplate.setSyncType("FULL");
+            batchTemplate.setSyncStatus(false);
+            batchTemplate.setCreateTime(DateUtils.getNowDate());
+            batchTemplate.setUpdateTime(DateUtils.getNowDate());
+            
+            saveBatch(SalesforceConfigConstants.BATCH_TYPE_YEAR, 
+                      java.sql.Date.valueOf(startDate), 
+                      java.sql.Date.valueOf(endDate), 
+                      objectApi, 
+                      objectLabel, 
+                      batchField, 
+                      connection, 
+                      batchTemplate);
+            
+            log.info("对象 {} 批次创建完成", objectApi);
+        } catch (Exception e) {
+            log.error("为对象 {} 创建批次时出错: {}", objectApi, e.getMessage(), e);
+        }
+    }
+
+    /**
+     * 保存批次信息，根据数据量自动调整批次粒度
+     *
+     * @param batchType 批次类型（年、月、周）
+     * @param startDate 开始日期
+     * @param endDate 结束日期
+     * @param apiName API名称
+     * @param label 对象标签
+     * @param batchField 批次字段
+     * @param connection Salesforce连接
+     * @param batchTemplate 批次对象模板
+     */
+    private void saveBatch(String batchType, Date startDate, Date endDate, String apiName, String label, String batchField, PartnerConnection connection, DataiIntegrationBatch batchTemplate) {
+        saveBatchRecursive(batchType, startDate, endDate, apiName, label, batchField, connection, batchTemplate, 0);
+    }
+
+    /**
+     * 递归保存批次信息
+     *
+     * @param batchType 批次类型
+     * @param startDate 开始日期
+     * @param endDate 结束日期
+     * @param apiName API名称
+     * @param label 对象标签
+     * @param batchField 批次字段
+     * @param connection Salesforce连接
+     * @param batchTemplate 批次对象模板
+     * @param depth 递归深度
+     */
+    private void saveBatchRecursive(String batchType, Date startDate, Date endDate, String apiName, String label, String batchField, PartnerConnection connection, DataiIntegrationBatch batchTemplate, int depth) {
+        if (depth > SalesforceConfigConstants.BATCH_MAX_DEPTH) {
+            log.warn("递归深度超过限制，直接保存批次: {}, startDate: {}, endDate: {}", apiName, startDate, endDate);
+            DataiIntegrationBatch dataBatch = new DataiIntegrationBatch();
+            dataBatch.setApi(apiName);
+            dataBatch.setLabel(label);
+            dataBatch.setBatchField(batchField);
+            dataBatch.setSyncType("FULL");
+            dataBatch.setSyncStatus(false);
+            dataBatch.setSyncStartDate(startDate.toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDateTime());
+            dataBatch.setSyncEndDate(endDate.toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDateTime());
+            dataBatch.setCreateTime(DateUtils.getNowDate());
+            dataBatch.setUpdateTime(DateUtils.getNowDate());
+            dataiIntegrationBatchService.insertDataiIntegrationBatch(dataBatch);
+            return;
+        }
+        
+        Date currentStartDate = startDate;
+        Date lastDay;
+        
+        do {
+            lastDay = getLastDay(batchType, endDate, currentStartDate);
+            log.debug("当前批次起始日期: {}, 计算得到的结束日期: {}", currentStartDate, lastDay);
+            
+            if (lastDay.compareTo(currentStartDate) <= 0) {
+                log.warn("计算得到的结束日期({})早于或等于起始日期({})，跳过该批次", lastDay, currentStartDate);
+                break;
+            }
+            
+            Integer totalNum = 0;
+            int retryCount = 0;
+            int maxRetries = 3;
+            
+            while (retryCount < maxRetries) {
+                try {
+                    totalNum = countSfNum(connection, apiName, batchField, currentStartDate, lastDay);
+                    log.debug("API {} 在 {} 到 {} 期间的数据量为: {}", apiName, currentStartDate, lastDay, totalNum);
+                    break;
+                } catch (Exception e) {
+                    retryCount++;
+                    log.error("api {} count error, retry {}/{}", apiName, retryCount, maxRetries, e);
+                    if (retryCount >= maxRetries) {
+                        log.error("api {} count failed after {} retries", apiName, maxRetries, e);
+                        totalNum = 0;
+                    } else {
+                        try {
+                            Thread.sleep(1000 * retryCount);
+                        } catch (InterruptedException ie) {
+                            Thread.currentThread().interrupt();
+                            throw new RuntimeException("Thread interrupted during retry delay", ie);
+                        }
+                    }
+                }
+            }
+            
+            if (totalNum > SalesforceConfigConstants.BATCH_DATA_THRESHOLD) {
+                log.info("API {} 当前批次数据量 {} 超过{}，需要细化批次粒度", apiName, totalNum, SalesforceConfigConstants.BATCH_DATA_THRESHOLD);
+                if (SalesforceConfigConstants.BATCH_TYPE_YEAR.equals(batchType)) {
+                    log.info("将年批次细化为月批次");
+                    saveBatchRecursive(SalesforceConfigConstants.BATCH_TYPE_MONTH, currentStartDate, lastDay, apiName, label, batchField, connection, batchTemplate, depth + 1);
+                } else if (SalesforceConfigConstants.BATCH_TYPE_MONTH.equals(batchType)) {
+                    log.info("将月批次细化为周批次");
+                    saveBatchRecursive(SalesforceConfigConstants.BATCH_TYPE_WEEK, currentStartDate, lastDay, apiName, label, batchField, connection, batchTemplate, depth + 1);
+                } else {
+                    log.info("已经是周粒度但数据量仍超过{}，直接保存批次", SalesforceConfigConstants.BATCH_DATA_THRESHOLD);
+                    DataiIntegrationBatch dataBatch = new DataiIntegrationBatch();
+                    dataBatch.setApi(apiName);
+                    dataBatch.setLabel(label);
+                    dataBatch.setBatchField(batchField);
+                    dataBatch.setSyncType("FULL");
+                    dataBatch.setSyncStatus(false);
+                    dataBatch.setSfNum(totalNum);
+                    dataBatch.setSyncStartDate(currentStartDate.toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDateTime());
+                    dataBatch.setSyncEndDate(lastDay.toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDateTime());
+                    dataBatch.setCreateTime(DateUtils.getNowDate());
+                    dataBatch.setUpdateTime(DateUtils.getNowDate());
+                    dataiIntegrationBatchService.insertDataiIntegrationBatch(dataBatch);
+                }
+            } else {
+                log.info("API {} 当前批次数据量 {} 未超过{}，直接保存批次", apiName, totalNum, SalesforceConfigConstants.BATCH_DATA_THRESHOLD);
+                DataiIntegrationBatch dataBatch = new DataiIntegrationBatch();
+                dataBatch.setApi(apiName);
+                dataBatch.setLabel(label);
+                dataBatch.setBatchField(batchField);
+                dataBatch.setSyncType("FULL");
+                dataBatch.setSyncStatus(false);
+                dataBatch.setSfNum(totalNum);
+                dataBatch.setSyncStartDate(currentStartDate.toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDateTime());
+                dataBatch.setSyncEndDate(lastDay.toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDateTime());
+                dataBatch.setCreateTime(DateUtils.getNowDate());
+                dataBatch.setUpdateTime(DateUtils.getNowDate());
+                dataiIntegrationBatchService.insertDataiIntegrationBatch(dataBatch);
+            }
+            
+            currentStartDate = lastDay;
+            
+            if (currentStartDate.compareTo(endDate) >= 0) {
+                break;
+            }
+        } while (lastDay.compareTo(endDate) < 0);
+    }
+
+    /**
+     * 根据批次类型获取结束日期
+     *
+     * @param batchType 批次类型（YEAR、MONTH、WEEK）
+     * @param endDate 总结束日期
+     * @param startDate 当前批次开始日期
+     * @return 批次结束日期
+     */
+    private Date getLastDay(String batchType, Date endDate, Date startDate) {
+        java.util.Calendar calendar = java.util.Calendar.getInstance();
+        calendar.setTime(startDate);
+        
+        switch (batchType) {
+            case SalesforceConfigConstants.BATCH_TYPE_WEEK:
+                calendar.add(java.util.Calendar.WEEK_OF_YEAR, 1);
+                break;
+            case SalesforceConfigConstants.BATCH_TYPE_MONTH:
+                calendar.add(java.util.Calendar.MONTH, 1);
+                break;
+            case SalesforceConfigConstants.BATCH_TYPE_YEAR:
+                calendar.add(java.util.Calendar.YEAR, 1);
+                break;
+            default:
+                return endDate;
+        }
+        
+        Date result = calendar.getTime();
+        if (result.after(endDate)) {
+            return endDate;
+        }
+        return result;
+    }
+
+    /**
+     * 查询Salesforce数据量
+     *
+     * @param connection Salesforce连接
+     * @param apiName API名称
+     * @param batchField 批次字段
+     * @param startDate 开始日期
+     * @param endDate 结束日期
+     * @return 数据量
+     */
+    private Integer countSfNum(PartnerConnection connection, String apiName, String batchField, Date startDate, Date endDate) {
+        try {
+            StringBuilder sql = new StringBuilder();
+            sql.append("SELECT COUNT(Id) num FROM ").append(apiName);
+            
+            if (batchField != null && !batchField.trim().isEmpty()) {
+                java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd");
+                sql.append(" WHERE ").append(batchField)
+                   .append(" >= ").append(sdf.format(startDate))
+                   .append(" AND ").append(batchField)
+                   .append(" < ").append(sdf.format(endDate));
+            }
+            
+            log.debug("Count SQL: {}", sql.toString());
+            QueryResult queryResult = connection.queryAll(sql.toString());
+            
+            if (queryResult.getSize() > 0) {
+                SObject record = queryResult.getRecords()[0];
+                Integer num = (Integer) record.getField("num");
+                log.debug("Count result: {}", num);
+                return num;
+            }
+        } catch (Exception e) {
+            log.error("查询 {} 的数据量时出错: {}", apiName, e.getMessage(), e);
+        }
+        return 0;
     }
 }

@@ -190,8 +190,6 @@ public class SalesforceDataPullServiceImpl implements ISalesforceDataPullService
             if (!objects.isEmpty()) {
                 // 更新现有对象
                 DataiIntegrationObject object = objects.get(0);
-                // 仅更新最后同步时间
-                object.setLastSyncDate(LocalDateTime.now());
                 
                 int updateResult = integrationObjectService.updateDataiIntegrationObject(object);
                 
@@ -566,9 +564,7 @@ public class SalesforceDataPullServiceImpl implements ISalesforceDataPullService
             // 同步设置
             object.setIsWork(true); // 默认启用
             object.setIsIncremental(true); // 默认增量更新
-            
-            // 同步时间
-            object.setLastSyncDate(LocalDateTime.now());
+
             
             return object;
         } catch (Exception e) {

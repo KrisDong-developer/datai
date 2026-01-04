@@ -21,4 +21,35 @@ public final class SalesforceConfigConstants {
 
     public static final String CURRENT_RESULT = "current_result";
 
+    /**
+     * 系统数据开始时间的默认年份
+     */
+    public static final int DEFAULT_SYSTEM_DATA_START_YEAR = 2020;
+
+    /**
+     * 批次类型 - 年
+     */
+    public static final String BATCH_TYPE_YEAR = "YEAR";
+
+    /**
+     * 批次类型 - 月
+     */
+    public static final String BATCH_TYPE_MONTH = "MONTH";
+
+    /**
+     * 批次类型 - 周
+     */
+    public static final String BATCH_TYPE_WEEK = "WEEK";
+
+    /**
+     * 批次数据量阈值（50万）
+     * 当批次数据量超过此阈值时，需要细化批次粒度
+     */
+    public static final int BATCH_DATA_THRESHOLD = 500000;
+
+    /**
+     * 批次递归最大深度
+     */
+    public static final int BATCH_MAX_DEPTH = 10;
+
 }
