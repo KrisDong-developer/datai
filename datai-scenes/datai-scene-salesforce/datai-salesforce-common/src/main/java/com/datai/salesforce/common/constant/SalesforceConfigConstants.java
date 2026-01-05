@@ -1,5 +1,8 @@
 package com.datai.salesforce.common.constant;
 
+import java.util.Arrays;
+import java.util.List;
+
 /**
  * Salesforce配置常量类
  * 定义配置相关的常量
@@ -51,5 +54,16 @@ public final class SalesforceConfigConstants {
      * 批次递归最大深度
      */
     public static final int BATCH_MAX_DEPTH = 10;
+
+    /**
+     * 表索引字段
+     * 只有在列表中的字段才需要创建索引
+     */
+    public static final List<String> TABLE_INDEX = Arrays.asList(
+        "CreatedDate",
+        "LastModifiedDate",
+        "IsDeleted",
+        "new_id"
+    );
 
 }

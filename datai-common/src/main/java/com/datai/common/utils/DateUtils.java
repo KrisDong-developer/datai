@@ -171,4 +171,22 @@ public class DateUtils extends org.apache.commons.lang3.time.DateUtils {
     @Deprecated
     public DateUtils() {
     }
+
+    /**
+     * 将 java.util.Date (及其子类 sql.Date/Timestamp) 安全地转换为 LocalDateTime
+     * 默认使用系统时区
+     */
+    public static LocalDateTime toLocalDateTime(Date date) {
+        if (date == null) {
+            return null;
+        }
+
+        // 方案：先转为 Instant，再转为 LocalDateTime
+        // 使用 new Date(date.getTime()) 是为了确保即使传入的是 java.sql.Date
+        // 也能顺利调用 toInstant() 而不抛出 UnsupportedOperationException
+        return new Date(date.getTime())
+                .toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDateTime();
+    }
 }

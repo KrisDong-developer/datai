@@ -3,8 +3,8 @@ package ${packageName}.service.impl;
 import java.util.List;
     #foreach ($column in $columns)
         #if($column.javaField == 'createTime' || $column.javaField == 'updateTime')
-        import com.datai.common.utils.DateUtils;
-        import com.datai.common.utils.SecurityUtils;
+import com.datai.common.utils.DateUtils;
+import com.datai.common.utils.SecurityUtils;
             #break
         #end
     #end

@@ -316,4 +316,18 @@ public final class SalesforceConstants {
      * 方法 - PUT
      */
     public static final String METHOD_PUT = "PUT";
+
+    // ================================= 日期格式常量 =================================
+
+    /**
+     * Salesforce 日期时间格式
+     * 格式示例: 2024-01-01T00:00:00.000Z
+     */
+    public static final String SF_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
+
+    /**
+     * Salesforce 日期格式
+     * 格式示例: 2024-01-01
+     */
+    public static final String SF_DATE_ONLY_FORMAT = "yyyy-MM-dd";
 }

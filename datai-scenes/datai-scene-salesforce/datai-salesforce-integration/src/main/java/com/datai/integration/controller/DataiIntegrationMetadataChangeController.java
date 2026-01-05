@@ -226,15 +226,44 @@ public class DataiIntegrationMetadataChangeController extends BaseController
 
     /**
      * 批量同步元数据变更到本地数据库
+     * 根据元数据变更ID数组将指定的元数据变更批量同步到本地数据库
+     * 
+     * 该方法会：
+     * 1. 使用线程池并发执行多个元数据变更的同步操作，提高同步效率
+     * 2. 根据ID数组查询元数据变更记录
+     * 3. 根据变更类型（OBJECT或FIELD）执行相应的同步操作
+     * 4. 对于对象变更：执行对象的创建、修改或删除操作
+     * 5. 对于字段变更：执行字段的创建、修改或删除操作
+     * 6. 更新元数据变更记录的同步状态
+     * 7. 提供实时的同步进度反馈（每10条记录输出一次进度）
+     * 8. 汇总同步结果，包含成功和失败的详细信息
+     * 
+     * 优化特性：
+     * - 并发处理：使用SalesforceExecutor线程池并发执行同步任务，大幅提升处理速度
+     * - 进度反馈：实时输出同步进度，方便监控大批量同步的执行状态
+     * - 异常隔离：单个同步任务失败不会影响其他任务的执行
+     * - 结果汇总：提供详细的同步结果统计，包括总数、成功数、失败数和详细信息
+     * - 线程安全：使用AtomicInteger和synchronizedList保证并发环境下的数据一致性
+     * 
+     * @return 同步结果，包含：
+     *         - success: 是否全部成功
+     *         - message: 同步结果摘要信息
+     *         - data: 详细数据
+     *           - totalCount: 总记录数
+     *           - successCount: 成功数量
+     *           - failCount: 失败数量
+     *           - details: 每条记录的同步详情列表
+     *             - id: 元数据变更ID
+     *             - success: 是否成功
+     *             - message: 结果消息
      */
     @Operation(summary = "批量同步元数据变更到本地数据库")
     @PreAuthorize("@ss.hasPermi('integration:change:syncBatch')")
     @Log(title = "批量同步元数据变更", businessType = BusinessType.UPDATE)
     @PostMapping("/syncBatch")
-    public AjaxResult syncBatchToLocalDatabase(@RequestBody java.util.Map<String, Object> params)
+    public AjaxResult syncBatchToLocalDatabase(@PathVariable( name = "ids" ) Long[] ids)
     {
         try {
-            Long[] ids = ((java.util.List<Long>) params.get("ids")).toArray(new Long[0]);
             Map<String, Object> result = dataiIntegrationMetadataChangeService.syncBatchToLocalDatabase(ids);
             return success(result);
         } catch (Exception e) {

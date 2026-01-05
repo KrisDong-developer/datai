@@ -2,6 +2,8 @@ package com.datai.integration.service.impl;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import com.datai.common.utils.DateUtils;
 import com.datai.common.utils.SecurityUtils;
@@ -9,10 +11,12 @@ import com.datai.common.utils.CacheUtils;
 import com.datai.integration.factory.impl.SOAPConnectionFactory;
 import com.datai.integration.mapper.CustomMapper;
 import com.datai.integration.model.domain.DataiIntegrationBatch;
+import com.datai.salesforce.common.utils.SoqlBuilder;
 import com.sforce.soap.partner.*;
 import com.sforce.soap.partner.sobject.SObject;
 import com.sforce.ws.ConnectionException;
 import com.datai.setting.config.SalesforceConfigCacheManager;
+import com.datai.setting.future.SalesforceExecutor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -74,6 +78,9 @@ public class DataiIntegrationMetadataChangeServiceImpl implements IDataiIntegrat
 
     @Autowired
     private CustomMapper customMapper;
+
+    @Autowired
+    private SalesforceExecutor salesforceExecutor;
 
     /**
      * 查询对象元数据变更
@@ -273,34 +280,77 @@ public class DataiIntegrationMetadataChangeServiceImpl implements IDataiIntegrat
     @Transactional(rollbackFor = Exception.class)
     public Map<String, Object> syncBatchToLocalDatabase(Long[] ids) {
         Map<String, Object> result = new HashMap<>();
-        List<Map<String, Object>> syncResults = new ArrayList<>();
-        int successCount = 0;
-        int failCount = 0;
+        List<Map<String, Object>> syncResults = Collections.synchronizedList(new ArrayList<>());
+        AtomicInteger successCount = new AtomicInteger(0);
+        AtomicInteger failCount = new AtomicInteger(0);
+        AtomicInteger processedCount = new AtomicInteger(0);
+        int totalCount = ids.length;
+        
+        log.info("开始批量同步元数据变更，总数: {}", totalCount);
 
-        for (Long id : ids) {
-            Map<String, Object> syncResult = syncToLocalDatabase(id);
+        List<Future<?>> futures = new ArrayList<>();
+
+        for (int i = 0; i < ids.length; i++) {
+            final Long id = ids[i];
+            final int index = i;
+
+            Future<?> future = salesforceExecutor.execute(() -> {
+                try {
+                    Map<String, Object> syncResult = syncToLocalDatabase(id);
+                    
+                    Map<String, Object> syncResultItem = new HashMap<>();
+                    syncResultItem.put("id", id);
+                    syncResultItem.put("success", syncResult.get("success"));
+                    syncResultItem.put("message", syncResult.get("message"));
+                    syncResults.add(syncResultItem);
+
+                    if ((Boolean) syncResult.get("success")) {
+                        successCount.incrementAndGet();
+                    } else {
+                        failCount.incrementAndGet();
+                    }
+                    
+                    int currentProcessed = processedCount.incrementAndGet();
+                    if (currentProcessed % 10 == 0 || currentProcessed == totalCount) {
+                        log.info("批量同步进度: {}/{} (成功: {}, 失败: {})", 
+                                currentProcessed, totalCount, successCount.get(), failCount.get());
+                    }
+                } catch (Exception e) {
+                    log.error("同步元数据变更ID {} 时发生异常: {}", id, e.getMessage(), e);
+                    
+                    Map<String, Object> syncResultItem = new HashMap<>();
+                    syncResultItem.put("id", id);
+                    syncResultItem.put("success", false);
+                    syncResultItem.put("message", "同步异常: " + e.getMessage());
+                    syncResults.add(syncResultItem);
+                    
+                    failCount.incrementAndGet();
+                    processedCount.incrementAndGet();
+                }
+            }, 1, index);
             
-            Map<String, Object> syncResultItem = new HashMap<>();
-            syncResultItem.put("id", id);
-            syncResultItem.put("success", syncResult.get("success"));
-            syncResultItem.put("message", syncResult.get("message"));
-            syncResults.add(syncResultItem);
+            futures.add(future);
+        }
 
-            if ((Boolean) syncResult.get("success")) {
-                successCount++;
-            } else {
-                failCount++;
-            }
+        try {
+            salesforceExecutor.waitForFutures(futures.toArray(new Future[0]));
+            log.info("批量同步完成，总数: {}, 成功: {}, 失败: {}", totalCount, successCount.get(), failCount.get());
+        } catch (InterruptedException e) {
+            log.error("批量同步被中断: {}", e.getMessage(), e);
+            Thread.currentThread().interrupt();
+            result.put("success", false);
+            result.put("message", "批量同步被中断: " + e.getMessage());
+            return result;
         }
 
         Map<String, Object> data = new HashMap<>();
-        data.put("totalCount", ids.length);
-        data.put("successCount", successCount);
-        data.put("failCount", failCount);
+        data.put("totalCount", totalCount);
+        data.put("successCount", successCount.get());
+        data.put("failCount", failCount.get());
         data.put("details", syncResults);
         
-        result.put("success", failCount == 0);
-        result.put("message", String.format("批量同步完成: 成功 %d 条, 失败 %d 条", successCount, failCount));
+        result.put("success", failCount.get() == 0);
+        result.put("message", String.format("批量同步完成: 成功 %d 条, 失败 %d 条", successCount.get(), failCount.get()));
         result.put("data", data);
 
         return result;
@@ -582,6 +632,13 @@ public class DataiIntegrationMetadataChangeServiceImpl implements IDataiIntegrat
             fieldDefinitions.add(newIdField);
 
             // 添加is_update字段
+            Map<String, Object> isInsertField = new HashMap<>();
+            isInsertField.put("name", "is_insert");
+            isInsertField.put("type", "tinyint(1) DEFAULT 0");
+            isInsertField.put("comment", "是否插入");
+            fieldDefinitions.add(isInsertField);
+
+            // 添加is_update字段
             Map<String, Object> isUpdateField = new HashMap<>();
             isUpdateField.put("name", "is_update");
             isUpdateField.put("type", "tinyint(1) DEFAULT 0");
@@ -590,18 +647,20 @@ public class DataiIntegrationMetadataChangeServiceImpl implements IDataiIntegrat
 
             // 添加fail_reason字段
             Map<String, Object> failReasonField = new HashMap<>();
-            failReasonField.put("name", "fail_reason");
+            failReasonField.put("name", "error_message");
             failReasonField.put("type", "text");
             failReasonField.put("comment", "失败原因");
             fieldDefinitions.add(failReasonField);
 
-            // 构建索引定义
+            // 构建索引定义 - 只为TABLE_INDEX列表中的字段创建索引
             List<Map<String, Object>> indexDefinitions = new ArrayList<>();
             for (String field : fields) {
-                Map<String, Object> indexMap = new HashMap<>();
-                indexMap.put("field", field);
-                indexMap.put("name", "IDX_" + objectApi + "_" + field);
-                indexDefinitions.add(indexMap);
+                if (SalesforceConfigConstants.TABLE_INDEX.contains(field)) {
+                    Map<String, Object> indexMap = new HashMap<>();
+                    indexMap.put("field", field);
+                    indexMap.put("name", "IDX_" + objectApi + "_" + field);
+                    indexDefinitions.add(indexMap);
+                }
             }
 
             // 根据是否分区创建不同的表
@@ -1780,8 +1839,25 @@ public class DataiIntegrationMetadataChangeServiceImpl implements IDataiIntegrat
      * @return 对象数据量
      */
     private int isLargeObject(PartnerConnection connection, String objectApi) {
+        if (connection == null) {
+            log.error("连接对象不能为空");
+            return 0;
+        }
+        
+        if (objectApi == null || objectApi.trim().isEmpty()) {
+            log.error("对象API名称不能为空");
+            return 0;
+        }
+        
         try {
-            QueryResult queryResult = connection.queryAll("SELECT COUNT() FROM " + objectApi);
+            SoqlBuilder soqlBuilder = new SoqlBuilder()
+                .select("COUNT()")
+                .from(objectApi.trim());
+            
+            String soql = soqlBuilder.build();
+            log.debug("Count SOQL for {}: {}", objectApi, soql);
+            
+            QueryResult queryResult = connection.queryAll(soql);
             
             if (queryResult != null && queryResult.getRecords() != null && queryResult.getRecords().length > 0) {
                 SObject record = queryResult.getRecords()[0];
@@ -1790,18 +1866,27 @@ public class DataiIntegrationMetadataChangeServiceImpl implements IDataiIntegrat
                 if (countValue != null) {
                     String countStr = countValue.toString();
                     long countLong = Long.parseLong(countStr);
-                    return Math.min(Math.toIntExact(countLong), Integer.MAX_VALUE);
+                    int result = Math.min(Math.toIntExact(countLong), Integer.MAX_VALUE);
+                    log.debug("Object {} count: {}", objectApi, result);
+                    return result;
                 }
             }
+            
+            log.debug("Query result is empty for {}", objectApi);
+            return 0;
         } catch (NumberFormatException e) {
             log.error("将对象 {} 的数据量转换为数字时出错: {}", objectApi, e.getMessage());
+            return 0;
         } catch (ArithmeticException e) {
             log.error("对象 {} 的数据量超过int最大值，返回int最大值: {}", objectApi, e.getMessage());
             return Integer.MAX_VALUE;
+        } catch (ConnectionException e) {
+            log.error("检查对象 {} 的数据量时发生连接异常: {}", objectApi, e.getMessage(), e);
+            return 0;
         } catch (Exception e) {
-            log.error("检查对象 {} 的数据量时出错: {}", objectApi, e.getMessage());
+            log.error("检查对象 {} 的数据量时出错: {}", objectApi, e.getMessage(), e);
+            return 0;
         }
-        return 0;
     }
 
     /**
@@ -1875,7 +1960,7 @@ public class DataiIntegrationMetadataChangeServiceImpl implements IDataiIntegrat
                 return;
             }
             
-            String systemDataStartTimeStr = CacheUtils.get(salesforceConfigCacheManager.getEnvironmentCacheKey(), "system.data.start.time", String.class);
+            String systemDataStartTimeStr = CacheUtils.get(salesforceConfigCacheManager.getEnvironmentCacheKey(), "salesforce.data.start.time", String.class);
             java.time.LocalDate startDate = java.time.LocalDate.now().minusYears(5);
             
             if (systemDataStartTimeStr != null && !systemDataStartTimeStr.trim().isEmpty()) {
@@ -1951,8 +2036,8 @@ public class DataiIntegrationMetadataChangeServiceImpl implements IDataiIntegrat
             dataBatch.setBatchField(batchField);
             dataBatch.setSyncType("FULL");
             dataBatch.setSyncStatus(false);
-            dataBatch.setSyncStartDate(startDate.toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDateTime());
-            dataBatch.setSyncEndDate(endDate.toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDateTime());
+            dataBatch.setSyncStartDate(DateUtils.toLocalDateTime(startDate));
+            dataBatch.setSyncEndDate(DateUtils.toLocalDateTime(endDate));
             dataBatch.setCreateTime(DateUtils.getNowDate());
             dataBatch.setUpdateTime(DateUtils.getNowDate());
             dataiIntegrationBatchService.insertDataiIntegrationBatch(dataBatch);
@@ -2014,8 +2099,8 @@ public class DataiIntegrationMetadataChangeServiceImpl implements IDataiIntegrat
                     dataBatch.setSyncType("FULL");
                     dataBatch.setSyncStatus(false);
                     dataBatch.setSfNum(totalNum);
-                    dataBatch.setSyncStartDate(currentStartDate.toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDateTime());
-                    dataBatch.setSyncEndDate(lastDay.toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDateTime());
+                    dataBatch.setSyncStartDate(DateUtils.toLocalDateTime(currentStartDate));
+                    dataBatch.setSyncEndDate(DateUtils.toLocalDateTime(lastDay));
                     dataBatch.setCreateTime(DateUtils.getNowDate());
                     dataBatch.setUpdateTime(DateUtils.getNowDate());
                     dataiIntegrationBatchService.insertDataiIntegrationBatch(dataBatch);
@@ -2029,8 +2114,8 @@ public class DataiIntegrationMetadataChangeServiceImpl implements IDataiIntegrat
                 dataBatch.setSyncType("FULL");
                 dataBatch.setSyncStatus(false);
                 dataBatch.setSfNum(totalNum);
-                dataBatch.setSyncStartDate(currentStartDate.toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDateTime());
-                dataBatch.setSyncEndDate(lastDay.toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDateTime());
+                dataBatch.setSyncStartDate(DateUtils.toLocalDateTime(currentStartDate));
+                dataBatch.setSyncEndDate(DateUtils.toLocalDateTime(lastDay));
                 dataBatch.setCreateTime(DateUtils.getNowDate());
                 dataBatch.setUpdateTime(DateUtils.getNowDate());
                 dataiIntegrationBatchService.insertDataiIntegrationBatch(dataBatch);
@@ -2088,30 +2173,47 @@ public class DataiIntegrationMetadataChangeServiceImpl implements IDataiIntegrat
      * @return 数据量
      */
     private Integer countSfNum(PartnerConnection connection, String apiName, String batchField, Date startDate, Date endDate) {
+        if (connection == null) {
+            log.error("连接对象不能为空");
+            return 0;
+        }
+        
+        if (apiName == null || apiName.trim().isEmpty()) {
+            log.error("对象API名称不能为空");
+            return 0;
+        }
+
         try {
-            StringBuilder sql = new StringBuilder();
-            sql.append("SELECT COUNT(Id) num FROM ").append(apiName);
+            SoqlBuilder soqlBuilder = new SoqlBuilder()
+                .select("COUNT(Id) num")
+                .from(apiName.trim());
             
             if (batchField != null && !batchField.trim().isEmpty()) {
-                java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd");
-                sql.append(" WHERE ").append(batchField)
-                   .append(" >= ").append(sdf.format(startDate))
-                   .append(" AND ").append(batchField)
-                   .append(" < ").append(sdf.format(endDate));
+                soqlBuilder.whereGe(batchField.trim(), startDate)
+                           .whereLe(batchField.trim(), endDate);
             }
             
-            log.debug("Count SQL: {}", sql.toString());
-            QueryResult queryResult = connection.queryAll(sql.toString());
+            String soql = soqlBuilder.build();
+            log.debug("Count SOQL: {}", soql);
             
-            if (queryResult.getSize() > 0) {
+            QueryResult queryResult = connection.queryAll(soql);
+            
+            if (queryResult != null && queryResult.getSize() > 0) {
                 SObject record = queryResult.getRecords()[0];
-                Integer num = (Integer) record.getField("num");
-                log.debug("Count result: {}", num);
+                Object numObj = record.getField("num");
+                Integer num = numObj != null ? Integer.valueOf(numObj.toString()) : 0;
+                log.debug("Count result for {}: {}", apiName, num);
                 return num;
+            } else {
+                log.debug("Query result is empty for {}", apiName);
+                return 0;
             }
+        } catch (ConnectionException e) {
+            log.error("查询 {} 的数据量时发生连接异常: {}", apiName, e.getMessage(), e);
+            return 0;
         } catch (Exception e) {
-            log.error("查询 {} 的数据量时出错: {}", apiName, e.getMessage(), e);
+            log.error("查询 {} 的数据量时发生异常: {}", apiName, e.getMessage(), e);
+            return 0;
         }
-        return 0;
     }
 }
