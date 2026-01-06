@@ -1,14 +1,17 @@
 package com.datai.setting.future;
 
 import lombok.Getter;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.concurrent.FutureTask;
 
 /**
- * 自定义FutureTask，支持优先级排序
+ * 自定义FutureTask，支持优先级排序和安全上下文传递
  * <p>
  * 该类扩展了FutureTask，实现了Comparable接口，可以根据优先级对任务进行排序。
  * 优先级规则：index值越大优先级越高；index相等时，batch值越小优先级越高。
+ * 同时支持将父线程的Spring Security上下文传递到子线程中。
  * </p>
  */
 @Getter
@@ -35,6 +38,11 @@ public class ComparableFutureTask extends FutureTask<Object> implements Comparab
     private final Integer batch;
 
     /**
+     * 父线程的Spring Security上下文
+     */
+    private final SecurityContext parentSecurityContext;
+
+    /**
      * 构造函数
      *
      * @param runnable 要执行的任务
@@ -45,6 +53,21 @@ public class ComparableFutureTask extends FutureTask<Object> implements Comparab
         super(runnable, null);
         this.index = index;
         this.batch = batch;
+        this.parentSecurityContext = SecurityContextHolder.getContext();
+    }
+
+    @Override
+    public void run() {
+        SecurityContext originalContext = null;
+        try {
+            originalContext = SecurityContextHolder.getContext();
+            if (parentSecurityContext != null) {
+                SecurityContextHolder.setContext(parentSecurityContext);
+            }
+            super.run();
+        } finally {
+            SecurityContextHolder.setContext(originalContext);
+        }
     }
 
     /**

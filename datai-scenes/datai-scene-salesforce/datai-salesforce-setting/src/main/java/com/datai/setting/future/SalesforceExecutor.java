@@ -17,7 +17,13 @@ import java.util.concurrent.*;
  * 该类提供了Salesforce数据处理任务的线程池管理功能，支持任务优先级排序和批量处理。
  * 使用PriorityBlockingQueue作为任务队列，确保高优先级任务优先执行。
  * </p>
- *
+ * <p>
+ * 特性：
+ * 1. 支持任务优先级排序（基于ComparableFutureTask）
+ * 2. 自动将父线程的Spring Security上下文传递到子线程
+ * 3. 可配置的线程池参数（核心线程数、最大线程数、队列容量等）
+ * 4. 支持优雅关闭和强制关闭
+ * </p>
  */
 @Service
 @Slf4j
@@ -179,6 +185,10 @@ public class SalesforceExecutor {
      * 执行任务
      * <p>
      * 将任务提交到线程池执行，支持优先级设置。
+     * </p>
+     * <p>
+     * 注意：该方法会自动将当前线程的Spring Security上下文传递到子线程中，
+     * 确保子线程可以访问父线程的安全信息（如登录用户信息）。
      * </p>
      *
      * @param runnable 要执行的任务

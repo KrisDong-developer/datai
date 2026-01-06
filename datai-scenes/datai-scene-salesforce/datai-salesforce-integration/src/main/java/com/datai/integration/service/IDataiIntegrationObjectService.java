@@ -108,4 +108,12 @@ public interface IDataiIntegrationObjectService
      * @return 统计信息
      */
     public Map<String, Object> getObjectStatistics();
+
+    /**
+     * 同步单对象数据到本地数据库
+     * 
+     * @param id 对象ID
+     * @return 同步结果
+     */
+    public Map<String, Object> syncSingleObjectData(Integer id);
 }

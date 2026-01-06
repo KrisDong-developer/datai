@@ -24,10 +24,12 @@ import com.datai.common.enums.BusinessType;
 import com.datai.integration.model.domain.DataiIntegrationObject;
 import com.datai.integration.model.dto.DataiIntegrationObjectDto;
 import com.datai.integration.service.IDataiIntegrationObjectService;
+import com.datai.integration.service.IDataiIntegrationFieldService;
 import com.datai.common.utils.poi.ExcelUtil;
 import com.datai.common.core.page.TableDataInfo;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Operation;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 对象同步控制Controller
@@ -38,6 +40,7 @@ import io.swagger.v3.oas.annotations.Operation;
 @RestController
 @RequestMapping("/integration/object")
 @Tag(name = "【对象同步控制】管理")
+@Slf4j
 public class DataiIntegrationObjectController extends BaseController
 {
     @Autowired
@@ -212,6 +215,47 @@ public class DataiIntegrationObjectController extends BaseController
             return success(statistics);
         } else {
             return error((String) statistics.get("message"));
+        }
+    }
+
+    /**
+     * 同步单对象数据到本地数据库
+     * 
+     * 该方法用于触发指定对象的单次数据同步操作，将Salesforce对象的数据同步到本地数据库
+     * 同步操作包括全量同步和增量同步两种模式，具体模式由对象的配置决定
+     * 
+     * @param id 对象ID，用于标识需要同步的Salesforce对象
+     * @return AjaxResult 同步结果，包含成功/失败状态、同步数据量、耗时等信息
+     *         - 成功时返回：success=true, message="对象数据同步成功", 以及详细的同步信息
+     *         - 失败时返回：success=false, message=错误信息
+     */
+    @Operation(summary = "同步单对象数据到本地数据库")
+    @PreAuthorize("@ss.hasPermi('integration:object:syncData')")
+    @Log(title = "对象同步控制", businessType = BusinessType.UPDATE)
+    @PostMapping("/{id}/syncData")
+    public AjaxResult syncObjectData(@PathVariable("id") Integer id)
+    {
+        if (id == null) {
+            log.error("对象ID为空，无法同步数据");
+            return error("对象ID不能为空");
+        }
+
+        try {
+            log.info("开始同步对象数据，对象ID: {}", id);
+
+            Map<String, Object> result = dataiIntegrationObjectService.syncSingleObjectData(id);
+
+            if ((Boolean) result.get("success")) {
+                log.info("对象数据同步成功，对象ID: {}", id);
+                return success(result);
+            } else {
+                log.error("对象数据同步失败，对象ID: {}, 错误信息: {}", id, result.get("message"));
+                return error((String) result.get("message"));
+            }
+
+        } catch (Exception e) {
+            log.error("同步对象数据时发生异常，对象ID: {}", id, e);
+            return error("同步对象数据时发生异常: " + e.getMessage());
         }
     }
 }

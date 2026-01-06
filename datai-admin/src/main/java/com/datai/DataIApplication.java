@@ -17,19 +17,9 @@ import org.springframework.core.env.Environment;
 @SpringBootApplication(exclude = { DataSourceAutoConfiguration.class })
 public class DataIApplication {
     public static void main(String[] args) throws UnknownHostException {
-        // System.setProperty("spring.devtools.restart.enabled", "false");
+         System.setProperty("spring.devtools.restart.enabled", "false");
         ConfigurableApplicationContext application = SpringApplication.run(DataIApplication.class, args);
-        System.out.println("(♥◠‿◠)ﾉﾞ  若依极客启动成功   ლ(´ڡ`ლ)ﾞ  \n" +
-                " .-------.       ____     __        \n" +
-                " |  _ _   \\      \\   \\   /  /    \n" +
-                " | ( ' )  |       \\  _. /  '       \n" +
-                " |(_ o _) /        _( )_ .'         \n" +
-                " | (_,_).' __  ___(_ o _)'     " + " ____           _         " + "\n" +
-                " |  |\\ \\  |  ||   |(_,_)'    " + "  / ___| ___  ___| | __   " + "\n" +
-                " |  | \\ `'   /|   `-'  /      " + "| |  _ / _ \\/ _ \\ |/ /  " + "\n" +
-                " |  |  \\    /  \\      /      " + " | |_| |  __/  __/   <    " + "\n" +
-                " ''-'   `'-'    `-..-'         " + "\\____|\\___|\\___|_|\\_\\");
-
+        System.out.println("(♥◠‿◠)ﾉﾞ  集成系统启动成功   ლ(´ڡ`ლ)ﾞ  \n");
         Environment env = application.getEnvironment();
         String ip = InetAddress.getLocalHost().getHostAddress();
         String port = env.getProperty("server.port");

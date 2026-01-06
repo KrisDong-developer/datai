@@ -21,6 +21,14 @@ public interface DataiIntegrationObjectMapper
     public DataiIntegrationObject selectDataiIntegrationObjectById(Integer id);
 
     /**
+     * 根据API查询对象同步控制
+     * 
+     * @param api 对象API
+     * @return 对象同步控制
+     */
+    public DataiIntegrationObject selectDataiIntegrationObjectByApi(String api);
+
+    /**
      * 查询对象同步控制列表
      * 
      * @param dataiIntegrationObject 对象同步控制

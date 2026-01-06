@@ -1,5 +1,6 @@
 package com.datai.integration.service.impl;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
@@ -21,6 +22,7 @@ import com.datai.common.core.domain.model.LoginUser;
 import com.datai.integration.model.domain.DataiIntegrationBatchHistory;
 import com.datai.integration.service.IDataiIntegrationBatchHistoryService;
 import com.datai.integration.service.IDataiIntegrationFieldService;
+import com.datai.integration.service.IDataiIntegrationSyncLogService;
 import com.datai.integration.mapper.CustomMapper;
 import com.datai.integration.factory.impl.SOAPConnectionFactory;
 import com.sforce.soap.partner.DescribeSObjectResult;
@@ -55,6 +57,9 @@ public class DataiIntegrationBatchServiceImpl implements IDataiIntegrationBatchS
 
     @Autowired
     private SOAPConnectionFactory soapConnectionFactory;
+
+    @Autowired
+    private IDataiIntegrationSyncLogService dataiIntegrationSyncLogService;
 
     /**
      * 查询数据批次
@@ -338,7 +343,18 @@ public class DataiIntegrationBatchServiceImpl implements IDataiIntegrationBatchS
             return false;
         }
         
+        DataiIntegrationBatch batch = null;
+        DataiIntegrationBatchHistory batchHistory = new DataiIntegrationBatchHistory();
+        long startTime = System.currentTimeMillis();
+        LocalDateTime syncStartTime = LocalDateTime.now();
+        
         try {
+            batch = selectDataiIntegrationBatchById(Integer.parseInt(batchId));
+            if (batch == null) {
+                log.error("批次不存在，批次ID: {}", batchId);
+                return false;
+            }
+            
             PartnerConnection connection = retryOperation(() -> soapConnectionFactory.getConnection(), 3, 1000);
             log.info("成功获取Salesforce SOAP连接");
 
@@ -355,11 +371,80 @@ public class DataiIntegrationBatchServiceImpl implements IDataiIntegrationBatchS
 
             int totalCount = executeQueryAndProcessData(connection, param, fieldList);
             log.info("对象 {} 批次 {} 数据同步完成，共处理 {} 条记录", objectApi, batchId, totalCount);
+            
+            long endTime = System.currentTimeMillis();
+            long duration = endTime - startTime;
+            LocalDateTime syncEndTime = LocalDateTime.now();
+            
+            batchHistory.setApi(objectApi);
+            batchHistory.setLabel(batch.getLabel());
+            batchHistory.setBatchId(Integer.parseInt(batchId));
+            batchHistory.setBatchField(batch.getBatchField());
+            batchHistory.setSyncNum(totalCount);
+            batchHistory.setSyncType(batch.getSyncType());
+            batchHistory.setSyncStatus(true);
+            batchHistory.setStartTime(syncStartTime);
+            batchHistory.setEndTime(syncEndTime);
+            batchHistory.setCost(duration);
+            batchHistory.setSyncStartTime(syncStartTime);
+            batchHistory.setSyncEndTime(syncEndTime);
+            batchHistoryService.insertDataiIntegrationBatchHistory(batchHistory);
+            log.info("批次 {} 历史记录已保存，同步数据量: {}, 耗时: {}ms", batchId, totalCount, duration);
 
+            insertSyncLog(objectApi, batch.getLabel(), batch.getSyncType(), true, null, duration);
+            
             return true;
         } catch (Exception e) {
             log.error("同步Salesforce对象指定批次数据失败，对象API: {}, 批次ID: {}", objectApi, batchId, e);
+            
+            long endTime = System.currentTimeMillis();
+            long duration = endTime - startTime;
+            LocalDateTime syncEndTime = LocalDateTime.now();
+            
+            batchHistory.setApi(objectApi);
+            batchHistory.setLabel(batch != null ? batch.getLabel() : "");
+            batchHistory.setBatchId(Integer.parseInt(batchId));
+            batchHistory.setBatchField(batch != null ? batch.getBatchField() : "");
+            batchHistory.setSyncNum(0);
+            batchHistory.setSyncType(batch != null ? batch.getSyncType() : "");
+            batchHistory.setSyncStatus(false);
+            batchHistory.setStartTime(syncStartTime);
+            batchHistory.setEndTime(syncEndTime);
+            batchHistory.setCost(duration);
+            batchHistory.setSyncStartTime(syncStartTime);
+            batchHistory.setSyncEndTime(syncEndTime);
+            batchHistoryService.insertDataiIntegrationBatchHistory(batchHistory);
+            log.info("批次 {} 失败历史记录已保存，耗时: {}ms", batchId, duration);
+            
+            insertSyncLog(objectApi, batch != null ? batch.getLabel() : "", batch != null ? batch.getSyncType() : "", false, e.getMessage(), duration);
+            
             return false;
+        }
+    }
+
+    private void insertSyncLog(String objectApi, String label, String syncType, boolean success, String errorMessage, long duration) {
+        try {
+            com.datai.integration.model.domain.DataiIntegrationSyncLog syncLog = new com.datai.integration.model.domain.DataiIntegrationSyncLog();
+            syncLog.setObjectApi(objectApi);
+            syncLog.setOperationType("FULL".equals(syncType) ? "全量同步" : "增量同步");
+            syncLog.setOperationStatus(success ? "成功" : "失败");
+            syncLog.setErrorMessage(errorMessage);
+            syncLog.setExecutionTime(new java.math.BigDecimal(duration / 1000.0));
+            syncLog.setCreateTime(DateUtils.getNowDate());
+            
+            try {
+                LoginUser loginUser = SecurityUtils.getLoginUser();
+                if (loginUser != null && loginUser.getDeptId() != null) {
+                    syncLog.setDeptId(loginUser.getDeptId());
+                }
+            } catch (Exception ex) {
+                log.warn("获取部门ID失败: {}", ex.getMessage());
+            }
+            
+            dataiIntegrationSyncLogService.insertDataiIntegrationSyncLog(syncLog);
+            log.info("同步日志已记录，对象API: {}, 操作类型: {}, 状态: {}", objectApi, syncLog.getOperationType(), syncLog.getOperationStatus());
+        } catch (Exception e) {
+            log.error("插入同步日志失败: {}", e.getMessage(), e);
         }
     }
 

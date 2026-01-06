@@ -17,8 +17,8 @@
 
 本人的其他两个推荐搭配的项目
 
-1. [DataI-App-Geek: 这是若依极客生态的小程序版本 (gitee.com)](https://gitee.com/geek-xd/geek-uniapp-vue3-uview-plus-uchart)
-2. [DataI-Vue3-Geek: 这是若依极客生态的Vue3版本 (gitee.com)](https://gitee.com/geek-xd/ruo-yi-vue3-geek)
+1. [DataI-App-Geek: 这是集成系统生态的小程序版本 (gitee.com)](https://gitee.com/geek-xd/geek-uniapp-vue3-uview-plus-uchart)
+2. [DataI-Vue3-Geek: 这是集成系统生态的Vue3版本 (gitee.com)](https://gitee.com/geek-xd/ruo-yi-vue3-geek)
 
 与本项目同为一个作者开发，兼容性最好，学习成本最低。
 
