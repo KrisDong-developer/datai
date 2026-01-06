@@ -5,6 +5,7 @@ import com.datai.integration.model.domain.DataiIntegrationFilterLookup;
 import com.datai.integration.model.domain.DataiIntegrationMetadataChange;
 import com.datai.integration.model.domain.DataiIntegrationObject;
 import com.datai.integration.model.domain.DataiIntegrationPicklist;
+import com.datai.integration.model.param.DataiSyncParam;
 import com.datai.integration.factory.impl.SOAPConnectionFactory;
 import com.datai.integration.mapper.CustomMapper;
 import com.datai.integration.service.IDataiIntegrationFieldService;
@@ -13,7 +14,8 @@ import com.datai.integration.service.IDataiIntegrationMetadataChangeService;
 import com.datai.integration.service.IDataiIntegrationObjectService;
 import com.datai.integration.service.IDataiIntegrationPicklistService;
 import com.datai.integration.service.ISalesforceDataPullService;
-import com.datai.salesforce.common.param.SalesforceParam;
+import com.datai.salesforce.common.utils.SoqlBuilder;
+import com.datai.integration.util.ConvertUtil;
 import com.datai.setting.future.SalesforceExecutor;
 import com.sforce.soap.partner.DescribeGlobalResult;
 import com.sforce.soap.partner.DescribeGlobalSObjectResult;
@@ -661,7 +663,7 @@ public class SalesforceDataPullServiceImpl implements ISalesforceDataPullService
             log.info("获取到对象 {} 的字段列表，共 {} 个字段", objectApi, fieldList.size());
 
             // 构建查询参数
-            SalesforceParam param = new SalesforceParam();
+            DataiSyncParam param = new DataiSyncParam();
             param.setApi(objectApi);
             param.setSelect(String.join(",", fieldList));
             
@@ -737,7 +739,7 @@ public class SalesforceDataPullServiceImpl implements ISalesforceDataPullService
      * @param fieldList  字段列表
      * @return 处理的数据条数
      */
-    private int executeQueryAndProcessData(PartnerConnection connection, SalesforceParam param, List<String> fieldList) {
+    private int executeQueryAndProcessData(PartnerConnection connection, DataiSyncParam param, List<String> fieldList) {
         int totalCount = 0;
         try {
             // 构建查询语句
@@ -780,18 +782,55 @@ public class SalesforceDataPullServiceImpl implements ISalesforceDataPullService
      * @param param 查询参数
      * @return SOQL查询语句
      */
-    private String buildDynamicQuery(SalesforceParam param) {
-        // 构建简单的查询语句（实际实现需要根据实际情况调整）
-        StringBuilder queryBuilder = new StringBuilder();
-        queryBuilder.append("SELECT ").append(param.getSelect())
-                   .append(" FROM ").append(param.getApi());
+    private String buildDynamicQuery(DataiSyncParam param) {
+        SoqlBuilder builder = new SoqlBuilder();
         
-        // 添加删除记录查询条件
+        String[] selectFields = param.getSelect().split(",");
+        builder.select(selectFields)
+               .from(param.getApi());
+        
         if (param.getIsDeleted() != null && param.getIsDeleted()) {
-            queryBuilder.append(" WHERE IsDeleted = true");
+            builder.where("IsDeleted = true");
+        } else if (param.getIsDeleted() != null && !param.getIsDeleted()) {
+            builder.where("IsDeleted = false");
         }
         
-        return queryBuilder.toString();
+        if (param.getBeginDate() != null && param.getEndDate() != null) {
+            builder.whereGe(param.getBatchField(), param.getBeginDate())
+                   .whereLe(param.getBatchField(), param.getEndDate());
+        } else if (param.getBeginDate() != null) {
+            builder.whereGe(param.getBatchField(), param.getBeginDate());
+        } else if (param.getEndDate() != null) {
+            builder.whereLe(param.getBatchField(), param.getEndDate());
+        }
+        
+        if (param.getBeginCreateDate() != null && param.getEndCreateDate() != null) {
+            builder.whereGe("CreatedDate", param.getBeginCreateDate())
+                   .whereLe("CreatedDate", param.getEndCreateDate());
+        } else if (param.getBeginCreateDate() != null) {
+            builder.whereGe("CreatedDate", param.getBeginCreateDate());
+        } else if (param.getEndCreateDate() != null) {
+            builder.whereLe("CreatedDate", param.getEndCreateDate());
+        }
+        
+        if (param.getBeginModifyDate() != null && param.getEndModifyDate() != null) {
+            builder.whereGe("LastModifiedDate", param.getBeginModifyDate())
+                   .whereLe("LastModifiedDate", param.getEndModifyDate());
+        } else if (param.getBeginModifyDate() != null) {
+            builder.whereGe("LastModifiedDate", param.getBeginModifyDate());
+        } else if (param.getEndModifyDate() != null) {
+            builder.whereLe("LastModifiedDate", param.getEndModifyDate());
+        }
+        
+        if (StringUtils.isNotEmpty(param.getMaxId())) {
+            builder.whereGt(param.getIdField(), param.getMaxId());
+        }
+        
+        if (param.getLimit() != null && param.getLimit() > 0) {
+            builder.limit(param.getLimit());
+        }
+        
+        return builder.build();
     }
 
     /**
@@ -991,42 +1030,7 @@ public class SalesforceDataPullServiceImpl implements ISalesforceDataPullService
      * @return 转换后的Map
      */
     private Map<String, Object> convertSObjectToMap(SObject record, List<String> fieldList) {
-        Map<String, Object> recordMap = new HashMap<>();
-
-        // 添加记录ID
-        if (record.getId() != null) {
-            recordMap.put("Id", record.getId());
-        }
-
-        // 添加其他字段
-        for (String field : fieldList) {
-            // 跳过ID字段，因为已经处理过了
-            if ("Id".equalsIgnoreCase(field)) {
-                continue;
-            }
-
-            try {
-                Object value = record.getField(field);
-                // 处理不同类型的字段值
-                if (value != null) {
-                    // 处理日期类型
-                    if (value instanceof java.util.Calendar) {
-                        recordMap.put(field.toLowerCase(), ((Calendar) value).getTime());
-                    }
-                    // 处理其他类型
-                    else {
-                        recordMap.put(field.toLowerCase(), value);
-                    }
-                } else {
-                    // 对于null值，可以选择不放入map或者放入null
-                    recordMap.put(field.toLowerCase(), null);
-                }
-            } catch (Exception e) {
-                log.warn("获取字段 {} 的值时发生异常", field, e);
-            }
-        }
-
-        return recordMap;
+        return null;
     }
 
 
@@ -1158,7 +1162,7 @@ public class SalesforceDataPullServiceImpl implements ISalesforceDataPullService
             log.info("获取到对象 {} 的字段列表: {}", objectApi, fieldList);
 
             // 构建查询参数
-            SalesforceParam param = new SalesforceParam();
+            DataiSyncParam param = new DataiSyncParam();
             param.setApi(objectApi);
             param.setSelect(String.join(",", fieldList));
 

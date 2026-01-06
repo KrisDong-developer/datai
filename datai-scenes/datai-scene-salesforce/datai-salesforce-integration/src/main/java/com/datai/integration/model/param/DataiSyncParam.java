@@ -9,7 +9,7 @@ import java.util.Date;
 import java.util.Set;
 
 /**
- * @author Radian
+ * @author Kris
  * @description
  * @date 2022/11/30
  */
@@ -33,16 +33,45 @@ public class DataiSyncParam {
      */
     private Date endDate;
     /**
-     * 同步类型 1：存量 2：增量
+     * 开始创建时间
      */
-    private Integer type;
-
+    private Date beginCreateDate;
     /**
-     * fastjson 过滤器 只打印当前类所有属性
-     * @return SimplePropertyPreFilter
+     * 结束创建时间
      */
-    public static SimplePropertyPreFilter getFilter() {
-        return new SimplePropertyPreFilter(DataiSyncParam.class, Arrays.stream(DataiSyncParam.class.getDeclaredFields()).map(Field::getName).toArray(String[]::new));
-    }
+    private Date endCreateDate;
+    /**
+     * 开始修改时间
+     */
+    private Date beginModifyDate;
+    /**
+     * 结束修改时间
+     */
+    private Date endModifyDate;
+    /**
+     * 最大Id
+     */
+    private String maxId;
+    /**
+     * id字段
+     */
+    private String idField = "Id";
+    /**
+     * 时间字段
+     */
+    private String batchField = "CreatedDate";
+    /**
+     * 查询限制数量
+     */
+    private Integer limit;
+    /**
+     * 查询字段 多个英文逗号分割
+     */
+    private String select;
+    /**
+     * 是否查询删除记录
+     */
+    private Boolean isDeleted;
+
 
 }

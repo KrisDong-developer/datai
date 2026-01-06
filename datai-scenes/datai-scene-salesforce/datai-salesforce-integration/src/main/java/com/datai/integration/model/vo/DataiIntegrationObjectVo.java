@@ -79,14 +79,17 @@ public class DataiIntegrationObjectVo implements Serializable {
         /** 批次字段 */
     private String batchField;
 
+        /** 是否分区 */
+    private Boolean isPartitioned;
+
         /** 本地记录数 */
     private Integer totalRows;
 
         /** 最近同步时间 */
     private LocalDateTime lastSyncDate;
 
-        /** 全量同步时间 */
-    private LocalDateTime lastFullSyncDate;
+        /** 最后批次时间 */
+    private LocalDateTime lastBatchDate;
 
         /** 状态 */
     private Boolean syncStatus;

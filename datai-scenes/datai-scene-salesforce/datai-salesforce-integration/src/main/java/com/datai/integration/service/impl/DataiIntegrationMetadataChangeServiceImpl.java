@@ -11,6 +11,7 @@ import com.datai.common.utils.CacheUtils;
 import com.datai.integration.factory.impl.SOAPConnectionFactory;
 import com.datai.integration.mapper.CustomMapper;
 import com.datai.integration.model.domain.DataiIntegrationBatch;
+import com.datai.integration.util.ConvertUtil;
 import com.datai.salesforce.common.utils.SoqlBuilder;
 import com.sforce.soap.partner.*;
 import com.sforce.soap.partner.sobject.SObject;
@@ -588,7 +589,7 @@ public class DataiIntegrationMetadataChangeServiceImpl implements IDataiIntegrat
             for (com.sforce.soap.partner.Field field : objDetail.getFields()) {
                 Map<String, Object> fieldDef = new HashMap<>();
                 fieldDef.put("name", field.getName());
-                fieldDef.put("type", convertSalesforceTypeToMySQL(field.getType() != null ? field.getType().toString() : null));
+                fieldDef.put("type", ConvertUtil.fieldTypeToMysql(field));
                 fieldDef.put("comment", field.getLabel() != null ? field.getLabel().replaceAll("'", "\\\\'") : "");
                 fieldDefinitions.add(fieldDef);
                 fields.add(field.getName());
@@ -819,7 +820,7 @@ public class DataiIntegrationMetadataChangeServiceImpl implements IDataiIntegrat
 
             for (com.sforce.soap.partner.Field field : objDetail.getFields()) {
                 if (fieldApi.equals(field.getName())) {
-                    String mysqlType = convertSalesforceTypeToMySQL(field.getType() != null ? field.getType().toString() : null);
+                    String mysqlType = ConvertUtil.fieldTypeToMysql(field);
                     
                     customMapper.addField(objectApi, fieldApi, mysqlType, field.isNillable());
                     log.info("成功添加字段: {}.{} 类型: {}", objectApi, fieldApi, mysqlType);
@@ -855,7 +856,7 @@ public class DataiIntegrationMetadataChangeServiceImpl implements IDataiIntegrat
 
             for (com.sforce.soap.partner.Field field : objDetail.getFields()) {
                 if (fieldApi.equals(field.getName())) {
-                    String mysqlType = convertSalesforceTypeToMySQL(field.getType() != null ? field.getType().toString() : null);
+                    String mysqlType = ConvertUtil.fieldTypeToMysql(field);
                     
                     customMapper.modifyField(objectApi, fieldApi, mysqlType, field.isNillable());
                     log.info("成功修改字段: {}.{} 类型: {}", objectApi, fieldApi, mysqlType);
@@ -885,59 +886,6 @@ public class DataiIntegrationMetadataChangeServiceImpl implements IDataiIntegrat
             result.put("success", false);
             result.put("message", "删除字段失败: " + e.getMessage());
             log.error("删除字段失败: {}", e.getMessage(), e);
-        }
-    }
-
-    private String convertSalesforceTypeToMySQL(String typeStr) {
-        if (typeStr == null || typeStr.isEmpty()) {
-            return "VARCHAR(255)";
-        }
-        
-        switch (typeStr) {
-            case "id":
-                return "VARCHAR(18)";
-            case "string":
-            case "email":
-            case "url":
-            case "phone":
-                return "VARCHAR(255)";
-            case "textarea":
-                return "TEXT";
-            case "boolean":
-                return "TINYINT(1)";
-            case "int":
-                return "INT";
-            case "double":
-                return "DOUBLE";
-            case "currency":
-                return "DECIMAL(18,4)";
-            case "date":
-                return "DATE";
-            case "datetime":
-                return "DATETIME";
-            case "time":
-                return "TIME";
-            case "percent":
-                return "DECIMAL(10,2)";
-            case "reference":
-                return "VARCHAR(18)";
-            case "picklist":
-            case "multipicklist":
-                return "VARCHAR(255)";
-            case "combobox":
-                return "VARCHAR(255)";
-            case "base64":
-                return "LONGBLOB";
-            case "anyType":
-                return "VARCHAR(255)";
-            case "address":
-                return "TEXT";
-            case "location":
-                return "VARCHAR(255)";
-            case "encryptedstring":
-                return "VARCHAR(255)";
-            default:
-                return "VARCHAR(255)";
         }
     }
 
@@ -1961,18 +1909,20 @@ public class DataiIntegrationMetadataChangeServiceImpl implements IDataiIntegrat
             }
             
             String systemDataStartTimeStr = CacheUtils.get(salesforceConfigCacheManager.getEnvironmentCacheKey(), "salesforce.data.start.time", String.class);
-            java.time.LocalDate startDate = java.time.LocalDate.now().minusYears(5);
+            java.time.LocalDateTime startDate = java.time.LocalDateTime.now().minusYears(5);
+            startDate = startDate.withHour(0).withMinute(0).withSecond(0).withNano(0);
             
             if (systemDataStartTimeStr != null && !systemDataStartTimeStr.trim().isEmpty()) {
                 try {
-                    startDate = java.time.LocalDate.parse(systemDataStartTimeStr.trim());
+                    java.time.LocalDate startDateLocalDate = java.time.LocalDate.parse(systemDataStartTimeStr.trim());
+                    startDate = startDateLocalDate.atStartOfDay();
                     log.info("从缓存获取系统数据开始时间: {}", systemDataStartTimeStr);
                 } catch (Exception e) {
                     log.warn("解析系统数据开始时间配置失败: {}, 使用默认值", systemDataStartTimeStr, e);
                 }
             }
             
-            java.time.LocalDate endDate = java.time.LocalDate.now();
+            java.time.LocalDateTime endDate = java.time.LocalDateTime.now();
             
             DataiIntegrationBatch batchTemplate = new DataiIntegrationBatch();
             batchTemplate.setApi(objectApi);
@@ -1984,13 +1934,16 @@ public class DataiIntegrationMetadataChangeServiceImpl implements IDataiIntegrat
             batchTemplate.setUpdateTime(DateUtils.getNowDate());
             
             saveBatch(SalesforceConfigConstants.BATCH_TYPE_YEAR, 
-                      java.sql.Date.valueOf(startDate), 
-                      java.sql.Date.valueOf(endDate), 
+                      java.sql.Timestamp.valueOf(startDate), 
+                      java.sql.Timestamp.valueOf(endDate), 
                       objectApi, 
                       objectLabel, 
                       batchField, 
                       connection, 
                       batchTemplate);
+            
+            object.setLastBatchDate(endDate);
+            dataiIntegrationObjectService.updateDataiIntegrationObject(object);
             
             log.info("对象 {} 批次创建完成", objectApi);
         } catch (Exception e) {

@@ -330,4 +330,11 @@ public final class SalesforceConstants {
      * 格式示例: 2024-01-01
      */
     public static final String SF_DATE_ONLY_FORMAT = "yyyy-MM-dd";
+
+
+    public static final String SF_DATE_FORMAT_BULK = "yyyy-MM-dd'T'HH:mm:ss.SSSX";
+    /**
+     * sf 时间格式
+     */
+    public static final String SF_TIME_FORMAT = "HH:mm:ss.SSS'Z'";
 }

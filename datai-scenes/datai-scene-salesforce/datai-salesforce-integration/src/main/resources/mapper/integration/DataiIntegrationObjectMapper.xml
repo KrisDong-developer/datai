@@ -25,9 +25,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="isIncremental" column="is_incremental" />
         <result property="objectIndex" column="object_index" />
         <result property="batchField" column="batch_field" />
+        <result property="isPartitioned" column="is_partitioned" />
         <result property="totalRows" column="total_rows" />
         <result property="lastSyncDate" column="last_sync_date" />
-        <result property="lastFullSyncDate" column="last_full_sync_date" />
+        <result property="lastBatchDate" column="last_batch_date" />
         <result property="syncStatus" column="sync_status" />
         <result property="errorMessage" column="error_message" />
         <result property="remark" column="remark" />
@@ -59,9 +60,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             dio.is_incremental,
             dio.object_index,
             dio.batch_field,
+            dio.is_partitioned,
             dio.total_rows,
             dio.last_sync_date,
-            dio.last_full_sync_date,
+            dio.last_batch_date,
             dio.sync_status,
             dio.error_message,
             dio.remark,
@@ -94,9 +96,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="isIncremental != null "> and dio.is_incremental = #{isIncremental}</if>
             <if test="objectIndex != null "> and dio.object_index = #{objectIndex}</if>
             <if test="batchField != null  and batchField != ''"> and dio.batch_field = #{batchField}</if>
+            <if test="isPartitioned != null "> and dio.is_partitioned = #{isPartitioned}</if>
             <if test="totalRows != null "> and dio.total_rows = #{totalRows}</if>
             <if test="lastSyncDate != null "> and dio.last_sync_date = #{lastSyncDate}</if>
-            <if test="lastFullSyncDate != null "> and dio.last_full_sync_date = #{lastFullSyncDate}</if>
+            <if test="lastBatchDate != null "> and dio.last_batch_date = #{lastBatchDate}</if>
             <if test="syncStatus != null "> and dio.sync_status = #{syncStatus}</if>
             <if test="errorMessage != null  and errorMessage != ''"> and dio.error_message = #{errorMessage}</if>
         </where>
@@ -134,9 +137,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="isIncremental != null">is_incremental,</if>
             <if test="objectIndex != null">object_index,</if>
             <if test="batchField != null">batch_field,</if>
+            <if test="isPartitioned != null">is_partitioned,</if>
             <if test="totalRows != null">total_rows,</if>
             <if test="lastSyncDate != null">last_sync_date,</if>
-            <if test="lastFullSyncDate != null">last_full_sync_date,</if>
+            <if test="lastBatchDate != null">last_batch_date,</if>
             <if test="syncStatus != null">sync_status,</if>
             <if test="errorMessage != null">error_message,</if>
             <if test="remark != null">remark,</if>
@@ -165,9 +169,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="isIncremental != null">#{isIncremental},</if>
             <if test="objectIndex != null">#{objectIndex},</if>
             <if test="batchField != null">#{batchField},</if>
+            <if test="isPartitioned != null">#{isPartitioned},</if>
             <if test="totalRows != null">#{totalRows},</if>
             <if test="lastSyncDate != null">#{lastSyncDate},</if>
-            <if test="lastFullSyncDate != null">#{lastFullSyncDate},</if>
+            <if test="lastBatchDate != null">#{lastBatchDate},</if>
             <if test="syncStatus != null">#{syncStatus},</if>
             <if test="errorMessage != null">#{errorMessage},</if>
             <if test="remark != null">#{remark},</if>
@@ -200,9 +205,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="isIncremental != null">is_incremental = #{isIncremental},</if>
             <if test="objectIndex != null">object_index = #{objectIndex},</if>
             <if test="batchField != null">batch_field = #{batchField},</if>
+            <if test="isPartitioned != null">is_partitioned = #{isPartitioned},</if>
             <if test="totalRows != null">total_rows = #{totalRows},</if>
             <if test="lastSyncDate != null">last_sync_date = #{lastSyncDate},</if>
-            <if test="lastFullSyncDate != null">last_full_sync_date = #{lastFullSyncDate},</if>
+            <if test="lastBatchDate != null">last_batch_date = #{lastBatchDate},</if>
             <if test="syncStatus != null">sync_status = #{syncStatus},</if>
             <if test="errorMessage != null">error_message = #{errorMessage},</if>
             <if test="remark != null">remark = #{remark},</if>

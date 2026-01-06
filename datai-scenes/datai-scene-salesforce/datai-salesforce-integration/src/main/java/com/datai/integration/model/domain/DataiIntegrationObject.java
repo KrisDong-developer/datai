@@ -118,6 +118,11 @@ public class DataiIntegrationObject extends BaseEntity
     @Excel(name = "批次字段")
     private String batchField;
 
+    /** 是否分区 */
+    @Schema(title = "是否分区")
+    @Excel(name = "是否分区")
+    private Boolean isPartitioned;
+
     /** 本地记录数 */
     @Schema(title = "本地记录数")
     @Excel(name = "本地记录数")
@@ -128,10 +133,10 @@ public class DataiIntegrationObject extends BaseEntity
     @Excel(name = "最近同步时间")
     private LocalDateTime lastSyncDate;
 
-    /** 全量同步时间 */
-    @Schema(title = "全量同步时间")
-    @Excel(name = "全量同步时间")
-    private LocalDateTime lastFullSyncDate;
+    /** 最后批次时间 */
+    @Schema(title = "最后批次时间")
+    @Excel(name = "最后批次时间")
+    private LocalDateTime lastBatchDate;
 
     /** 状态 */
     @Schema(title = "状态")
@@ -362,6 +367,17 @@ public class DataiIntegrationObject extends BaseEntity
     }
 
 
+    public void setIsPartitioned(Boolean isPartitioned) 
+    {
+        this.isPartitioned = isPartitioned;
+    }
+
+    public Boolean getIsPartitioned() 
+    {
+        return isPartitioned;
+    }
+
+
     public void setTotalRows(Integer totalRows) 
     {
         this.totalRows = totalRows;
@@ -384,14 +400,14 @@ public class DataiIntegrationObject extends BaseEntity
     }
 
 
-    public void setLastFullSyncDate(LocalDateTime lastFullSyncDate) 
+    public void setLastBatchDate(LocalDateTime lastBatchDate) 
     {
-        this.lastFullSyncDate = lastFullSyncDate;
+        this.lastBatchDate = lastBatchDate;
     }
 
-    public LocalDateTime getLastFullSyncDate() 
+    public LocalDateTime getLastBatchDate() 
     {
-        return lastFullSyncDate;
+        return lastBatchDate;
     }
 
 
@@ -441,9 +457,10 @@ public class DataiIntegrationObject extends BaseEntity
             .append("isIncremental", getIsIncremental())
             .append("objectIndex", getObjectIndex())
             .append("batchField", getBatchField())
+            .append("isPartitioned", getIsPartitioned())
             .append("totalRows", getTotalRows())
             .append("lastSyncDate", getLastSyncDate())
-            .append("lastFullSyncDate", getLastFullSyncDate())
+            .append("lastBatchDate", getLastBatchDate())
             .append("syncStatus", getSyncStatus())
             .append("errorMessage", getErrorMessage())
             .append("remark", getRemark())

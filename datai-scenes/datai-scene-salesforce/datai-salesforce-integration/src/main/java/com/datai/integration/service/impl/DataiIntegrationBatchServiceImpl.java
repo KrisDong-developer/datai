@@ -1,17 +1,18 @@
 package com.datai.integration.service.impl;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Collection;
-import java.util.Date;
+import java.util.*;
 import java.util.function.Supplier;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+
+import com.alibaba.fastjson2.JSONArray;
+import com.alibaba.fastjson2.JSONObject;
 import com.datai.common.utils.DateUtils;
 import com.datai.common.utils.SecurityUtils;
+import com.datai.integration.model.param.DataiSyncParam;
+import com.datai.salesforce.common.utils.SoqlBuilder;
+import com.datai.integration.util.ConvertUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -356,14 +357,14 @@ public class DataiIntegrationBatchServiceImpl implements IDataiIntegrationBatchS
             }
             
             PartnerConnection connection = retryOperation(() -> soapConnectionFactory.getConnection(), 3, 1000);
-            log.info("成功获取Salesforce SOAP连接");
 
             List<String> fieldList = getSalesforceObjectFields(connection, objectApi);
             log.info("获取到对象 {} 的字段列表: {}", objectApi, fieldList);
 
-            SalesforceParam param = new SalesforceParam();
+            DataiSyncParam param = new DataiSyncParam();
             param.setApi(objectApi);
             param.setSelect(String.join(",", fieldList));
+            param.setBatchField(batch.getBatchField());
 
             if (integrationFieldService.isDeletedFieldExists(objectApi)) {
                 param.setIsDeleted(true);
@@ -391,7 +392,7 @@ public class DataiIntegrationBatchServiceImpl implements IDataiIntegrationBatchS
             batchHistoryService.insertDataiIntegrationBatchHistory(batchHistory);
             log.info("批次 {} 历史记录已保存，同步数据量: {}, 耗时: {}ms", batchId, totalCount, duration);
 
-            insertSyncLog(objectApi, batch.getLabel(), batch.getSyncType(), true, null, duration);
+            insertSyncLog(objectApi, batch.getLabel(), batch.getSyncType(), Integer.parseInt(batchId), true, null, duration);
             
             return true;
         } catch (Exception e) {
@@ -416,16 +417,17 @@ public class DataiIntegrationBatchServiceImpl implements IDataiIntegrationBatchS
             batchHistoryService.insertDataiIntegrationBatchHistory(batchHistory);
             log.info("批次 {} 失败历史记录已保存，耗时: {}ms", batchId, duration);
             
-            insertSyncLog(objectApi, batch != null ? batch.getLabel() : "", batch != null ? batch.getSyncType() : "", false, e.getMessage(), duration);
+            insertSyncLog(objectApi, batch != null ? batch.getLabel() : "", batch != null ? batch.getSyncType() : "", Integer.parseInt(batchId), false, e.getMessage(), duration);
             
             return false;
         }
     }
 
-    private void insertSyncLog(String objectApi, String label, String syncType, boolean success, String errorMessage, long duration) {
+    private void insertSyncLog(String objectApi, String label, String syncType, Integer batchId, boolean success, String errorMessage, long duration) {
         try {
             com.datai.integration.model.domain.DataiIntegrationSyncLog syncLog = new com.datai.integration.model.domain.DataiIntegrationSyncLog();
             syncLog.setObjectApi(objectApi);
+            syncLog.setBatchId(batchId);
             syncLog.setOperationType("FULL".equals(syncType) ? "全量同步" : "增量同步");
             syncLog.setOperationStatus(success ? "成功" : "失败");
             syncLog.setErrorMessage(errorMessage);
@@ -519,17 +521,38 @@ public class DataiIntegrationBatchServiceImpl implements IDataiIntegrationBatchS
      * @param fieldList  字段列表
      * @return 处理的数据条数
      */
-    private int executeQueryAndProcessData(PartnerConnection connection, SalesforceParam param, List<String> fieldList) {
+    private int executeQueryAndProcessData(PartnerConnection connection, DataiSyncParam param, List<String> fieldList) {
         int totalCount = 0;
-        try {
-            String query = buildDynamicQuery(param);
-            log.info("执行查询SQL: {}", query);
+        JSONArray objects = null;
+        String maxId = null;
+        Date lastDate = null;
 
-            QueryResult result = connection.queryAll(query);
+        try {
+            DescribeSObjectResult describeSObject = connection.describeSObject(param.getApi());
+            Field[] dsrFields = describeSObject.getFields();
 
             while (true) {
+                // 获取创建时间
+                param.setBeginDate(lastDate);
+                // 判断是否存在要排除的id
+                param.setMaxId(maxId);
+                String query = buildDynamicQuery(param);
+                log.info("执行查询SQL: {}", query);
+                QueryResult result = connection.queryAll(query);
                 if (result.getRecords() != null && result.getRecords().length > 0) {
-                    totalCount += processQueryResult(param.getApi(), result, fieldList);
+                    objects = ConvertUtil.toJsonArray(result.getRecords(), dsrFields);
+                    Date maxDate = objects.getJSONObject(objects.size() - 1).getDate(param.getBatchField());
+                    // 在当前批次中找出所有具有相同时间戳的记录，并获取其中ID最大的那条记录的ID
+                    // 这个ID将作为下一批次查询的起始位置，避免重复处理相同时间戳的数据
+                    Optional<String> maxIdOptional = objects.stream()
+                            .map(t -> (JSONObject) t)
+                            .filter(t -> maxDate.equals(t.getDate(param.getBatchField())))
+                            .map(t -> t.getString("Id"))
+                            .max(String::compareTo);
+                    maxId = maxIdOptional.orElse(null);
+                    lastDate = maxDate;
+
+                    totalCount += processQueryResult(param.getApi(), result.getRecords(), objects);
                     log.info("已处理 {} 条记录", totalCount);
                 }
 
@@ -556,35 +579,65 @@ public class DataiIntegrationBatchServiceImpl implements IDataiIntegrationBatchS
      * @param param 查询参数
      * @return SOQL查询语句
      */
-    private String buildDynamicQuery(SalesforceParam param) {
-        StringBuilder queryBuilder = new StringBuilder();
-        queryBuilder.append("SELECT ").append(param.getSelect())
-                   .append(" FROM ").append(param.getApi());
+    private String buildDynamicQuery(DataiSyncParam param) {
+        SoqlBuilder builder = new SoqlBuilder();
         
-        if (param.getIsDeleted() != null && param.getIsDeleted()) {
-            queryBuilder.append(" WHERE IsDeleted = true");
+        String[] selectFields = param.getSelect().split(",");
+        builder.select(selectFields)
+               .from(param.getApi());
+        
+        if (param.getIsDeleted() != null && !param.getIsDeleted()) {
+            builder.where("IsDeleted = false");
         }
         
-        return queryBuilder.toString();
+        if (param.getBeginDate() != null && param.getEndDate() != null) {
+            builder.whereGe(param.getBatchField(), param.getBeginDate())
+                   .whereLe(param.getBatchField(), param.getEndDate());
+        } else if (param.getBeginDate() != null) {
+            builder.whereGe(param.getBatchField(), param.getBeginDate());
+        } else if (param.getEndDate() != null) {
+            builder.whereLe(param.getBatchField(), param.getEndDate());
+        }
+        
+        if (param.getBeginCreateDate() != null && param.getEndCreateDate() != null) {
+            builder.whereGe(param.getBatchField(), param.getBeginCreateDate())
+                   .whereLe(param.getBatchField(), param.getEndCreateDate());
+        } else if (param.getBeginCreateDate() != null) {
+            builder.whereGe(param.getBatchField(), param.getBeginCreateDate());
+        } else if (param.getEndCreateDate() != null) {
+            builder.whereLe(param.getBatchField(), param.getEndCreateDate());
+        }
+        
+        if (param.getBeginModifyDate() != null && param.getEndModifyDate() != null) {
+            builder.whereGe(param.getBatchField(), param.getBeginModifyDate())
+                   .whereLe(param.getBatchField(), param.getEndModifyDate());
+        } else if (param.getBeginModifyDate() != null) {
+            builder.whereGe(param.getBatchField(), param.getBeginModifyDate());
+        } else if (param.getEndModifyDate() != null) {
+            builder.whereLe(param.getBatchField(), param.getEndModifyDate());
+        }
+        
+        if (StringUtils.isNotEmpty(param.getMaxId())) {
+            builder.whereGt(param.getIdField(), param.getMaxId());
+        }
+        
+        if (param.getLimit() != null && param.getLimit() > 0) {
+            builder.limit(param.getLimit());
+        }
+        
+        return builder.build();
     }
 
     /**
      * 处理查询结果
      *
      * @param api       API名称
-     * @param result    查询结果
-     * @param fieldList 字段列表
+
      * @return 处理的数据条数
      */
-    private int processQueryResult(String api, QueryResult result, List<String> fieldList) {
+    private int processQueryResult(String api, SObject[] records, JSONArray objects) {
         int count = 0;
         
-        if (result == null || result.getRecords() == null) {
-            log.info("处理API {} 的查询结果，共 0 条记录", api);
-            return count;
-        }
-        
-        SObject[] records = result.getRecords();
         log.info("处理API {} 的查询结果，共 {} 条记录", api, records.length);
 
         boolean isPartitioned = checkIfTablePartitioned(api);
@@ -593,135 +646,95 @@ public class DataiIntegrationBatchServiceImpl implements IDataiIntegrationBatchS
             batchField = integrationFieldService.getDateField(api);
         }
 
-        Map<String, List<Map<String, Object>>> partitionedData = new HashMap<>();
-        List<Map<String, Object>> normalData = new ArrayList<>();
-
-        for (SObject record : records) {
-            if (record == null) {
-                continue;
-            }
-            
-            try {
-                Map<String, Object> recordMap = convertSObjectToMap(record, fieldList);
-
-                if (isPartitioned) {
-                    String partitionName = "p_default";
-                    
-                    if (StringUtils.isNotEmpty(batchField) && recordMap.containsKey(batchField.toLowerCase())) {
-                        Object dateValue = recordMap.get(batchField.toLowerCase());
-                        if (dateValue instanceof Date) {
-                            Calendar calendar = Calendar.getInstance();
-                            calendar.setTime((Date) dateValue);
-                            int year = calendar.get(Calendar.YEAR);
-                            partitionName = "p" + year;
-                        }
-                    }
-                    
-                    partitionedData.computeIfAbsent(partitionName, k -> new ArrayList<>()).add(recordMap);
-                } else {
-                    normalData.add(recordMap);
-                }
-
-                count++;
-
-            } catch (Exception e) {
-                String recordId = record.getId() != null ? record.getId() : "未知";
-                log.error("处理记录时发生异常，记录ID: {}", recordId, e);
-            }
+        if (objects == null || objects.isEmpty()) {
+            log.info("API {} 没有需要处理的数据", api);
+            return 0;
         }
 
         try {
-            if (isPartitioned) {
-                for (Map.Entry<String, List<Map<String, Object>>> entry : partitionedData.entrySet()) {
-                    String partitionName = entry.getKey();
-                    List<Map<String, Object>> dataList = entry.getValue();
-                    if (!dataList.isEmpty()) {
-                        if (!dataList.isEmpty()) {
-                            Collection<String> keys = dataList.get(0).keySet();
-                            Collection<Collection<Object>> values = new ArrayList<>();
-                            for (Map<String, Object> recordMap : dataList) {
-                                Collection<Object> recordValues = new ArrayList<>();
-                                for (String key : keys) {
-                                    recordValues.add(recordMap.get(key));
-                                }
-                                values.add(recordValues);
-                            }
-                            customMapper.saveBatchToPartition(api.toLowerCase(), partitionName, keys, values);
-                            log.info("批量插入分区 {} 数据 {} 条", partitionName, dataList.size());
-                        }
-                    }
+            List<String> ids = Arrays.stream(records).map(SObject::getId).collect(Collectors.toList());
+            List<String> existsIds = customMapper.getIds(api, ids);
+            
+            String partitionName = null;
+            if (isPartitioned && batchField != null) {
+                partitionName = buildPartitionName(batchField, objects);
+            }
+
+            List<Map<String, Object>> insertMaps = new ArrayList<>();
+            List<Map<String, Object>> updateMaps = new ArrayList<>();
+            List<String> updateIds = new ArrayList<>();
+
+            for (int i = 0; i < objects.size(); i++) {
+                JSONObject jsonObject = objects.getJSONObject(i);
+                String id = jsonObject.getString("Id");
+                
+                Map<String, Object> recordMap = new HashMap<>();
+                for (String key : jsonObject.keySet()) {
+                    recordMap.put(key, jsonObject.get(key));
                 }
-            } else {
-                if (!normalData.isEmpty()) {
-                    Collection<String> keys = normalData.get(0).keySet();
-                    Collection<Collection<Object>> values = new ArrayList<>();
-                    for (Map<String, Object> recordMap : normalData) {
-                        Collection<Object> recordValues = new ArrayList<>();
-                        for (String key : keys) {
-                            recordValues.add(recordMap.get(key));
-                        }
-                        values.add(recordValues);
-                    }
-                    customMapper.saveBatch(api.toLowerCase(), keys, values);
-                    log.info("批量插入普通表数据 {} 条", normalData.size());
+
+                if (existsIds.contains(id)) {
+                    updateMaps.add(recordMap);
+                    updateIds.add(id);
+                } else {
+                    insertMaps.add(recordMap);
                 }
             }
+
+            if (!insertMaps.isEmpty()) {
+                List<String> keys = new ArrayList<>(insertMaps.get(0).keySet());
+                List<Collection<Object>> values = new ArrayList<>();
+                
+                for (Map<String, Object> recordMap : insertMaps) {
+                    List<Object> rowValues = new ArrayList<>();
+                    for (String key : keys) {
+                        rowValues.add(recordMap.get(key));
+                    }
+                    values.add(rowValues);
+                }
+
+                if (isPartitioned && partitionName != null) {
+                    customMapper.saveBatchToPartition(api, partitionName, keys, values);
+                    log.info("成功插入 {} 条记录到分区表 {} 的分区 {}", values.size(), api, partitionName);
+                } else {
+                    customMapper.saveBatch(api, keys, values);
+                    log.info("成功插入 {} 条记录到表 {}", values.size(), api);
+                }
+                count += values.size();
+            }
+
+            if (!updateMaps.isEmpty()) {
+                for (int i = 0; i < updateMaps.size(); i++) {
+                    Map<String, Object> recordMap = updateMaps.get(i);
+                    String id = updateIds.get(i);
+                    
+                    List<Map<String, Object>> maps = new ArrayList<>();
+                    for (Map.Entry<String, Object> entry : recordMap.entrySet()) {
+                        Map<String, Object> paramMap = new HashMap<>();
+                        paramMap.put("key", entry.getKey());
+                        paramMap.put("value", entry.getValue());
+                        maps.add(paramMap);
+                    }
+
+                    if (isPartitioned && partitionName != null) {
+                        customMapper.updateByIdFromPartition(api, partitionName, maps, id);
+                    } else {
+                        customMapper.updateById(api, maps, id);
+                    }
+                }
+                log.info("成功更新 {} 条记录到表 {}", updateMaps.size(), api);
+                count += updateMaps.size();
+            }
+            
         } catch (Exception e) {
-            log.error("批量处理数据时发生异常，API: {}", api, e);
-            fallbackToSingleRecordProcessing(api, records, fieldList, isPartitioned, batchField);
+            log.error("处理API {} 的查询结果时发生异常", api, e);
+            throw new RuntimeException("处理查询结果失败: " + e.getMessage(), e);
         }
 
         return count;
     }
 
-    /**
-     * 批量处理失败时的回退方案，使用单条记录处理
-     *
-     * @param api       API名称
-     * @param records   记录列表
-     * @param fieldList 字段列表
-     * @param isPartitioned 是否为分区表
-     * @param batchField 批次字段
-     */
-    private void fallbackToSingleRecordProcessing(String api, SObject[] records, List<String> fieldList, boolean isPartitioned, String batchField) {
-        log.warn("批量处理数据失败，将回退到单条记录处理，API: {}", api);
-        
-        if (records == null || records.length == 0) {
-            log.info("回退处理API {} 的记录，共 0 条记录", api);
-            return;
-        }
-        
-        for (SObject record : records) {
-            if (record == null) {
-                continue;
-            }
-            
-            try {
-                Map<String, Object> recordMap = convertSObjectToMap(record, fieldList);
-                
-                if (isPartitioned) {
-                    String partitionName = "p_default";
-                    
-                    if (StringUtils.isNotEmpty(batchField) && recordMap.containsKey(batchField.toLowerCase())) {
-                        Object dateValue = recordMap.get(batchField.toLowerCase());
-                        if (dateValue instanceof Date) {
-                            Calendar calendar = Calendar.getInstance();
-                            calendar.setTime((Date) dateValue);
-                            int year = calendar.get(Calendar.YEAR);
-                            partitionName = "p" + year;
-                        }
-                    }
-                    
-                    customMapper.upsertToPartition(api.toLowerCase(), partitionName, recordMap);
-                } else {
-                    customMapper.upsert(api.toLowerCase(), recordMap);
-                }
-            } catch (Exception e) {
-                String recordId = record.getId() != null ? record.getId() : "未知";
-                log.error("单条处理记录时发生异常，记录ID: {}", recordId, e);
-            }
-        }
-    }
+
 
     /**
      * 检查表是否已分区
@@ -735,73 +748,27 @@ public class DataiIntegrationBatchServiceImpl implements IDataiIntegrationBatchS
     }
 
     /**
-     * 将SObject转换为Map
+     * 根据批次字段和数据构建分区名
      *
-     * @param record SObject记录
-     * @param fieldList 字段列表
-     * @return 转换后的Map
+     * @param batchField 批次字段名
+     * @param objects 数据对象数组
+     * @return 分区名（如p2025）
      */
-    private Map<String, Object> convertSObjectToMap(SObject record, List<String> fieldList) {
-        Map<String, Object> recordMap = new HashMap<>();
-
-        if (record.getId() != null) {
-            recordMap.put("Id", record.getId());
-        }
-
-        for (String field : fieldList) {
-            if ("Id".equalsIgnoreCase(field)) {
-                continue;
-            }
-
-            try {
-                Object value = record.getField(field);
-                if (value != null) {
-                    if (value instanceof java.util.Calendar) {
-                        recordMap.put(field.toLowerCase(), ((Calendar) value).getTime());
-                    } else {
-                        recordMap.put(field.toLowerCase(), value);
-                    }
-                } else {
-                    recordMap.put(field.toLowerCase(), null);
-                }
-            } catch (Exception e) {
-                log.warn("获取字段 {} 的值时发生异常", field, e);
+    private String buildPartitionName(String batchField, JSONArray objects) {
+        String partitionName = "p_default";
+        
+        if (StringUtils.isNotEmpty(batchField) && !objects.isEmpty()) {
+            JSONObject firstRecord = objects.getJSONObject(0);
+            Object dateValue = firstRecord.get(batchField);
+            
+            if (dateValue instanceof Date) {
+                Calendar calendar = Calendar.getInstance();
+                calendar.setTime((Date) dateValue);
+                int year = calendar.get(Calendar.YEAR);
+                partitionName = "p" + year;
             }
         }
-
-        return recordMap;
-    }
-
-    /**
-     * Salesforce查询参数内部类
-     */
-    private static class SalesforceParam {
-        private String api;
-        private String select;
-        private Boolean isDeleted;
-
-        public String getApi() {
-            return api;
-        }
-
-        public void setApi(String api) {
-            this.api = api;
-        }
-
-        public String getSelect() {
-            return select;
-        }
-
-        public void setSelect(String select) {
-            this.select = select;
-        }
-
-        public Boolean getIsDeleted() {
-            return isDeleted;
-        }
-
-        public void setIsDeleted(Boolean isDeleted) {
-            this.isDeleted = isDeleted;
-        }
+        
+        return partitionName;
     }
 }
