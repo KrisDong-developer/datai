@@ -20,6 +20,10 @@ public class DataiIntegrationRateLimit extends BaseEntity
     private static final long serialVersionUID = 1L;
 
 
+    /** 乐观锁版本号 */
+    @Schema(title = "乐观锁版本号")
+    private Integer version;
+
     /** 主键ID */
     @Schema(title = "主键ID")
     private Long id;
@@ -62,6 +66,16 @@ public class DataiIntegrationRateLimit extends BaseEntity
     @Schema(title = "是否限流")
     @Excel(name = "是否限流")
     private Boolean isBlocked;
+    public void setVersion(Integer version)
+    {
+        this.version = version;
+    }
+
+    public Integer getVersion()
+    {
+        return version;
+    }
+
     public void setId(Long id) 
     {
         this.id = id;

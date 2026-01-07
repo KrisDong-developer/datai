@@ -12,6 +12,8 @@ import com.datai.integration.model.domain.DataiIntegrationApiCallLog;
 import com.datai.integration.service.IDataiIntegrationApiCallLogService;
 import com.datai.common.core.domain.model.LoginUser;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * API调用日志Service业务层处理
@@ -56,6 +58,7 @@ public class DataiIntegrationApiCallLogServiceImpl implements IDataiIntegrationA
      * @return 结果
      */
     @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public int insertDataiIntegrationApiCallLog(DataiIntegrationApiCallLog dataiIntegrationApiCallLog)
     {
         LoginUser loginUser = SecurityUtils.getLoginUser();

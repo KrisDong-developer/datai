@@ -26,7 +26,7 @@ import java.util.*;
  * @since 1.0.0
  */
 @Slf4j
-public class BulkV2Connection extends BulkConnection {
+public class BulkV2Connection extends BulkConnection implements IBulkV2Connection {
 
     private String queryLocator = "";
 
@@ -65,7 +65,7 @@ public class BulkV2Connection extends BulkConnection {
      * @throws AsyncApiException 异步API异常
      */
     public JobInfo closeJob(String jobId) throws AsyncApiException {
-        return getJobStatus(jobId);
+        return setJobState(jobId, false, JobStateEnum.UploadComplete, "关闭作业失败: " + jobId);
     }
 
     /**
@@ -91,6 +91,17 @@ public class BulkV2Connection extends BulkConnection {
 
     /**
      * 中止作业
+     *
+     * @param jobId 作业ID
+     * @return JobInfo 作业信息
+     * @throws AsyncApiException 异步API异常
+     */
+    public JobInfo abortJob(String jobId) throws AsyncApiException {
+        return setJobState(jobId, false, JobStateEnum.Aborted, "中止作业失败: " + jobId);
+    }
+
+    /**
+     * 中止作业（内部方法，用于查询作业）
      *
      * @param jobId 作业ID
      * @param isQuery 是否为查询作业

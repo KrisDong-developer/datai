@@ -33,16 +33,11 @@ import java.util.*;
  * @since 1.0.0
  */
 @Slf4j
-public class RESTConnection {
+public class RESTConnection implements IRESTConnection {
 
     private final ConnectorConfig connectorConfig;
     private String apiVersion = SalesforceConnectionConstants.DEFAULT_API_VERSION;
     private final ObjectMapper objectMapper = new ObjectMapper();
-
-    // 定义操作枚举（如果项目中有公共枚举，请替换此处引用）
-    public enum ACTION_ENUM {
-        INSERT, UPDATE, DELETE, UPSERT
-    }
 
     /**
      * 构造函数 - 创建RESTConnection实例
@@ -76,58 +71,24 @@ public class RESTConnection {
         log.debug("开始执行 SObject 批量操作: {}, 记录数: {}", actionName, dynabeans.size());
 
         try {
-            // 1. 准备请求数据
             Map<String, Object> batchRecords = getSobjectMapForCompositeREST(dynabeans);
             String jsonPayload = objectMapper.writeValueAsString(batchRecords);
 
-            // 2. 构建请求 URL 和 Method
-            // Composite SObject Collections API 端点通常为 /services/data/vXX.X/composite/sobjects
-            String endpoint = connectorConfig.getRestEndpoint();
-            // 如果 config 中的 endpoint 只是 base url (e.g. https://instance.salesforce.com)，需要拼接
-            if (!endpoint.contains("/composite/sobjects")) {
-                // 这里假设 connectorConfig 里的 endpoint 已经包含了 /services/Soap/... 需要截取或者重新构建
-                // 通常建议传入的是 Instance URL，然后手动拼装 REST 路径：
-                // String serviceUrl = connectorConfig.getServiceEndpoint(); // https://xx.salesforce.com/services/Soap/u/50.0
-                // URL urlObject = new URL(serviceUrl);
-                // String baseUrl = urlObject.getProtocol() + "://" + urlObject.getHost();
-                // endpoint = baseUrl + "/services/data/v" + apiVersion + "/composite/sobjects";
-
-                // 为了保持原代码逻辑，假设 config.getRestEndpoint() 返回正确的 REST 基础路径
-            }
-
-            // 注意：Salesforce Composite Collections 对不同操作有不同的 HTTP Method 和 参数
-            // Update -> PATCH
-            // Insert -> POST
-            // Delete -> DELETE (通过 URL 参数传入 ids， body 为空，或者是 delete 集合操作)
-
-            String httpMethod;
-            String url = endpoint; // 确保这里指向 .../composite/sobjects
+            String endpoint = buildCompositeSobjectsEndpoint();
+            String httpMethod = getHttpMethodForAction(action);
+            String url = endpoint;
 
             if (action == ACTION_ENUM.DELETE) {
-                httpMethod = SalesforceConstants.HTTP_METHOD_DELETE;
-                // Delete 在 Composite API 中通常通过 Query Params 传递 IDs: ?ids=id1,id2...
-                // 或者使用 POST /composite/sobjects?ids=... (具体取决于 API 版本和集合操作)
-                // 此处如果不使用 ids 参数，而是用 body，需确认 API 支持情况。
-                // 标准 SObject Collections Delete 需要 ids 参数在 URL 中:
                 List<String> ids = extractIds(dynabeans);
                 url = url + "?ids=" + String.join(",", ids) + "&allOrNone=false";
-                jsonPayload = null; // DELETE 请求体通常为空
-            } else if (action == ACTION_ENUM.UPDATE) {
-                httpMethod = SalesforceConstants.HTTP_METHOD_PATCH;
-            } else {
-                httpMethod = SalesforceConstants.HTTP_METHOD_POST; // INSERT
+                jsonPayload = null;
             }
 
-            // 3. 构建 Header
             Map<String, String> headers = createRestHeaders(sessionId);
-
-            // 4. 发送请求
             SimpleHttpResponse response = sendHttpRequest(url, headers, httpMethod, jsonPayload);
 
-            // 5. 解析响应
             if (!response.isSuccessful()) {
                 log.warn("Salesforce REST 请求失败 [Code: {}], 响应: {}", response.getResponseCode(), response.getContentString());
-                // 这里可以根据 Body 内容抛出更具体的异常
                 throw new ConnectionException("REST API 调用失败: " + response.getResponseCode() + " " + response.getContentString());
             }
 
@@ -140,6 +101,35 @@ public class RESTConnection {
             log.error("REST 操作发生非预期错误: {}", actionName, e);
             if (e instanceof ConnectionException) throw (ConnectionException) e;
             throw new ConnectionException("操作失败: " + e.getMessage(), e);
+        }
+    }
+
+    private String buildCompositeSobjectsEndpoint() {
+        String endpoint = connectorConfig.getRestEndpoint();
+        if (endpoint == null || endpoint.isEmpty()) {
+            throw new IllegalStateException("REST endpoint is not configured");
+        }
+        
+        if (!endpoint.contains("/composite/sobjects")) {
+            if (endpoint.endsWith("/")) {
+                endpoint = endpoint + "composite/sobjects";
+            } else {
+                endpoint = endpoint + "/composite/sobjects";
+            }
+        }
+        
+        return endpoint;
+    }
+
+    private String getHttpMethodForAction(ACTION_ENUM action) {
+        switch (action) {
+            case DELETE:
+                return SalesforceConstants.HTTP_METHOD_DELETE;
+            case UPDATE:
+                return SalesforceConstants.HTTP_METHOD_PATCH;
+            case INSERT:
+            default:
+                return SalesforceConstants.HTTP_METHOD_POST;
         }
     }
 
@@ -290,17 +280,15 @@ public class RESTConnection {
         URL url = new URL(urlString);
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         connection.setRequestMethod(method);
-        connection.setConnectTimeout(60000); // 1分钟超时
-        connection.setReadTimeout(60000);
+        connection.setConnectTimeout(SalesforceConnectionConstants.DEFAULT_CONNECTION_TIMEOUT);
+        connection.setReadTimeout(SalesforceConnectionConstants.DEFAULT_READ_TIMEOUT);
 
-        // 设置请求头
         if (headers != null) {
             for (Map.Entry<String, String> entry : headers.entrySet()) {
                 connection.setRequestProperty(entry.getKey(), entry.getValue());
             }
         }
 
-        // 写入请求体
         if (requestBody != null && !requestBody.isEmpty()) {
             connection.setDoOutput(true);
             try (OutputStream out = connection.getOutputStream()) {
@@ -308,13 +296,11 @@ public class RESTConnection {
             }
         }
 
-        // 获取响应
         int responseCode = connection.getResponseCode();
         boolean successful = responseCode >= 200 && responseCode < 300;
 
         String content;
         try (InputStream inputStream = successful ? connection.getInputStream() : connection.getErrorStream()) {
-            // 如果 Stream 为空防止 IOUtils 报错
             if (inputStream != null) {
                 content = IOUtils.toString(inputStream, StandardCharsets.UTF_8);
             } else {

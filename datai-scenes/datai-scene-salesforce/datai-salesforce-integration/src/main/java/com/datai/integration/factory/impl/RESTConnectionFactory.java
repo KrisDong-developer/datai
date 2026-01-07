@@ -1,24 +1,35 @@
 package com.datai.integration.factory.impl;
 
+import com.datai.salesforce.common.constant.SalesforceConstants;
+import com.datai.integration.core.IRESTConnection;
+import com.datai.integration.core.RESTConnection;
 import com.datai.integration.factory.AbstractConnectionFactory;
+import com.datai.integration.proxy.ConnectionProxy;
+import com.sforce.async.AsyncApiException;
 import com.sforce.ws.ConnectorConfig;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-/**
- * REST连接工厂类 - 管理全局唯一的REST连接配置实例
- *
- * @author Salesforce
- */
 @Slf4j
 @Component
-public class RESTConnectionFactory extends AbstractConnectionFactory<ConnectorConfig> {
+public class RESTConnectionFactory extends AbstractConnectionFactory<IRESTConnection> {
+
+    @Autowired
+    private ConnectionProxy connectionProxy;
 
     @Override
-    protected ConnectorConfig createConnection() {
-        ConnectorConfig config = new ConnectorConfig();
-        config.setSessionId(getSessionId());
-        config.setRestEndpoint(getInstanceUrl() + "/services/data/v59.0/");
-        return config;
+    protected IRESTConnection createConnection() {
+        try {
+            ConnectorConfig config = new ConnectorConfig();
+            config.setSessionId(getSessionId());
+            config.setRestEndpoint(getInstanceUrl() + "/services/data/v" + 
+                SalesforceConstants.REST_API_VERSION.replace("v", "") + "/");
+            RESTConnection connection = new RESTConnection(config);
+            return connectionProxy.createProxy(connection, "REST");
+        } catch (AsyncApiException e) {
+            log.error("创建REST连接失败", e);
+            throw new RuntimeException("创建REST连接失败: " + e.getMessage(), e);
+        }
     }
 }

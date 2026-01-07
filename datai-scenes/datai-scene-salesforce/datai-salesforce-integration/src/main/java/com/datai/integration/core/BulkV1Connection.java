@@ -29,7 +29,7 @@ import java.nio.charset.StandardCharsets;
  * 最终支持增删改查操作
  */
 @Slf4j
-public class BulkV1Connection extends BulkConnection {
+public class BulkV1Connection extends BulkConnection implements IBulkV1Connection {
 
     public BulkV1Connection(ConnectorConfig config) throws AsyncApiException {
         super(config);

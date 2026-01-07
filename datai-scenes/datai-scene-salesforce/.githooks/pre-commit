@@ -1,0 +1,42 @@
+#!/bin/bash
+
+# pre-commit钩子：检查代码变更是否包含docs链接
+
+set -e
+
+echo "=== 运行pre-commit检查 ==="
+
+# 检查是否有文件变更
+if git diff --cached --name-only | grep -q "\.java$\|\.md$\|\.xml$"; then
+    echo "检查代码变更是否包含docs链接..."
+    
+    # 获取变更的文件列表
+    changed_files=$(git diff --cached --name-only | grep -E "\.java$\|\.md$\|\.xml$")
+    
+    # 检查每个变更的文件是否包含docs链接
+    has_docs_link=false
+    for file in $changed_files; do
+        if git show :"$file" | grep -q "docs/" && ! echo "$file" | grep -q "docs/"; then
+            echo "✓ 文件 $file 包含docs链接"
+            has_docs_link=true
+        fi
+    done
+    
+    # 如果是文档文件变更，检查是否更新了docs/index.md
+    if echo "$changed_files" | grep -q "docs/"; then
+        if ! echo "$changed_files" | grep -q "docs/index.md"; then
+            echo "警告：文档文件已变更，但未更新docs/index.md索引"
+            echo "请确保在docs/index.md中添加或更新对应的文档链接"
+        else
+            echo "✓ docs/index.md已更新"
+        fi
+    fi
+else
+    echo "✓ 无代码文件变更"
+fi
+
+# 运行验证脚本的部分检查
+echo "\n运行文档结构检查..."
+bash scripts/verify.sh 2>&1 | grep -E "(错误|✓)"
+
+echo "\n=== pre-commit检查完成 ==="
