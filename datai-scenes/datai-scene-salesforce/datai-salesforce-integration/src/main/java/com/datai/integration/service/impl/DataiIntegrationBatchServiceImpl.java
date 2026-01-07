@@ -175,7 +175,7 @@ public class DataiIntegrationBatchServiceImpl implements IDataiIntegrationBatchS
 
             log.info("批次 {} 共有 {} 条失败的同步记录，准备重试", id, failedHistories.size());
 
-            boolean retryResult = syncObjectDataByBatch(batch.getApi(), id.toString());
+            boolean retryResult = syncObjectDataByBatch(batch.getApi(), id);
 
             if (retryResult) {
                 log.info("批次 {} 重试成功", id);
@@ -299,12 +299,13 @@ public class DataiIntegrationBatchServiceImpl implements IDataiIntegrationBatchS
             }
 
             String objectApi = batch.getApi();
-            String batchId = id.toString();
 
-            log.info("准备同步对象 {} 的批次 {} 数据", objectApi, batchId);
+            log.info("准备同步对象 {} 的批次 {} 数据", objectApi, id);
 
-            boolean syncResult = syncObjectDataByBatch(objectApi, batchId);
+            boolean syncResult = syncObjectDataByBatch(objectApi, id);
 
+            batch = selectDataiIntegrationBatchById(id);
+            
             if (syncResult) {
                 log.info("批次 {} 数据同步成功", id);
                 result.put("success", true);
@@ -312,12 +313,14 @@ public class DataiIntegrationBatchServiceImpl implements IDataiIntegrationBatchS
                 result.put("batchId", id);
                 result.put("api", objectApi);
                 result.put("label", batch.getLabel());
+                result.put("syncNum", batch.getDbNum());
             } else {
                 log.error("批次 {} 数据同步失败", id);
                 result.put("success", false);
                 result.put("message", "批次数据同步失败");
                 result.put("batchId", id);
                 result.put("api", objectApi);
+                result.put("syncNum", batch.getDbNum() != null ? batch.getDbNum() : 0);
             }
 
         } catch (Exception e) {
@@ -336,10 +339,10 @@ public class DataiIntegrationBatchServiceImpl implements IDataiIntegrationBatchS
      * @param batchId   批次ID
      * @return 同步结果
      */
-    private boolean syncObjectDataByBatch(String objectApi, String batchId) {
+    private boolean syncObjectDataByBatch(String objectApi, Integer batchId) {
         log.info("准备同步Salesforce对象的指定批次数据，对象API: {}, 批次ID: {}", objectApi, batchId);
         
-        if (objectApi == null || objectApi.trim().isEmpty() || batchId == null || batchId.trim().isEmpty()) {
+        if (objectApi == null || objectApi.trim().isEmpty() || batchId == null ) {
             log.error("对象API或批次ID为空，无法同步指定批次数据");
             return false;
         }
@@ -350,7 +353,7 @@ public class DataiIntegrationBatchServiceImpl implements IDataiIntegrationBatchS
         LocalDateTime syncStartTime = LocalDateTime.now();
         
         try {
-            batch = selectDataiIntegrationBatchById(Integer.parseInt(batchId));
+            batch = selectDataiIntegrationBatchById(batchId);
             if (batch == null) {
                 log.error("批次不存在，批次ID: {}", batchId);
                 return false;
@@ -370,8 +373,18 @@ public class DataiIntegrationBatchServiceImpl implements IDataiIntegrationBatchS
                 param.setIsDeleted(true);
             }
 
-            int totalCount = executeQueryAndProcessData(connection, param, fieldList);
-            log.info("对象 {} 批次 {} 数据同步完成，共处理 {} 条记录", objectApi, batchId, totalCount);
+            if (batch.getSyncStartDate() != null) {
+                param.setBeginDate(java.sql.Timestamp.valueOf(batch.getSyncStartDate()));
+            }
+            if (batch.getSyncEndDate() != null) {
+                param.setEndDate(java.sql.Timestamp.valueOf(batch.getSyncEndDate()));
+            }
+
+            int sfTotalCount = querySalesforceDataCount(connection, param);
+            log.info("对象 {} 批次 {} Salesforce中共有 {} 条记录需要同步", objectApi, batchId, sfTotalCount);
+            
+            int dbProcessedCount = executeQueryAndProcessData(connection, param, fieldList);
+            log.info("对象 {} 批次 {} 数据同步完成，共处理 {} 条记录", objectApi, batchId, dbProcessedCount);
             
             long endTime = System.currentTimeMillis();
             long duration = endTime - startTime;
@@ -379,9 +392,9 @@ public class DataiIntegrationBatchServiceImpl implements IDataiIntegrationBatchS
             
             batchHistory.setApi(objectApi);
             batchHistory.setLabel(batch.getLabel());
-            batchHistory.setBatchId(Integer.parseInt(batchId));
+            batchHistory.setBatchId(batchId);
             batchHistory.setBatchField(batch.getBatchField());
-            batchHistory.setSyncNum(totalCount);
+            batchHistory.setSyncNum(dbProcessedCount);
             batchHistory.setSyncType(batch.getSyncType());
             batchHistory.setSyncStatus(true);
             batchHistory.setStartTime(syncStartTime);
@@ -390,9 +403,21 @@ public class DataiIntegrationBatchServiceImpl implements IDataiIntegrationBatchS
             batchHistory.setSyncStartTime(syncStartTime);
             batchHistory.setSyncEndTime(syncEndTime);
             batchHistoryService.insertDataiIntegrationBatchHistory(batchHistory);
-            log.info("批次 {} 历史记录已保存，同步数据量: {}, 耗时: {}ms", batchId, totalCount, duration);
-
-            insertSyncLog(objectApi, batch.getLabel(), batch.getSyncType(), Integer.parseInt(batchId), true, null, duration);
+            log.info("批次 {} 历史记录已保存，同步数据量: {}, 耗时: {}ms", batchId, dbProcessedCount, duration);
+            
+            batch.setSfNum(sfTotalCount);
+            batch.setDbNum(dbProcessedCount);
+            batch.setSyncStatus(true);
+            if (batch.getFirstSyncTime() == null) {
+                batch.setFirstSyncTime(syncStartTime);
+            }
+            batch.setLastSyncTime(syncEndTime);
+            batch.setUpdateTime(DateUtils.getNowDate());
+            updateDataiIntegrationBatch(batch);
+            log.info("批次 {} 信息已更新，SF数据量: {}, 本地数据量: {}, 同步状态: {}, 首次同步时间: {}, 最后同步时间: {}", 
+                    batchId, sfTotalCount, dbProcessedCount, true, batch.getFirstSyncTime(), syncEndTime);
+            
+            insertSyncLog(objectApi, batch.getLabel(), batch.getSyncType(), batchId, true, null, duration);
             
             return true;
         } catch (Exception e) {
@@ -404,7 +429,7 @@ public class DataiIntegrationBatchServiceImpl implements IDataiIntegrationBatchS
             
             batchHistory.setApi(objectApi);
             batchHistory.setLabel(batch != null ? batch.getLabel() : "");
-            batchHistory.setBatchId(Integer.parseInt(batchId));
+            batchHistory.setBatchId(batchId);
             batchHistory.setBatchField(batch != null ? batch.getBatchField() : "");
             batchHistory.setSyncNum(0);
             batchHistory.setSyncType(batch != null ? batch.getSyncType() : "");
@@ -417,7 +442,15 @@ public class DataiIntegrationBatchServiceImpl implements IDataiIntegrationBatchS
             batchHistoryService.insertDataiIntegrationBatchHistory(batchHistory);
             log.info("批次 {} 失败历史记录已保存，耗时: {}ms", batchId, duration);
             
-            insertSyncLog(objectApi, batch != null ? batch.getLabel() : "", batch != null ? batch.getSyncType() : "", Integer.parseInt(batchId), false, e.getMessage(), duration);
+            if (batch != null) {
+                batch.setSyncStatus(false);
+                batch.setLastSyncTime(syncEndTime);
+                batch.setUpdateTime(DateUtils.getNowDate());
+                updateDataiIntegrationBatch(batch);
+                log.info("批次 {} 信息已更新，同步状态: {}, 结束时间: {}", batchId, false, syncEndTime);
+            }
+            
+            insertSyncLog(objectApi, batch != null ? batch.getLabel() : "", batch != null ? batch.getSyncType() : "", batchId, false, e.getMessage(), duration);
             
             return false;
         }
@@ -514,79 +547,48 @@ public class DataiIntegrationBatchServiceImpl implements IDataiIntegrationBatchS
     }
 
     /**
-     * 执行查询并处理结果
+     * 查询Salesforce数据量
      *
-     * @param connection SOAP连接
-     * @param param      查询参数
-     * @param fieldList  字段列表
-     * @return 处理的数据条数
+     * @param connection Salesforce连接
+     * @param param 查询参数
+     * @return 符合条件的总记录数
      */
-    private int executeQueryAndProcessData(PartnerConnection connection, DataiSyncParam param, List<String> fieldList) {
+    private int querySalesforceDataCount(PartnerConnection connection, DataiSyncParam param) {
         int totalCount = 0;
-        JSONArray objects = null;
-        String maxId = null;
-        Date lastDate = null;
-
+        
         try {
-            DescribeSObjectResult describeSObject = connection.describeSObject(param.getApi());
-            Field[] dsrFields = describeSObject.getFields();
-
-            while (true) {
-                // 获取创建时间
-                param.setBeginDate(lastDate);
-                // 判断是否存在要排除的id
-                param.setMaxId(maxId);
-                String query = buildDynamicQuery(param);
-                log.info("执行查询SQL: {}", query);
-                QueryResult result = connection.queryAll(query);
-                if (result.getRecords() != null && result.getRecords().length > 0) {
-                    objects = ConvertUtil.toJsonArray(result.getRecords(), dsrFields);
-                    Date maxDate = objects.getJSONObject(objects.size() - 1).getDate(param.getBatchField());
-                    // 在当前批次中找出所有具有相同时间戳的记录，并获取其中ID最大的那条记录的ID
-                    // 这个ID将作为下一批次查询的起始位置，避免重复处理相同时间戳的数据
-                    Optional<String> maxIdOptional = objects.stream()
-                            .map(t -> (JSONObject) t)
-                            .filter(t -> maxDate.equals(t.getDate(param.getBatchField())))
-                            .map(t -> t.getString("Id"))
-                            .max(String::compareTo);
-                    maxId = maxIdOptional.orElse(null);
-                    lastDate = maxDate;
-
-                    totalCount += processQueryResult(param.getApi(), result.getRecords(), objects);
-                    log.info("已处理 {} 条记录", totalCount);
+            String countQuery = buildCountQuery(param);
+            log.info("查询数据量SQL: {}", countQuery);
+            
+            QueryResult result = connection.queryAll(countQuery);
+            
+            if (result != null && result.getRecords() != null && result.getRecords().length > 0) {
+                SObject record = result.getRecords()[0];
+                Object countValue = record.getField("expr0");
+                if (countValue != null) {
+                    totalCount = Integer.parseInt(countValue.toString());
                 }
-
-                if (result.isDone()) {
-                    break;
-                }
-
-                result = connection.queryMore(result.getQueryLocator());
-
-                TimeUnit.MILLISECONDS.sleep(100);
             }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            log.error("查询数据时线程被中断，对象API: {}", param.getApi(), e);
+            
+            log.info("对象 {} 符合条件的总记录数: {}", param.getApi(), totalCount);
         } catch (Exception e) {
-            log.error("查询处理数据时发生异常，对象API: {}", param.getApi(), e);
+            log.error("查询数据量时发生异常，对象API: {}", param.getApi(), e);
         }
+        
         return totalCount;
     }
 
     /**
-     * 构建动态查询语句
+     * 构建COUNT查询语句
      *
      * @param param 查询参数
-     * @return SOQL查询语句
+     * @return SOQL COUNT查询语句
      */
-    private String buildDynamicQuery(DataiSyncParam param) {
+    private String buildCountQuery(DataiSyncParam param) {
         SoqlBuilder builder = new SoqlBuilder();
+        builder.from(param.getApi());
         
-        String[] selectFields = param.getSelect().split(",");
-        builder.select(selectFields)
-               .from(param.getApi());
-        
-        if (param.getIsDeleted() != null && !param.getIsDeleted()) {
+        if (param.getIsDeleted() != null && param.getIsDeleted()) {
             builder.where("IsDeleted = false");
         }
         
@@ -617,6 +619,117 @@ public class DataiIntegrationBatchServiceImpl implements IDataiIntegrationBatchS
             builder.whereLe(param.getBatchField(), param.getEndModifyDate());
         }
         
+        return builder.buildCountQuery();
+    }
+
+    /**
+     * 执行查询并处理结果
+     *
+     * @param connection SOAP连接
+     * @param param      查询参数
+     * @param fieldList  字段列表
+     * @return 处理的数据条数
+     */
+    private int executeQueryAndProcessData(PartnerConnection connection, DataiSyncParam param, List<String> fieldList) {
+        int totalCount = 0;
+        JSONArray objects = null;
+        String maxId = null;
+        Date lastDate = null;
+
+        try {
+            DescribeSObjectResult describeSObject = connection.describeSObject(param.getApi());
+            Field[] dsrFields = describeSObject.getFields();
+
+            while (true) {
+                DataiSyncParam queryParam = new DataiSyncParam();
+                queryParam.setApi(param.getApi());
+                queryParam.setSelect(param.getSelect());
+                queryParam.setBatchField(param.getBatchField());
+                queryParam.setIdField(param.getIdField());
+                queryParam.setIsDeleted(param.getIsDeleted());
+                
+                queryParam.setBeginDate(param.getBeginDate());
+                queryParam.setEndDate(param.getEndDate());
+                queryParam.setLastDate(lastDate);
+                queryParam.setMaxId(maxId);
+                
+                String query = buildDynamicQuery(queryParam);
+                log.info("执行查询SQL: {}", query);
+                QueryResult result = connection.queryAll(query);
+
+                if (result.getRecords() != null && result.getRecords().length > 0) {
+                    objects = ConvertUtil.toJsonArray(result.getRecords(), dsrFields);
+                    Date maxDate = objects.getJSONObject(objects.size() - 1).getDate(param.getBatchField());
+                    Optional<String> maxIdOptional = objects.stream()
+                            .map(t -> (JSONObject) t)
+                            .filter(t -> maxDate.equals(t.getDate(param.getBatchField())))
+                            .map(t -> t.getString("Id"))
+                            .max(String::compareTo);
+                    maxId = maxIdOptional.orElse(null);
+                    lastDate = maxDate;
+
+                    totalCount += processQueryResult(param.getApi(), result.getRecords(), objects);
+                    log.info("已处理 {} 条记录", totalCount);
+                }
+
+                if (result.isDone() || result.getRecords() == null || result.getRecords().length == 0) {
+                    break;
+                }
+            }
+        } catch (Exception e) {
+            log.error("查询处理数据时发生异常，对象API: {}", param.getApi(), e);
+        }
+        return totalCount;
+    }
+
+    /**
+     * 构建动态查询语句
+     *
+     * @param param 查询参数
+     * @return SOQL查询语句
+     */
+    private String buildDynamicQuery(DataiSyncParam param) {
+        SoqlBuilder builder = new SoqlBuilder();
+        
+        String[] selectFields = param.getSelect().split(",");
+        builder.select(selectFields)
+               .from(param.getApi());
+        
+        if (param.getIsDeleted() != null && param.getIsDeleted()) {
+            builder.where("IsDeleted = false");
+        }
+        
+        if (param.getBeginDate() != null && param.getEndDate() != null) {
+            builder.whereGe(param.getBatchField(), param.getBeginDate())
+                   .whereLe(param.getBatchField(), param.getEndDate());
+        } else if (param.getBeginDate() != null) {
+            builder.whereGe(param.getBatchField(), param.getBeginDate());
+        } else if (param.getEndDate() != null) {
+            builder.whereLe(param.getBatchField(), param.getEndDate());
+        }
+        
+        if (param.getBeginCreateDate() != null && param.getEndCreateDate() != null) {
+            builder.whereGe(param.getBatchField(), param.getBeginCreateDate())
+                   .whereLe(param.getBatchField(), param.getEndCreateDate());
+        } else if (param.getBeginCreateDate() != null) {
+            builder.whereGe(param.getBatchField(), param.getBeginCreateDate());
+        } else if (param.getEndCreateDate() != null) {
+            builder.whereLe(param.getBatchField(), param.getEndCreateDate());
+        }
+
+        if (param.getLastDate() != null) {
+            builder.whereLe(param.getBatchField(), param.getLastDate());
+        }
+        
+        if (param.getBeginModifyDate() != null && param.getEndModifyDate() != null) {
+            builder.whereGe(param.getBatchField(), param.getBeginModifyDate())
+                   .whereLe(param.getBatchField(), param.getEndModifyDate());
+        } else if (param.getBeginModifyDate() != null) {
+            builder.whereGe(param.getBatchField(), param.getBeginModifyDate());
+        } else if (param.getEndModifyDate() != null) {
+            builder.whereLe(param.getBatchField(), param.getEndModifyDate());
+        }
+        
         if (StringUtils.isNotEmpty(param.getMaxId())) {
             builder.whereGt(param.getIdField(), param.getMaxId());
         }
@@ -624,6 +737,7 @@ public class DataiIntegrationBatchServiceImpl implements IDataiIntegrationBatchS
         if (param.getLimit() != null && param.getLimit() > 0) {
             builder.limit(param.getLimit());
         }
+
         
         return builder.build();
     }
@@ -771,4 +885,6 @@ public class DataiIntegrationBatchServiceImpl implements IDataiIntegrationBatchS
         
         return partitionName;
     }
+
+
 }

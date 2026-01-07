@@ -17,7 +17,6 @@ import com.datai.integration.service.IDataiIntegrationBatchService;
 import com.datai.integration.service.IDataiIntegrationFieldService;
 import com.datai.integration.service.IDataiIntegrationObjectService;
 import com.datai.salesforce.common.utils.SoqlBuilder;
-import com.datai.integration.util.ConvertUtil;
 import com.datai.setting.future.SalesforceExecutor;
 import com.sforce.soap.partner.DescribeSObjectResult;
 import com.sforce.soap.partner.Field;
@@ -710,6 +709,86 @@ public class DataiIntegrationObjectServiceImpl implements IDataiIntegrationObjec
         return result;
     }
 
+    @Override
+    public Map<String, Object> syncMultipleObjectData(Integer[] ids) {
+        Map<String, Object> result = new HashMap<>();
+        long startTime = System.currentTimeMillis();
+        
+        try {
+            if (ids == null || ids.length == 0) {
+                log.error("对象ID数组不能为空");
+                result.put("success", false);
+                result.put("message", "对象ID数组不能为空");
+                return result;
+            }
+            
+            log.info("开始同步多个对象数据，对象数量: {}", ids.length);
+            
+            List<Map<String, Object>> syncResults = new ArrayList<>();
+            int successCount = 0;
+            int failureCount = 0;
+            int totalSyncRecords = 0;
+            List<Map<String, Object>> failedObjects = new ArrayList<>();
+            
+            for (int i = 0; i < ids.length; i++) {
+                Integer id = ids[i];
+                log.info("开始同步第 {}/{} 个对象，对象ID: {}", i + 1, ids.length, id);
+                
+                try {
+                    Map<String, Object> singleResult = syncSingleObjectData(id);
+                    syncResults.add(singleResult);
+                    
+                    if ((Boolean) singleResult.get("success")) {
+                        successCount++;
+                        Integer totalCount = (Integer) singleResult.get("totalCount");
+                        if (totalCount != null) {
+                            totalSyncRecords += totalCount;
+                        }
+                        log.info("对象 {} 同步成功，同步记录数: {}", id, totalCount);
+                    } else {
+                        failureCount++;
+                        Map<String, Object> failedObject = new HashMap<>();
+                        failedObject.put("objectId", id);
+                        failedObject.put("message", singleResult.get("message"));
+                        failedObjects.add(failedObject);
+                        log.error("对象 {} 同步失败: {}", id, singleResult.get("message"));
+                    }
+                    
+                } catch (Exception e) {
+                    failureCount++;
+                    Map<String, Object> failedObject = new HashMap<>();
+                    failedObject.put("objectId", id);
+                    failedObject.put("message", "同步异常: " + e.getMessage());
+                    failedObjects.add(failedObject);
+                    log.error("同步对象 {} 时发生异常", id, e);
+                }
+            }
+            
+            long endTime = System.currentTimeMillis();
+            long duration = endTime - startTime;
+            
+            result.put("success", true);
+            result.put("message", "多对象数据同步完成");
+            result.put("totalObjects", ids.length);
+            result.put("successCount", successCount);
+            result.put("failureCount", failureCount);
+            result.put("totalSyncRecords", totalSyncRecords);
+            result.put("duration", duration);
+            result.put("syncResults", syncResults);
+            result.put("failedObjects", failedObjects);
+            
+            log.info("多对象数据同步完成，总对象数: {}, 成功: {}, 失败: {}, 总同步记录数: {}, 耗时: {}ms", 
+                    ids.length, successCount, failureCount, totalSyncRecords, duration);
+            
+        } catch (Exception e) {
+            log.error("同步多个对象数据时发生异常", e);
+            result.put("success", false);
+            result.put("message", "同步多个对象数据时发生异常: " + e.getMessage());
+        }
+        
+        return result;
+    }
+
     /**
      * 全量数据拉取
      * 查询所有批次并使用多线程并行拉取
@@ -739,7 +818,6 @@ public class DataiIntegrationObjectServiceImpl implements IDataiIntegrationObjec
             
             List<java.util.concurrent.Future<?>> futures = new ArrayList<>();
             List<Map<String, Object>> batchResults = new CopyOnWriteArrayList<>();
-            int totalSyncCount = 0;
             int successBatchCount = 0;
             int failedBatchCount = 0;
             
@@ -787,9 +865,6 @@ public class DataiIntegrationObjectServiceImpl implements IDataiIntegrationObjec
             for (Map<String, Object> batchResult : batchResults) {
                 if ((Boolean) batchResult.get("success")) {
                     successBatchCount++;
-                    if (batchResult.get("syncNum") != null) {
-                        totalSyncCount += (Integer) batchResult.get("syncNum");
-                    }
                 } else {
                     failedBatchCount++;
                 }
@@ -800,7 +875,17 @@ public class DataiIntegrationObjectServiceImpl implements IDataiIntegrationObjec
             LocalDateTime now = LocalDateTime.now();
             
             object.setLastSyncDate(now);
-            object.setTotalRows(totalSyncCount);
+            
+            DataiIntegrationBatch queryAllBatches = new DataiIntegrationBatch();
+            queryAllBatches.setApi(objectApi);
+            List<DataiIntegrationBatch> allBatches = dataiIntegrationBatchService.selectDataiIntegrationBatchList(queryAllBatches);
+            
+            int totalDbNum = allBatches.stream()
+                .filter(batch -> batch.getDbNum() != null)
+                .mapToInt(DataiIntegrationBatch::getDbNum)
+                .sum();
+            
+            object.setTotalRows(totalDbNum);
             object.setSyncStatus(failedBatchCount == 0);
             object.setUpdateTime(DateUtils.getNowDate());
             updateDataiIntegrationObject(object);
@@ -809,7 +894,7 @@ public class DataiIntegrationObjectServiceImpl implements IDataiIntegrationObjec
             result.put("message", "全量数据拉取完成");
             result.put("objectId", object.getId());
             result.put("objectApi", objectApi);
-            result.put("totalCount", totalSyncCount);
+            result.put("totalCount", totalDbNum);
             result.put("duration", duration);
             result.put("syncType", "full");
             result.put("lastBatchDate", object.getLastBatchDate());
@@ -818,7 +903,7 @@ public class DataiIntegrationObjectServiceImpl implements IDataiIntegrationObjec
             result.put("failedBatchCount", failedBatchCount);
             
             log.info("对象 {} 全量数据拉取完成，共处理 {} 个批次，成功 {} 个，失败 {} 个，总记录数: {}，耗时: {}ms", 
-                    objectApi, batches.size(), successBatchCount, failedBatchCount, totalSyncCount, duration);
+                    objectApi, batches.size(), successBatchCount, failedBatchCount, totalDbNum, duration);
             
         } catch (Exception e) {
             log.error("全量数据拉取失败，对象API: {}", objectApi, e);
@@ -857,8 +942,6 @@ public class DataiIntegrationObjectServiceImpl implements IDataiIntegrationObjec
                 result.put("message", "无法获取Salesforce连接");
                 return result;
             }
-            
-            List<String> fieldList = getSalesforceObjectFields(connection, objectApi);
             String batchField = object.getBatchField();
             
             if (batchField == null || batchField.trim().isEmpty()) {
@@ -876,7 +959,7 @@ public class DataiIntegrationObjectServiceImpl implements IDataiIntegrationObjec
             DataiIntegrationBatch incrementalBatch = new DataiIntegrationBatch();
             incrementalBatch.setApi(objectApi);
             incrementalBatch.setLabel(object.getLabel());
-            incrementalBatch.setBatchField(batchField);
+            incrementalBatch.setBatchField(dataiIntegrationFieldService.getUpdateField(objectApi));
             incrementalBatch.setSyncType("INCREMENTAL");
             incrementalBatch.setSyncStatus(false);
             incrementalBatch.setSyncStartDate(lastBatchDate);
@@ -884,26 +967,22 @@ public class DataiIntegrationObjectServiceImpl implements IDataiIntegrationObjec
             incrementalBatch.setCreateTime(DateUtils.getNowDate());
             incrementalBatch.setUpdateTime(DateUtils.getNowDate());
             
-            int batchId = dataiIntegrationBatchService.insertDataiIntegrationBatch(incrementalBatch);
+            dataiIntegrationBatchService.insertDataiIntegrationBatch(incrementalBatch);
+            Integer batchId = incrementalBatch.getId();
             log.info("为对象 {} 创建增量批次，批次ID: {}", objectApi, batchId);
             
             object.setLastBatchDate(incrementalBatch.getSyncEndDate());
-            updateDataiIntegrationObject(object);
-            
+
             Map<String, Object> batchResult = dataiIntegrationBatchService.syncBatchData(batchId);
-            
+
+            Integer totalDbNum = customMapper.countBySQL(objectApi, null);
             long endTime = System.currentTimeMillis();
             long duration = endTime - startTime;
             LocalDateTime now = LocalDateTime.now();
             
             if ((Boolean) batchResult.get("success")) {
                 object.setLastSyncDate(now);
-                Integer syncNum = (Integer) batchResult.get("syncNum");
-                if (object.getTotalRows() != null) {
-                    object.setTotalRows(object.getTotalRows() + syncNum);
-                } else {
-                    object.setTotalRows(syncNum);
-                }
+                object.setTotalRows(totalDbNum);
                 object.setSyncStatus(true);
                 object.setUpdateTime(DateUtils.getNowDate());
                 updateDataiIntegrationObject(object);
@@ -912,13 +991,13 @@ public class DataiIntegrationObjectServiceImpl implements IDataiIntegrationObjec
                 result.put("message", "增量数据拉取成功");
                 result.put("objectId", object.getId());
                 result.put("objectApi", objectApi);
-                result.put("totalCount", syncNum);
+                result.put("totalCount", batchResult.get(""));
                 result.put("duration", duration);
                 result.put("syncType", "incremental");
                 result.put("lastBatchDate", object.getLastBatchDate());
                 result.put("lastSyncDate", object.getLastSyncDate());
                 
-                log.info("对象 {} 增量数据拉取成功，同步数据量: {}，耗时: {}ms", objectApi, syncNum, duration);
+                log.info("对象 {} 增量数据拉取成功，总数据量: {}，耗时: {}ms", objectApi, totalDbNum, duration);
             } else {
                 object.setSyncStatus(false);
                 object.setUpdateTime(DateUtils.getNowDate());

@@ -258,4 +258,47 @@ public class DataiIntegrationObjectController extends BaseController
             return error("同步对象数据时发生异常: " + e.getMessage());
         }
     }
+
+    /**
+     * 同步多个对象数据到本地数据库
+     * 
+     * 该方法用于触发多个对象的批量数据同步操作，将多个Salesforce对象的数据同步到本地数据库
+     * 同步操作包括全量同步和增量同步两种模式，具体模式由每个对象的配置决定
+     * 该方法会依次同步每个对象，即使某个对象同步失败，也会继续同步其他对象
+     * 
+     * @param ids 对象ID数组，用于标识需要同步的多个Salesforce对象
+     * @return AjaxResult 同步结果，包含成功/失败状态、每个对象的同步结果、总耗时等信息
+     *         - 成功时返回：success=true, message="多对象数据同步完成", 以及详细的同步信息
+     *         - 失败时返回：success=false, message=错误信息
+     */
+    @Operation(summary = "同步多个对象数据到本地数据库")
+    @PreAuthorize("@ss.hasPermi('integration:object:syncData')")
+    @Log(title = "对象同步控制", businessType = BusinessType.UPDATE)
+    @PostMapping("/syncMultipleData")
+    public AjaxResult syncMultipleObjectData(@RequestBody Integer[] ids)
+    {
+        if (ids == null || ids.length == 0) {
+            log.error("对象ID数组为空，无法同步数据");
+            return error("对象ID不能为空");
+        }
+
+        try {
+            log.info("开始同步多个对象数据，对象ID数量: {}", ids.length);
+
+            Map<String, Object> result = dataiIntegrationObjectService.syncMultipleObjectData(ids);
+
+            if ((Boolean) result.get("success")) {
+                log.info("多对象数据同步完成，成功数量: {}, 失败数量: {}", 
+                    result.get("successCount"), result.get("failureCount"));
+                return success(result);
+            } else {
+                log.error("多对象数据同步失败，错误信息: {}", result.get("message"));
+                return error((String) result.get("message"));
+            }
+
+        } catch (Exception e) {
+            log.error("同步多个对象数据时发生异常", e);
+            return error("同步多个对象数据时发生异常: " + e.getMessage());
+        }
+    }
 }

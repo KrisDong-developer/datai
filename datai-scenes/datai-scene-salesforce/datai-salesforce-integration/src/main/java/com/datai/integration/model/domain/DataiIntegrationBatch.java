@@ -11,6 +11,25 @@ import com.datai.common.core.domain.BaseEntity;
 /**
  * 数据批次对象 datai_integration_batch
  * 
+ * 字段更新规则：
+ * 1. 创建批次时设置的字段（后续不允许修改）：
+ *    - id: 批次ID
+ *    - deptId: 部门ID
+ *    - api: 对象API
+ *    - label: 对象名称
+ *    - syncType: 同步类型（FULL/INCREMENTAL）
+ *    - batchField: 批次字段
+ *    - syncStartDate: 开始同步时间（批次的时间范围起点）
+ *    - syncEndDate: 结束同步时间（批次的时间范围终点）
+ * 
+ * 2. 同步时更新的字段：
+ *    - sfNum: SF数据量（每次同步时更新）
+ *    - dbNum: 本地数据量（每次同步时更新）
+ *    - syncStatus: 同步状态（true=成功，false=失败）
+ *    - firstSyncTime: 首次同步时间（仅在首次同步时设置）
+ *    - lastSyncTime: 最后同步时间（每次同步时更新）
+ *    - updateTime: 更新时间（每次更新时自动设置）
+ * 
  * @author datai
  * @date 2026-01-01
  */

@@ -612,6 +612,37 @@ public class SoqlBuilder {
     }
 
     /**
+     * 构建COUNT查询语句
+     * 生成类似 "SELECT count(Id) FROM Object WHERE ..." 的查询
+     * 
+     * 注意：
+     * - COUNT查询不使用SELECT子句中指定的字段，而是使用count(Id)
+     * - COUNT查询不支持GROUP BY、HAVING、ORDER BY、LIMIT、OFFSET
+     * - 只使用FROM和WHERE条件
+     *
+     * @return COUNT查询语句
+     * @throws IllegalStateException 如果FROM子句为空
+     */
+    public String buildCountQuery() {
+        if (fromObject == null || fromObject.trim().isEmpty()) {
+            throw new IllegalStateException("FROM子句不能为空，必须指定查询对象");
+        }
+
+        StringBuilder soql = new StringBuilder();
+
+        // 构建SELECT count(Id)子句
+        soql.append("SELECT count(Id)");
+
+        // 构建FROM子句
+        soql.append(" FROM ").append(fromObject);
+
+        // 构建WHERE子句
+        buildWhereClause(soql);
+
+        return soql.toString();
+    }
+
+    /**
      * 验证构建器配置
      *
      * @throws IllegalStateException 如果配置不完整或无效

@@ -116,4 +116,12 @@ public interface IDataiIntegrationObjectService
      * @return 同步结果
      */
     public Map<String, Object> syncSingleObjectData(Integer id);
+
+    /**
+     * 同步多个对象数据到本地数据库
+     * 
+     * @param ids 对象ID集合
+     * @return 同步结果
+     */
+    public Map<String, Object> syncMultipleObjectData(Integer[] ids);
 }

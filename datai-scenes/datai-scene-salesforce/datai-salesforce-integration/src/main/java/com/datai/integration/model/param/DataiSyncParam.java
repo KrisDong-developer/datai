@@ -44,6 +44,11 @@ public class DataiSyncParam {
      * 开始修改时间
      */
     private Date beginModifyDate;
+
+    /**
+     * 数据拉取截断时间
+     */
+    private Date lastDate;
     /**
      * 结束修改时间
      */
@@ -69,7 +74,7 @@ public class DataiSyncParam {
      */
     private String select;
     /**
-     * 是否查询删除记录
+     * 是否存在IsDeleted删除字段
      */
     private Boolean isDeleted;
 
