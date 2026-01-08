@@ -1,48 +1,67 @@
 # 单一真源文档中心
 
-## 目录结构
+## 项目概述
 
-### 需求文档
-| 编号 | 标题 | 链接 |
-|------|------|------|
-| REQ-001 | 业务上下文 | [REQ-001-业务上下文.md](requirements/REQ-001-业务上下文.md) |
-| REQ-002 | 项目简报 | [REQ-002-项目简报.md](requirements/REQ-002-项目简报.md) |
+本文件是 Salesforce 集成项目的单一真源入口，包含所有项目相关文档的链接清单。
 
-### 设计文档
-| 编号 | 标题 | 链接 |
-|------|------|------|
-| DESIGN-001 | 系统架构说明 | [DESIGN-001-系统架构说明.md](design/DESIGN-001-系统架构说明.md) |
-| DESIGN-002 | 技术上下文 | [DESIGN-002-技术上下文.md](design/DESIGN-002-技术上下文.md) |
-| DESIGN-003 | 全对象元数据变更拉取接口文档 | [DESIGN-003-全对象元数据变更拉取接口文档.md](design/DESIGN-003-全对象元数据变更拉取接口文档.md) |
-| DESIGN-004 | 同步元数据变更到本地数据库接口文档 | [DESIGN-004-同步元数据变更到本地数据库接口文档.md](design/DESIGN-004-同步元数据变更到本地数据库接口文档.md) |
+## 文档目录
 
-### 架构决策记录
-| 编号 | 标题 | 链接 |
-|------|------|------|
-| 0000 | ADR模板 | [0000-template.md](decisions/adr/0000-template.md) |
+### 【视觉看板】
 
-### 提示词库
-| 编号 | 标题 | 链接 |
-|------|------|------|
-| 0000 | Prompt First模板 | [0000-template.md](prompts/0000-template.md) |
+- **架构图**: [Authentication.canvas](../Authentication.canvas) - 项目架构视觉化展示，包含认证、集成、通用和配置模块的详细结构
 
-### 会话记录
-| 日期 | 标题 | 链接 |
-|------|------|------|
+### 1. 需求文档
 
-### 迭代复盘
-| 日期 | 标题 | 链接 |
-|------|------|------|
+- **目录**: [requirements/](requirements/)
+- **描述**: 包含项目的功能需求、非功能需求和验收标准
 
-### 变更记录
-| 版本 | 日期 | 链接 |
-|------|------|------|
+### 2. 设计文档
 
-## 工作流程
-1. **需求收集** → docs/requirements/
-2. **设计方案** → docs/design/
-3. **架构决策** → docs/decisions/adr/
-4. **Prompt设计** → docs/prompts/
-5. **会话执行** → docs/sessions/
-6. **迭代复盘** → docs/retros/
-7. **变更记录** → docs/changelog/
+- **目录**: [design/](design/)
+- **描述**: 包含系统架构设计、模块设计和接口设计
+
+### 3. 架构决策
+
+- **目录**: [decisions/adr/](decisions/adr/)
+- **描述**: 包含架构决策记录 (ADR)，记录重要的架构决策过程
+- **模板**: [0000-template.md](decisions/adr/0000-template.md)
+
+### 4. 提示词库
+
+- **目录**: [prompts/](prompts/)
+- **描述**: 包含 AI 提示词模板和最佳实践
+- **模板**: [0000-template.md](prompts/0000-template.md)
+
+### 5. 会话记录
+
+- **目录**: [sessions/](sessions/)
+- **描述**: 包含每次重要操作的会话记录
+- **模板**: [YYYYMMDD-template.md](sessions/YYYYMMDD-template.md)
+
+### 6. 迭代复盘
+
+- **目录**: [retros/](retros/)
+- **描述**: 包含每个迭代的复盘报告
+- **模板**: [YYYYMMDD-template.md](retros/YYYYMMDD-template.md)
+
+### 7. 变更日志
+
+- **目录**: [changelog/](changelog/)
+- **描述**: 包含详细的变更记录
+
+## 协作基线文件
+
+- **README.md**: [../README.md](../README.md) - 项目目标和真源入口
+- **CONTRIBUTING.md**: [../CONTRIBUTING.md](../CONTRIBUTING.md) - 协作规则
+- **CHANGELOG.md**: [../CHANGELOG.md](../CHANGELOG.md) - 变更摘要
+
+## 导航说明
+
+- 本文件是项目文档的唯一入口，所有文档变更必须在此添加链接
+- 文档间引用必须使用相对路径链接
+- 新文档必须使用相应目录中的模板文件
+
+## 最后更新
+
+- 更新时间: 2026-01-08
+- 更新内容: 初始化文档中心结构
