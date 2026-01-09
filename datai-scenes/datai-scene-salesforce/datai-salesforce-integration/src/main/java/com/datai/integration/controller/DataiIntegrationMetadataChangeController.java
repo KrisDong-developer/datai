@@ -2,6 +2,9 @@ package com.datai.integration.controller;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 
 import com.datai.common.utils.PageUtils;
 import com.datai.integration.model.domain.DataiIntegrationMetadataChange;
@@ -34,15 +37,65 @@ import io.swagger.v3.oas.annotations.Operation;
  * 对象元数据变更Controller
  * 
  * @author datai
- * @date 2025-12-27 */
+ * @date 2025-12-27 */@Tag(name = "对象元数据变更")
 @RestController
 @RequestMapping("/integration/change")
-@Tag(name = "【对象元数据变更】管理")
 @Slf4j
-public class DataiIntegrationMetadataChangeController extends BaseController
-{
+public class DataiIntegrationMetadataChangeController extends BaseController {
+    
     @Autowired
     private IDataiIntegrationMetadataChangeService dataiIntegrationMetadataChangeService;
+    
+    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    
+    /**
+     * 验证时间格式是否正确
+     * 
+     * @param timeStr 时间字符串
+     * @return 验证结果
+     */
+    private boolean validateTimeFormat(String timeStr) {
+        if (timeStr == null || timeStr.isEmpty()) {
+            return true;
+        }
+        
+        try {
+            // 尝试解析为完整的日期时间格式
+            LocalDateTime.parse(timeStr, DATE_TIME_FORMATTER);
+            return true;
+        } catch (DateTimeParseException e1) {
+            try {
+                // 尝试解析为仅日期格式
+                LocalDateTime.parse(timeStr + " 00:00:00", DATE_TIME_FORMATTER);
+                return true;
+            } catch (DateTimeParseException e2) {
+                return false;
+            }
+        }
+    }
+    
+    /**
+     * 验证分组维度是否有效
+     * 
+     * @param groupBy 分组维度
+     * @return 验证结果
+     */
+    private boolean validateGroupBy(String groupBy) {
+        Set<String> validGroupBy = new HashSet<>(Arrays.asList("changeType", "operationType", "objectApi", "syncStatus", "isCustom"));
+        return validGroupBy.contains(groupBy);
+    }
+    
+    /**
+     * 验证时间维度是否有效
+     * 
+     * @param timeUnit 时间维度
+     * @return 验证结果
+     */
+    private boolean validateTimeUnit(String timeUnit) {
+        Set<String> validTimeUnit = new HashSet<>(Arrays.asList("day", "week", "month", "quarter"));
+        return validTimeUnit.contains(timeUnit);
+    }
 
     /**
      * 查询对象元数据变更列表
@@ -169,6 +222,14 @@ public class DataiIntegrationMetadataChangeController extends BaseController
                                           @RequestParam(required = false) String startTime,
                                           @RequestParam(required = false) String endTime)
     {
+        // 验证时间格式
+        if (!validateTimeFormat(startTime)) {
+            return error("开始时间格式不正确，请使用 yyyy-MM-dd HH:mm:ss 或 yyyy-MM-dd 格式");
+        }
+        if (!validateTimeFormat(endTime)) {
+            return error("结束时间格式不正确，请使用 yyyy-MM-dd HH:mm:ss 或 yyyy-MM-dd 格式");
+        }
+        
         Map<String, Object> params = new java.util.HashMap<>();
         if (changeType != null && !changeType.isEmpty()) {
             params.put("changeType", changeType);
@@ -193,6 +254,118 @@ public class DataiIntegrationMetadataChangeController extends BaseController
         }
         
         Map<String, Object> statistics = dataiIntegrationMetadataChangeService.getChangeStatistics(params);
+        return success(statistics);
+    }
+
+    /**
+     * 获取分组变更统计信息
+     */
+    @Operation(summary = "获取分组变更统计信息")
+    @PreAuthorize("@ss.hasPermi('integration:change:statistics')")
+    @GetMapping("/statistics/group")
+    public AjaxResult getChangeStatisticsByGroup(@RequestParam(required = true) String groupBy,
+                                                @RequestParam(required = false) String changeType,
+                                                @RequestParam(required = false) String operationType,
+                                                @RequestParam(required = false) String objectApi,
+                                                @RequestParam(required = false) Boolean syncStatus,
+                                                @RequestParam(required = false) Boolean isCustom,
+                                                @RequestParam(required = false) String startTime,
+                                                @RequestParam(required = false) String endTime)
+    {
+        // 验证分组维度
+        if (!validateGroupBy(groupBy)) {
+            return error("分组维度不正确，支持的维度：changeType, operationType, objectApi, syncStatus, isCustom");
+        }
+        
+        // 验证时间格式
+        if (!validateTimeFormat(startTime)) {
+            return error("开始时间格式不正确，请使用 yyyy-MM-dd HH:mm:ss 或 yyyy-MM-dd 格式");
+        }
+        if (!validateTimeFormat(endTime)) {
+            return error("结束时间格式不正确，请使用 yyyy-MM-dd HH:mm:ss 或 yyyy-MM-dd 格式");
+        }
+        
+        Map<String, Object> params = new java.util.HashMap<>();
+        params.put("groupBy", groupBy);
+        if (changeType != null && !changeType.isEmpty()) {
+            params.put("changeType", changeType);
+        }
+        if (operationType != null && !operationType.isEmpty()) {
+            params.put("operationType", operationType);
+        }
+        if (objectApi != null && !objectApi.isEmpty()) {
+            params.put("objectApi", objectApi);
+        }
+        if (syncStatus != null) {
+            params.put("syncStatus", syncStatus);
+        }
+        if (isCustom != null) {
+            params.put("isCustom", isCustom);
+        }
+        if (startTime != null && !startTime.isEmpty()) {
+            params.put("startTime", startTime);
+        }
+        if (endTime != null && !endTime.isEmpty()) {
+            params.put("endTime", endTime);
+        }
+        
+        Map<String, Object> statistics = dataiIntegrationMetadataChangeService.getChangeStatisticsByGroup(params);
+        return success(statistics);
+    }
+
+    /**
+     * 获取趋势变更统计信息
+     */
+    @Operation(summary = "获取趋势变更统计信息")
+    @PreAuthorize("@ss.hasPermi('integration:change:statistics')")
+    @GetMapping("/statistics/trend")
+    public AjaxResult getChangeStatisticsByTrend(@RequestParam(required = true) String timeUnit,
+                                                @RequestParam(required = false) String changeType,
+                                                @RequestParam(required = false) String operationType,
+                                                @RequestParam(required = false) String objectApi,
+                                                @RequestParam(required = false) Boolean syncStatus,
+                                                @RequestParam(required = false) Boolean isCustom,
+                                                @RequestParam(required = false) String startTime,
+                                                @RequestParam(required = false) String endTime)
+    {
+        // 验证时间维度
+        if (!validateTimeUnit(timeUnit)) {
+            return error("时间维度不正确，支持的维度：day, week, month, quarter");
+        }
+        
+        // 验证时间格式
+        if (!validateTimeFormat(startTime)) {
+            return error("开始时间格式不正确，请使用 yyyy-MM-dd HH:mm:ss 或 yyyy-MM-dd 格式");
+        }
+        if (!validateTimeFormat(endTime)) {
+            return error("结束时间格式不正确，请使用 yyyy-MM-dd HH:mm:ss 或 yyyy-MM-dd 格式");
+        }
+        
+        Map<String, Object> params = new java.util.HashMap<>();
+        params.put("timeUnit", timeUnit);
+        if (changeType != null && !changeType.isEmpty()) {
+            params.put("changeType", changeType);
+        }
+        if (operationType != null && !operationType.isEmpty()) {
+            params.put("operationType", operationType);
+        }
+        if (objectApi != null && !objectApi.isEmpty()) {
+            params.put("objectApi", objectApi);
+        }
+        if (syncStatus != null) {
+            params.put("syncStatus", syncStatus);
+        }
+        if (isCustom != null) {
+            params.put("isCustom", isCustom);
+        }
+        if (startTime != null && !startTime.isEmpty()) {
+            params.put("startTime", startTime);
+        }
+        if (endTime != null && !endTime.isEmpty()) {
+            params.put("endTime", endTime);
+        }
+        
+        Map<String, Object> statistics = dataiIntegrationMetadataChangeService.getChangeStatisticsByTrend(params);
         return success(statistics);
     }
 

@@ -98,4 +98,20 @@ public interface DataiIntegrationMetadataChangeMapper
      * @return 存在的记录数
      */
     public int countSimilarChanges(String changeType, String operationType, String objectApi, String fieldApi, String changeReason);
+
+    /**
+     * 查询变更分组统计信息
+     * 
+     * @param params 查询参数
+     * @return 分组统计信息
+     */
+    public List<Map<String, Object>> selectChangeStatisticsByGroup(Map<String, Object> params);
+
+    /**
+     * 查询变更趋势统计信息
+     * 
+     * @param params 查询参数
+     * @return 趋势统计信息
+     */
+    public List<Map<String, Object>> selectChangeStatisticsByTrend(Map<String, Object> params);
 }

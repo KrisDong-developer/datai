@@ -16,7 +16,9 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.format.annotation.DateTimeFormat;
 import com.datai.common.annotation.Log;
 import com.datai.common.core.controller.BaseController;
 import com.datai.common.core.domain.AjaxResult;
@@ -131,20 +133,37 @@ public class DataiIntegrationApiCallLogController extends BaseController
     @Operation(summary = "获取API调用日志统计信息")
     @PreAuthorize("@ss.hasPermi('integration:apilog:statistics')")
     @GetMapping("/statistics")
-    public AjaxResult getStatistics(DataiIntegrationApiCallLogDto dataiIntegrationApiCallLogDto)
+    public AjaxResult getStatistics(
+            @RequestParam(required = false) String apiType,
+            @RequestParam(required = false) String connectionClass,
+            @RequestParam(required = false) String methodName,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date startTime,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date endTime,
+            @RequestParam(required = false) String groupBy
+    )
     {
         Map<String, Object> params = new java.util.HashMap<>();
-        if (dataiIntegrationApiCallLogDto.getApiType() != null) {
-            params.put("apiType", dataiIntegrationApiCallLogDto.getApiType());
+        if (apiType != null && !apiType.isEmpty()) {
+            params.put("apiType", apiType);
         }
-        if (dataiIntegrationApiCallLogDto.getConnectionClass() != null) {
-            params.put("connectionClass", dataiIntegrationApiCallLogDto.getConnectionClass());
+        if (connectionClass != null && !connectionClass.isEmpty()) {
+            params.put("connectionClass", connectionClass);
         }
-        if (dataiIntegrationApiCallLogDto.getMethodName() != null) {
-            params.put("methodName", dataiIntegrationApiCallLogDto.getMethodName());
+        if (methodName != null && !methodName.isEmpty()) {
+            params.put("methodName", methodName);
         }
-        if (dataiIntegrationApiCallLogDto.getStatus() != null) {
-            params.put("status", dataiIntegrationApiCallLogDto.getStatus());
+        if (status != null && !status.isEmpty()) {
+            params.put("status", status);
+        }
+        if (startTime != null) {
+            params.put("startTime", startTime);
+        }
+        if (endTime != null) {
+            params.put("endTime", endTime);
+        }
+        if (groupBy != null && !groupBy.isEmpty()) {
+            params.put("groupBy", groupBy);
         }
         
         Map<String, Object> result = dataiIntegrationApiCallLogService.getApiCallLogStatistics(params);

@@ -14,7 +14,6 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="remainingVal" column="remaining_val" />
         <result property="resetTime" column="reset_time" />
         <result property="isBlocked" column="is_blocked" />
-        <result property="version" column="version" />
         <result property="remark" column="remark" />
         <result property="createBy" column="create_by" />
         <result property="createTime" column="create_time" />
@@ -33,7 +32,6 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             dirl.remaining_val,
             dirl.reset_time,
             dirl.is_blocked,
-            dirl.version,
             dirl.remark,
             dirl.create_by,
             dirl.create_time,
@@ -72,7 +70,6 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="remainingVal != null">remaining_val,</if>
             <if test="resetTime != null">reset_time,</if>
             <if test="isBlocked != null">is_blocked,</if>
-            <if test="version != null">version,</if>
             <if test="remark != null">remark,</if>
             <if test="createBy != null">create_by,</if>
             <if test="createTime != null">create_time,</if>
@@ -88,7 +85,6 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="remainingVal != null">#{remainingVal},</if>
             <if test="resetTime != null">#{resetTime},</if>
             <if test="isBlocked != null">#{isBlocked},</if>
-            <if test="version != null">#{version},</if>
             <if test="remark != null">#{remark},</if>
             <if test="createBy != null">#{createBy},</if>
             <if test="createTime != null">#{createTime},</if>
@@ -113,12 +109,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="createTime != null">create_time = #{createTime},</if>
             <if test="updateBy != null">update_by = #{updateBy},</if>
             <if test="updateTime != null">update_time = #{updateTime},</if>
-            version = version + 1,
         </trim>
         where datai_integration_rate_limit.id = #{id}
-        <if test="version != null">
-            and version = #{version}
-        </if>
     </update>
 
     <delete id="deleteDataiIntegrationRateLimitById" parameterType="Long">

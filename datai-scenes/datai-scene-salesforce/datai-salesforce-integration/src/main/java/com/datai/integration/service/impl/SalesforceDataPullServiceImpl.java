@@ -22,7 +22,7 @@ import com.sforce.soap.partner.DescribeGlobalSObjectResult;
 import com.sforce.soap.partner.DescribeSObjectResult;
 import com.sforce.soap.partner.Field;
 import com.sforce.soap.partner.FilteredLookupInfo;
-import com.sforce.soap.partner.PartnerConnection;
+import com.datai.integration.core.IPartnerV1Connection;
 import com.sforce.soap.partner.PicklistEntry;
 import com.sforce.soap.partner.QueryResult;
 import com.sforce.soap.partner.sobject.SObject;
@@ -102,7 +102,7 @@ public class SalesforceDataPullServiceImpl implements ISalesforceDataPullService
         }
         try {
             // 获取源ORG连接，添加重试机制
-            PartnerConnection connection = retryOperation(() -> soapConnectionFactory.getConnection(), 3, 1000);
+            IPartnerV1Connection connection = retryOperation(() -> soapConnectionFactory.getConnection(), 3, 1000);
             log.info("成功获取源ORG连接");
 
             for (String objectApi : objectApis) {
@@ -614,7 +614,7 @@ public class SalesforceDataPullServiceImpl implements ISalesforceDataPullService
      * @param objectApi  对象API名称
      * @return 对象的数据量
      */
-    private int isLargeObject(PartnerConnection connection, String objectApi) {
+    private int isLargeObject(IPartnerV1Connection connection, String objectApi) {
         try {
             // 查询对象数据总量（简化实现，实际应使用更高效的方式）
             QueryResult queryResult = connection.queryAll("SELECT COUNT() FROM " + objectApi);
@@ -655,7 +655,7 @@ public class SalesforceDataPullServiceImpl implements ISalesforceDataPullService
         
         try {
             // 获取Salesforce SOAP连接，添加重试机制
-            PartnerConnection connection = retryOperation(() -> soapConnectionFactory.getConnection(), 3, 1000);
+            IPartnerV1Connection connection = retryOperation(() -> soapConnectionFactory.getConnection(), 3, 1000);
             log.info("成功获取Salesforce SOAP连接，耗时 {}ms", System.currentTimeMillis() - startTime);
 
             // 获取对象的字段信息
@@ -701,7 +701,7 @@ public class SalesforceDataPullServiceImpl implements ISalesforceDataPullService
      * @return 字段列表
      * @throws ConnectionException 连接异常
      */
-    private List<String> getSalesforceObjectFields(PartnerConnection connection, String objectApi) throws ConnectionException {
+    private List<String> getSalesforceObjectFields(IPartnerV1Connection connection, String objectApi) throws ConnectionException {
         List<String> fields = new ArrayList<>();
 
         // 获取对象描述信息
@@ -739,7 +739,7 @@ public class SalesforceDataPullServiceImpl implements ISalesforceDataPullService
      * @param fieldList  字段列表
      * @return 处理的数据条数
      */
-    private int executeQueryAndProcessData(PartnerConnection connection, DataiSyncParam param, List<String> fieldList) {
+    private int executeQueryAndProcessData(IPartnerV1Connection connection, DataiSyncParam param, List<String> fieldList) {
         int totalCount = 0;
         try {
             // 构建查询语句
@@ -1154,7 +1154,7 @@ public class SalesforceDataPullServiceImpl implements ISalesforceDataPullService
         
         try {
             // 获取Salesforce SOAP连接，添加重试机制
-            PartnerConnection connection = retryOperation(() -> soapConnectionFactory.getConnection(), 3, 1000);
+            IPartnerV1Connection connection = retryOperation(() -> soapConnectionFactory.getConnection(), 3, 1000);
             log.info("成功获取Salesforce SOAP连接");
 
             // 获取对象的字段信息
@@ -1187,7 +1187,7 @@ public class SalesforceDataPullServiceImpl implements ISalesforceDataPullService
         log.info("开始自动同步Salesforce对象信息");
 
         try {
-            PartnerConnection connection = retryOperation(() -> soapConnectionFactory.getConnection(), 3, 1000);
+            IPartnerV1Connection connection = retryOperation(() -> soapConnectionFactory.getConnection(), 3, 1000);
             log.info("成功获取Salesforce SOAP连接");
 
             DescribeGlobalResult globalDescribe = connection.describeGlobal();
@@ -1236,7 +1236,7 @@ public class SalesforceDataPullServiceImpl implements ISalesforceDataPullService
         return sObject.isQueryable() || sObject.isCreateable() || sObject.isUpdateable() || sObject.isDeletable();
     }
 
-    private String syncSingleObject(PartnerConnection connection, String objectApi) throws ConnectionException {
+    private String syncSingleObject(IPartnerV1Connection connection, String objectApi) throws ConnectionException {
         DescribeSObjectResult objDetail = connection.describeSObject(objectApi);
 
         DataiIntegrationObject queryObject = new DataiIntegrationObject();
@@ -1389,7 +1389,7 @@ public class SalesforceDataPullServiceImpl implements ISalesforceDataPullService
         log.info("开始同步元数据变更到元数据变更信息表");
 
         try {
-            PartnerConnection connection = retryOperation(() -> soapConnectionFactory.getConnection(), 3, 1000);
+            IPartnerV1Connection connection = retryOperation(() -> soapConnectionFactory.getConnection(), 3, 1000);
             log.info("成功获取Salesforce SOAP连接");
 
             DescribeGlobalResult globalDescribe = connection.describeGlobal();

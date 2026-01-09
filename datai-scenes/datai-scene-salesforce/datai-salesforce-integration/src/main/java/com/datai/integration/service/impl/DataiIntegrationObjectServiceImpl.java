@@ -20,7 +20,7 @@ import com.datai.salesforce.common.utils.SoqlBuilder;
 import com.datai.setting.future.SalesforceExecutor;
 import com.sforce.soap.partner.DescribeSObjectResult;
 import com.sforce.soap.partner.Field;
-import com.sforce.soap.partner.PartnerConnection;
+import com.datai.integration.core.IPartnerV1Connection;
 import com.sforce.soap.partner.QueryResult;
 import com.sforce.soap.partner.sobject.SObject;
 import com.sforce.ws.ConnectionException;
@@ -259,7 +259,7 @@ public class DataiIntegrationObjectServiceImpl implements IDataiIntegrationObjec
             
             log.info("开始创建对象表结构: {}, 标签: {}", objectApi, objectLabel);
 
-            PartnerConnection connection = null;
+            IPartnerV1Connection connection = null;
             connection = soapConnectionFactory.getConnection();
             if (connection == null) {
                 result.put("success", false);
@@ -935,7 +935,7 @@ public class DataiIntegrationObjectServiceImpl implements IDataiIntegrationObjec
                 return result;
             }
             
-            PartnerConnection connection = soapConnectionFactory.getConnection();
+            IPartnerV1Connection connection = soapConnectionFactory.getConnection();
             if (connection == null) {
                 log.error("无法获取Salesforce连接");
                 result.put("success", false);
@@ -1018,7 +1018,7 @@ public class DataiIntegrationObjectServiceImpl implements IDataiIntegrationObjec
         return result;
     }
 
-    private List<String> getSalesforceObjectFields(PartnerConnection connection, String objectApi) throws ConnectionException
+    private List<String> getSalesforceObjectFields(IPartnerV1Connection connection, String objectApi) throws ConnectionException
     {
         List<String> fields = new ArrayList<>();
         

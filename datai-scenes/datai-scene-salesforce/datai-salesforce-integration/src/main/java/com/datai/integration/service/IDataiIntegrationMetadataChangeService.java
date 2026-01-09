@@ -87,6 +87,22 @@ public interface IDataiIntegrationMetadataChangeService
     public Map<String, Object> getChangeStatistics(Map<String, Object> params);
 
     /**
+     * 获取变更分组统计信息
+     * 
+     * @param params 查询参数，包含 groupBy 字段指定分组维度
+     * @return 分组统计信息
+     */
+    public Map<String, Object> getChangeStatisticsByGroup(Map<String, Object> params);
+
+    /**
+     * 获取变更趋势统计信息
+     * 
+     * @param params 查询参数，包含 timeUnit 字段指定时间维度（day/week/month/quarter）
+     * @return 趋势统计信息
+     */
+    public Map<String, Object> getChangeStatisticsByTrend(Map<String, Object> params);
+
+    /**
      * 同步元数据变更到本地数据库
      * 根据元数据变更ID将指定的元数据变更同步到本地数据库
      * 

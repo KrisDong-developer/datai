@@ -3,8 +3,10 @@ package com.datai.integration.service.impl;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Objects;
 import com.datai.common.utils.DateUtils;
 import com.datai.common.utils.SecurityUtils;
+import com.datai.common.utils.CacheUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.datai.integration.mapper.DataiIntegrationApiCallLogMapper;
@@ -125,17 +127,62 @@ public class DataiIntegrationApiCallLogServiceImpl implements IDataiIntegrationA
         try {
             log.info("开始获取API调用日志统计信息，查询参数: {}", params);
             
-            Map<String, Object> statistics = dataiIntegrationApiCallLogMapper.getApiCallLogStatistics(params);
+            // 生成缓存键
+            String cacheKey = generateCacheKey(params);
             
-            if (statistics != null) {
-                result.put("success", true);
-                result.put("message", "获取统计信息成功");
-                result.put("data", statistics);
-                log.info("获取API调用日志统计信息成功");
+            // 尝试从缓存获取
+            Object cachedResult = CacheUtils.get(cacheKey);
+            if (cachedResult != null) {
+                log.info("从缓存获取API调用日志统计信息成功");
+                return (Map<String, Object>) cachedResult;
+            }
+            
+            // 检查是否需要分组统计
+            String groupBy = (String) params.get("groupBy");
+            if (groupBy != null && !groupBy.isEmpty()) {
+                // 分组统计
+                List<Map<String, Object>> groupedStatistics = dataiIntegrationApiCallLogMapper.getApiCallLogGroupedStatistics(params);
+                
+                if (groupedStatistics != null && !groupedStatistics.isEmpty()) {
+                    result.put("success", true);
+                    result.put("message", "获取分组统计信息成功");
+                    result.put("data", groupedStatistics);
+                    log.info("获取API调用日志分组统计信息成功，分组维度: {}", groupBy);
+                } else {
+                    result.put("success", false);
+                    result.put("message", "未找到分组统计数据");
+                    log.warn("未找到API调用日志分组统计数据");
+                }
             } else {
-                result.put("success", false);
-                result.put("message", "未找到统计数据");
-                log.warn("未找到API调用日志统计数据");
+                // 整体统计
+                Map<String, Object> statistics = dataiIntegrationApiCallLogMapper.getApiCallLogStatistics(params);
+                
+                if (statistics != null) {
+                    // 计算额外的统计指标
+                    calculateAdditionalMetrics(statistics);
+                    
+                    // 获取趋势数据
+                    List<Map<String, Object>> trendData = getTrendData(params);
+                    
+                    Map<String, Object> completeData = new HashMap<>();
+                    completeData.put("summary", statistics);
+                    completeData.put("trend", trendData);
+                    
+                    result.put("success", true);
+                    result.put("message", "获取统计信息成功");
+                    result.put("data", completeData);
+                    log.info("获取API调用日志统计信息成功");
+                } else {
+                    result.put("success", false);
+                    result.put("message", "未找到统计数据");
+                    log.warn("未找到API调用日志统计数据");
+                }
+            }
+            
+            // 缓存结果，有效期5分钟
+            if (result.containsKey("success") && (Boolean) result.get("success")) {
+                CacheUtils.put(cacheKey, result, 5 * 60);
+                log.info("API调用日志统计信息已缓存，缓存键: {}", cacheKey);
             }
             
         } catch (Exception e) {
@@ -145,5 +192,67 @@ public class DataiIntegrationApiCallLogServiceImpl implements IDataiIntegrationA
         }
         
         return result;
+    }
+    
+    /**
+     * 生成缓存键
+     *
+     * @param params 查询参数
+     * @return 缓存键
+     */
+    private String generateCacheKey(Map<String, Object> params) {
+        StringBuilder keyBuilder = new StringBuilder("api_call_log_statistics_");
+        
+        if (params != null) {
+            // 按顺序添加参数，确保相同参数生成相同的键
+            String[] keys = {"apiType", "connectionClass", "methodName", "status", "startTime", "endTime", "groupBy"};
+            for (String key : keys) {
+                Object value = params.get(key);
+                if (value != null) {
+                    keyBuilder.append(key).append("_").append(value).append("_");
+                }
+            }
+        }
+        
+        return keyBuilder.toString();
+    }
+    
+    /**
+     * 计算额外的统计指标
+     *
+     * @param statistics 统计数据
+     */
+    private void calculateAdditionalMetrics(Map<String, Object> statistics) {
+        // 可以在这里添加更多自定义统计指标
+        // 例如：按时间段的分布、按方法的分布等
+    }
+    
+    /**
+     * 获取趋势数据
+     *
+     * @param params 查询参数
+     * @return 趋势数据列表
+     */
+    private List<Map<String, Object>> getTrendData(Map<String, Object> params) {
+        Map<String, Object> trendParams = new HashMap<>(params);
+        
+        // 根据时间范围自动选择合适的时间格式
+        Date startTime = (Date) params.get("startTime");
+        Date endTime = (Date) params.get("endTime");
+        
+        String timeFormat = "%Y-%m-%d %H:00";
+        if (startTime != null && endTime != null) {
+            long timeDiff = endTime.getTime() - startTime.getTime();
+            long daysDiff = timeDiff / (24 * 60 * 60 * 1000);
+            
+            if (daysDiff > 7) {
+                timeFormat = "%Y-%m-%d";
+            } else if (daysDiff < 1) {
+                timeFormat = "%Y-%m-%d %H:%i";
+            }
+        }
+        
+        trendParams.put("timeFormat", timeFormat);
+        return dataiIntegrationApiCallLogMapper.getApiCallLogTrend(trendParams);
     }
 }

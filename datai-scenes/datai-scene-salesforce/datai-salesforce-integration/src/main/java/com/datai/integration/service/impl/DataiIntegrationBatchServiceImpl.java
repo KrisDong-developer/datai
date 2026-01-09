@@ -13,6 +13,7 @@ import com.datai.common.utils.SecurityUtils;
 import com.datai.integration.model.param.DataiSyncParam;
 import com.datai.salesforce.common.utils.SoqlBuilder;
 import com.datai.integration.util.ConvertUtil;
+import com.sforce.soap.partner.PartnerConnection;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -28,7 +29,7 @@ import com.datai.integration.mapper.CustomMapper;
 import com.datai.integration.factory.impl.SOAPConnectionFactory;
 import com.sforce.soap.partner.DescribeSObjectResult;
 import com.sforce.soap.partner.Field;
-import com.sforce.soap.partner.PartnerConnection;
+import com.datai.integration.core.IPartnerV1Connection;
 import com.sforce.soap.partner.QueryResult;
 import com.sforce.soap.partner.sobject.SObject;
 import com.sforce.ws.ConnectionException;
@@ -359,7 +360,7 @@ public class DataiIntegrationBatchServiceImpl implements IDataiIntegrationBatchS
                 return false;
             }
             
-            PartnerConnection connection = retryOperation(() -> soapConnectionFactory.getConnection(), 3, 1000);
+            IPartnerV1Connection connection = retryOperation(() -> soapConnectionFactory.getConnection(), 3, 1000);
 
             List<String> fieldList = getSalesforceObjectFields(connection, objectApi);
             log.info("获取到对象 {} 的字段列表: {}", objectApi, fieldList);
@@ -523,7 +524,7 @@ public class DataiIntegrationBatchServiceImpl implements IDataiIntegrationBatchS
      * @return 字段列表
      * @throws ConnectionException 连接异常
      */
-    private List<String> getSalesforceObjectFields(PartnerConnection connection, String objectApi) throws ConnectionException {
+    private List<String> getSalesforceObjectFields(IPartnerV1Connection connection, String objectApi) throws ConnectionException {
         List<String> fields = new ArrayList<>();
 
         DescribeSObjectResult describeResult = connection.describeSObject(objectApi);
@@ -553,7 +554,7 @@ public class DataiIntegrationBatchServiceImpl implements IDataiIntegrationBatchS
      * @param param 查询参数
      * @return 符合条件的总记录数
      */
-    private int querySalesforceDataCount(PartnerConnection connection, DataiSyncParam param) {
+    private int querySalesforceDataCount(IPartnerV1Connection connection, DataiSyncParam param) {
         int totalCount = 0;
         
         try {
@@ -630,7 +631,7 @@ public class DataiIntegrationBatchServiceImpl implements IDataiIntegrationBatchS
      * @param fieldList  字段列表
      * @return 处理的数据条数
      */
-    private int executeQueryAndProcessData(PartnerConnection connection, DataiSyncParam param, List<String> fieldList) {
+    private int executeQueryAndProcessData(IPartnerV1Connection connection, DataiSyncParam param, List<String> fieldList) {
         int totalCount = 0;
         JSONArray objects = null;
         String maxId = null;

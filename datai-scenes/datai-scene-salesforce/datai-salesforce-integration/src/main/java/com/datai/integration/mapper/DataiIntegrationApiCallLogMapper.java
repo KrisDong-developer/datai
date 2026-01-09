@@ -67,4 +67,20 @@ public interface DataiIntegrationApiCallLogMapper
      * @return 统计信息
      */
     public Map<String, Object> getApiCallLogStatistics(Map<String, Object> params);
+
+    /**
+     * 获取API调用日志分组统计信息
+     * 
+     * @param params 查询参数
+     * @return 分组统计信息列表
+     */
+    public List<Map<String, Object>> getApiCallLogGroupedStatistics(Map<String, Object> params);
+
+    /**
+     * 获取API调用日志趋势统计信息
+     * 
+     * @param params 查询参数
+     * @return 趋势统计信息列表
+     */
+    public List<Map<String, Object>> getApiCallLogTrend(Map<String, Object> params);
 }
