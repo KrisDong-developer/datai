@@ -1,5 +1,6 @@
 package com.datai.integration.controller;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -143,6 +144,25 @@ public class DataiIntegrationApiCallLogController extends BaseController
             @RequestParam(required = false) String groupBy
     )
     {
+        // 参数验证
+        // 1. 日期范围验证
+        if (startTime != null && endTime != null) {
+            if (startTime.after(endTime)) {
+                return error("开始时间不能晚于结束时间");
+            }
+        }
+        
+        // 2. groupBy参数有效性验证
+        if (groupBy != null && !groupBy.isEmpty()) {
+            // 定义合法的groupBy值
+            List<String> validGroupByValues = java.util.Arrays.asList(
+                "apiType", "connectionClass", "methodName", "status", "createTime", "day", "hour"
+            );
+            if (!validGroupByValues.contains(groupBy)) {
+                return error("无效的分组字段，请使用以下值之一: " + String.join(", ", validGroupByValues));
+            }
+        }
+        
         Map<String, Object> params = new java.util.HashMap<>();
         if (apiType != null && !apiType.isEmpty()) {
             params.put("apiType", apiType);

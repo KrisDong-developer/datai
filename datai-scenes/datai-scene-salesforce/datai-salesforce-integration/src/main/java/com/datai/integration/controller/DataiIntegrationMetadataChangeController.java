@@ -1,10 +1,12 @@
 package com.datai.integration.controller;
 
+import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import com.datai.salesforce.common.utils.ValidationUtils;
 
 import com.datai.common.utils.PageUtils;
 import com.datai.integration.model.domain.DataiIntegrationMetadataChange;
@@ -45,57 +47,6 @@ public class DataiIntegrationMetadataChangeController extends BaseController {
     
     @Autowired
     private IDataiIntegrationMetadataChangeService dataiIntegrationMetadataChangeService;
-    
-    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-    
-    /**
-     * 验证时间格式是否正确
-     * 
-     * @param timeStr 时间字符串
-     * @return 验证结果
-     */
-    private boolean validateTimeFormat(String timeStr) {
-        if (timeStr == null || timeStr.isEmpty()) {
-            return true;
-        }
-        
-        try {
-            // 尝试解析为完整的日期时间格式
-            LocalDateTime.parse(timeStr, DATE_TIME_FORMATTER);
-            return true;
-        } catch (DateTimeParseException e1) {
-            try {
-                // 尝试解析为仅日期格式
-                LocalDateTime.parse(timeStr + " 00:00:00", DATE_TIME_FORMATTER);
-                return true;
-            } catch (DateTimeParseException e2) {
-                return false;
-            }
-        }
-    }
-    
-    /**
-     * 验证分组维度是否有效
-     * 
-     * @param groupBy 分组维度
-     * @return 验证结果
-     */
-    private boolean validateGroupBy(String groupBy) {
-        Set<String> validGroupBy = new HashSet<>(Arrays.asList("changeType", "operationType", "objectApi", "syncStatus", "isCustom"));
-        return validGroupBy.contains(groupBy);
-    }
-    
-    /**
-     * 验证时间维度是否有效
-     * 
-     * @param timeUnit 时间维度
-     * @return 验证结果
-     */
-    private boolean validateTimeUnit(String timeUnit) {
-        Set<String> validTimeUnit = new HashSet<>(Arrays.asList("day", "week", "month", "quarter"));
-        return validTimeUnit.contains(timeUnit);
-    }
 
     /**
      * 查询对象元数据变更列表
@@ -222,14 +173,72 @@ public class DataiIntegrationMetadataChangeController extends BaseController {
                                           @RequestParam(required = false) String startTime,
                                           @RequestParam(required = false) String endTime)
     {
-        // 验证时间格式
-        if (!validateTimeFormat(startTime)) {
+        // 1. 验证时间格式
+        if (!ValidationUtils.validateTimeFormat(startTime)) {
             return error("开始时间格式不正确，请使用 yyyy-MM-dd HH:mm:ss 或 yyyy-MM-dd 格式");
         }
-        if (!validateTimeFormat(endTime)) {
+        if (!ValidationUtils.validateTimeFormat(endTime)) {
             return error("结束时间格式不正确，请使用 yyyy-MM-dd HH:mm:ss 或 yyyy-MM-dd 格式");
         }
         
+        // 2. 验证日期范围
+        if (startTime != null && !startTime.isEmpty() && endTime != null && !endTime.isEmpty()) {
+            try {
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+                LocalDateTime startDateTime = null;
+                LocalDateTime endDateTime = null;
+                
+                // 尝试解析完整格式
+                try {
+                    startDateTime = LocalDateTime.parse(startTime, formatter);
+                } catch (DateTimeParseException e) {
+                    // 尝试解析日期格式
+                    try {
+                        formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+                        startDateTime = LocalDate.parse(startTime, formatter).atStartOfDay();
+                    } catch (DateTimeParseException ex) {
+                        // 已经在上面的validateTimeFormat中验证过，这里不会执行到
+                    }
+                }
+                
+                try {
+                    endDateTime = LocalDateTime.parse(endTime, formatter);
+                } catch (DateTimeParseException e) {
+                    // 尝试解析日期格式
+                    try {
+                        formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+                        endDateTime = LocalDate.parse(endTime, formatter).atTime(23, 59, 59);
+                    } catch (DateTimeParseException ex) {
+                        // 已经在上面的validateTimeFormat中验证过，这里不会执行到
+                    }
+                }
+                
+                if (startDateTime != null && endDateTime != null && startDateTime.isAfter(endDateTime)) {
+                    return error("开始时间不能晚于结束时间");
+                }
+            } catch (Exception e) {
+                return error("日期范围验证失败: " + e.getMessage());
+            }
+        }
+        
+        // 3. 验证其他参数的有效性
+        // 验证changeType
+        if (changeType != null && !changeType.isEmpty()) {
+            List<String> validChangeTypes = java.util.Arrays.asList("OBJECT", "FIELD");
+            if (!validChangeTypes.contains(changeType)) {
+                return error("变更类型不正确，支持的类型：OBJECT, FIELD");
+            }
+        }
+        
+        // 验证operationType
+        if (operationType != null && !operationType.isEmpty()) {
+            List<String> validOperationTypes = java.util.Arrays.asList("CREATE", "UPDATE", "DELETE");
+            if (!validOperationTypes.contains(operationType)) {
+                return error("操作类型不正确，支持的类型：CREATE, UPDATE, DELETE");
+            }
+        }
+        
+        // 4. 构建参数
         Map<String, Object> params = new java.util.HashMap<>();
         if (changeType != null && !changeType.isEmpty()) {
             params.put("changeType", changeType);
@@ -253,6 +262,7 @@ public class DataiIntegrationMetadataChangeController extends BaseController {
             params.put("endTime", endTime);
         }
         
+        // 5. 调用服务层方法
         Map<String, Object> statistics = dataiIntegrationMetadataChangeService.getChangeStatistics(params);
         return success(statistics);
     }
@@ -273,15 +283,15 @@ public class DataiIntegrationMetadataChangeController extends BaseController {
                                                 @RequestParam(required = false) String endTime)
     {
         // 验证分组维度
-        if (!validateGroupBy(groupBy)) {
+        if (!ValidationUtils.validateGroupBy(groupBy)) {
             return error("分组维度不正确，支持的维度：changeType, operationType, objectApi, syncStatus, isCustom");
         }
         
         // 验证时间格式
-        if (!validateTimeFormat(startTime)) {
+        if (!ValidationUtils.validateTimeFormat(startTime)) {
             return error("开始时间格式不正确，请使用 yyyy-MM-dd HH:mm:ss 或 yyyy-MM-dd 格式");
         }
-        if (!validateTimeFormat(endTime)) {
+        if (!ValidationUtils.validateTimeFormat(endTime)) {
             return error("结束时间格式不正确，请使用 yyyy-MM-dd HH:mm:ss 或 yyyy-MM-dd 格式");
         }
         
@@ -329,15 +339,15 @@ public class DataiIntegrationMetadataChangeController extends BaseController {
                                                 @RequestParam(required = false) String endTime)
     {
         // 验证时间维度
-        if (!validateTimeUnit(timeUnit)) {
+        if (!ValidationUtils.validateTimeUnit(timeUnit)) {
             return error("时间维度不正确，支持的维度：day, week, month, quarter");
         }
         
         // 验证时间格式
-        if (!validateTimeFormat(startTime)) {
+        if (!ValidationUtils.validateTimeFormat(startTime)) {
             return error("开始时间格式不正确，请使用 yyyy-MM-dd HH:mm:ss 或 yyyy-MM-dd 格式");
         }
-        if (!validateTimeFormat(endTime)) {
+        if (!ValidationUtils.validateTimeFormat(endTime)) {
             return error("结束时间格式不正确，请使用 yyyy-MM-dd HH:mm:ss 或 yyyy-MM-dd 格式");
         }
         

@@ -1,9 +1,7 @@
 package com.datai.integration.service.impl;
 
-import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Objects;
+import java.util.*;
+
 import com.datai.common.utils.DateUtils;
 import com.datai.common.utils.SecurityUtils;
 import com.datai.common.utils.CacheUtils;
@@ -131,7 +129,7 @@ public class DataiIntegrationApiCallLogServiceImpl implements IDataiIntegrationA
             String cacheKey = generateCacheKey(params);
             
             // 尝试从缓存获取
-            Object cachedResult = CacheUtils.get(cacheKey);
+            Object cachedResult = CacheUtils.get("apiCallLog", cacheKey);
             if (cachedResult != null) {
                 log.info("从缓存获取API调用日志统计信息成功");
                 return (Map<String, Object>) cachedResult;
@@ -181,7 +179,7 @@ public class DataiIntegrationApiCallLogServiceImpl implements IDataiIntegrationA
             
             // 缓存结果，有效期5分钟
             if (result.containsKey("success") && (Boolean) result.get("success")) {
-                CacheUtils.put(cacheKey, result, 5 * 60);
+                CacheUtils.put("apiCallLog", cacheKey, result, 5, java.util.concurrent.TimeUnit.MINUTES);
                 log.info("API调用日志统计信息已缓存，缓存键: {}", cacheKey);
             }
             
