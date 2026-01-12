@@ -71,6 +71,8 @@
   - [0004-realtime-sync-log-enhancement.md](changelog/0004-realtime-sync-log-enhancement.md) - 实时同步日志功能完善
   - [0005-testing-and-verification.md](changelog/0005-testing-and-verification.md) - 测试和验证
   - [0006-documentation-improvement.md](changelog/0006-documentation-improvement.md) - 文档完善
+  - [0007-pubsub-api-implementation.md](changelog/0007-pubsub-api-implementation.md) - Salesforce Pub/Sub API 实时同步功能实现
+  - [0008-pubsub-config-optimization.md](changelog/0008-pubsub-config-optimization.md) - Pub/Sub API 配置项添加与连接工厂优化
   - [0000-template.md](changelog/0000-template.md) - 变更记录模板
 
 ### 8. 接口文档
@@ -89,8 +91,23 @@
 - **描述**: 包含数据库结构和初始化SQL文件
 - **SQL文件**:
   - [create-realtime-sync-log-table.sql](sql/create-realtime-sync-log-table.sql) - 实时同步日志表创建SQL
+  - [add_is_realtime_sync_column.sql](sql/add_is_realtime_sync_column.sql) - 添加实时同步列SQL
   - [add_is_partitioned_column.sql](sql/add_is_partitioned_column.sql) - 添加分区列SQL
   - [datai_table.sql](sql/datai_table.sql) - 数据表初始化SQL
+
+### 10. 参考代码
+
+- **目录**: [reference-code/](reference-code/)
+- **描述**: 包含项目参考代码和示例实现
+- **组件详情**:
+  - **multicloudj组件**: [salesforce-pubsub-realtime-sync/multicloudj](reference-code/salesforce-pubsub-realtime-sync/multicloudj/)
+    - **来源**: 从 `com.salesforce.multicloudj:pubsub-client:0.2.10` 依赖编译而来
+    - **包含模块**: 
+      - multicloudj-common-0.2.10: 通用异常处理和工具类
+      - pubsub-client-0.2.10: Pub/Sub API 客户端实现
+      - sts-client-0.2.10: STS 客户端实现
+    - **使用说明**: 往后直接使用 `com.salesforce.multicloudj:pubsub-client:0.2.10` 依赖，可参考此组件中的代码实现
+    - **核心功能**: 提供了订阅 Salesforce Event Bus、处理事件、管理连接等功能的封装
 
 ## 协作基线文件
 
@@ -106,5 +123,5 @@
 
 ## 最后更新
 
-- 更新时间: 2026-01-10
-- 更新内容: 创建Salesforce CDC实时同步的6个变更记录文档，并更新文档索引，添加新创建的变更记录文档链接；同时为DataiIntegrationRealtimeSyncController创建了API文档，并更新了文档索引
+- 更新时间: 2026-01-12
+- 更新内容: 添加了0008-pubsub-config-optimization.md变更记录文档，记录了Pub/Sub API配置项添加与连接工厂优化的实现细节；更新了文档索引，确保所有文档都能被正确索引和访问

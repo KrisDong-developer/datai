@@ -2,216 +2,144 @@ package com.datai.integration.realtime.impl;
 
 import com.datai.integration.factory.impl.PubSubConnectionFactory;
 import com.datai.integration.realtime.EventSubscriber;
-import com.salesforce.multicloudj.SubscriptionListener;
-import com.salesforce.multicloudj.protobuf.EventBatch;
+import com.salesforce.multicloudj.pubsub.client.SubscriptionClient;
+import com.salesforce.multicloudj.pubsub.driver.Message;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * Pub/Sub API 事件订阅器实现类
- * 用于订阅 Salesforce Event Bus 事件，实时捕获数据变更
+ * Pub/Sub API 事件订阅器实现
+ * 用于订阅 Salesforce Event Bus 事件并处理事件
  */
 @Slf4j
 @Component
 public class PubSubEventSubscriberImpl implements EventSubscriber {
 
     @Autowired
-    private PubSubConnectionFactory pubSubConnectionFactory;
+    private PubSubConnectionFactory connectionFactory;
 
     @Autowired
     private EventProcessorImpl eventProcessor;
 
+    private SubscriptionClient subscriptionClient;
     private final AtomicBoolean subscribed = new AtomicBoolean(false);
-    private String subscribedTopic;
-    private ScheduledExecutorService executorService;
+    private final String TOPIC = "/event/ChangeEvents"; // 监听所有变更事件
+    private ScheduledExecutorService monitorExecutor;
 
-    @Value("${salesforce.pubsub.subscription.retry.attempts:3}")
-    private int subscriptionRetryAttempts;
-
-    @Value("${salesforce.pubsub.subscription.retry.delay:10}")
-    private int subscriptionRetryDelay;
+    @Value("${salesforce.pubsub.retry.delay:30}")
+    private int retryDelay;
 
     @Override
+    @PostConstruct
     public void startSubscription() {
-        log.info("开始启动 Salesforce Pub/Sub API 订阅");
+        if (subscribed.get()) {
+            log.info("Salesforce Pub/Sub API 订阅已经启动，跳过启动操作");
+            return;
+        }
+
+        log.info("启动 Salesforce Pub/Sub API 订阅: {}", TOPIC);
 
         try {
-            // 启动订阅（带重试）
-            boolean subscriptionResult = startSubscriptionWithRetry(subscriptionRetryAttempts);
+            // 获取订阅客户端
+            subscriptionClient = connectionFactory.getSubscriptionClient(TOPIC);
 
-            if (subscriptionResult) {
-                // 启动订阅监控
-                startSubscriptionMonitor();
-            }
+            // 启动事件接收线程
+            monitorExecutor = Executors.newSingleThreadScheduledExecutor();
+            monitorExecutor.execute(this::receiveEvents);
+
+            // 启动监控线程，处理断线重连
+            monitorExecutor.scheduleWithFixedDelay(this::checkSubscriptionStatus, 0, retryDelay, TimeUnit.SECONDS);
+
+            subscribed.set(true);
+            log.info("Salesforce Pub/Sub API 订阅启动成功");
         } catch (Exception e) {
             log.error("启动 Salesforce Pub/Sub API 订阅时发生异常: {}", e.getMessage(), e);
+            subscribed.set(false);
         }
     }
 
     /**
-     * 带重试的订阅启动方法
-     * @param maxAttempts 最大重试次数
-     * @return 是否订阅成功
+     * 接收并处理事件
      */
-    private boolean startSubscriptionWithRetry(int maxAttempts) {
-        for (int attempt = 1; attempt <= maxAttempts; attempt++) {
-            log.info("启动 Salesforce Pub/Sub API 订阅 (尝试 {} / {})", attempt, maxAttempts);
-
+    private void receiveEvents() {
+        while (subscribed.get()) {
             try {
-                // 获取 Pub/Sub API 客户端
-                var pubSubClient = pubSubConnectionFactory.getConnection();
-                if (pubSubClient == null) {
-                    log.error("无法获取 Pub/Sub API 客户端");
-                    if (attempt < maxAttempts) {
-                        log.info("{}秒后重试", subscriptionRetryDelay);
-                        TimeUnit.SECONDS.sleep(subscriptionRetryDelay);
-                    }
-                    continue;
-                }
+                if (subscriptionClient != null) {
+                    // 接收事件
+                    Message message = subscriptionClient.receive();
+                    if (message != null) {
+                        log.debug("接收到事件: {}", message.getLoggableID());
+                        
+                        // 处理事件
+                        eventProcessor.processMessage(message);
 
-                // 订阅 Change Events 通道
-                String topic = "/event/ChangeEvents";
-                boolean subscriptionResult = pubSubClient.subscribe(topic, new SubscriptionListener() {
-                    @Override
-                    public void onSubscribe(String subscriptionId) {
-                        log.info("成功订阅事件通道 {}，订阅ID: {}", topic, subscriptionId);
-                        subscribed.set(true);
-                        subscribedTopic = topic;
-                    }
-
-                    @Override
-                    public void onError(String error) {
-                        log.error("订阅事件通道 {} 发生错误: {}", topic, error);
-                        subscribed.set(false);
-                        // 错误发生时尝试重新订阅
-                        handleSubscriptionError();
-                    }
-
-                    @Override
-                    public void onComplete() {
-                        log.info("订阅事件通道 {} 完成", topic);
-                        subscribed.set(false);
-                        // 订阅完成时尝试重新订阅
-                        handleSubscriptionComplete();
-                    }
-
-                    @Override
-                    public void onEventBatch(EventBatch eventBatch) {
-                        try {
-                            log.info("接收到事件批次，包含 {} 个事件", eventBatch.getEventsCount());
-                            
-                            // 处理事件批次
-                            eventProcessor.processEventBatch(eventBatch);
-                        } catch (Exception e) {
-                            log.error("处理事件批次时发生异常: {}", e.getMessage(), e);
-                        }
-                    }
-                });
-
-                if (subscriptionResult) {
-                    log.info("Salesforce Pub/Sub API 订阅启动成功");
-                    return true;
-                } else {
-                    log.error("Salesforce Pub/Sub API 订阅启动失败");
-                    if (attempt < maxAttempts) {
-                        log.info("{}秒后重试", subscriptionRetryDelay);
-                        TimeUnit.SECONDS.sleep(subscriptionRetryDelay);
+                        // 确认接收
+                        subscriptionClient.sendAck(message.getAckID());
                     }
                 }
             } catch (Exception e) {
-                log.error("启动 Salesforce Pub/Sub API 订阅时发生异常: {}", e.getMessage(), e);
-                if (attempt < maxAttempts) {
-                    try {
-                        log.info("{}秒后重试", subscriptionRetryDelay);
-                        TimeUnit.SECONDS.sleep(subscriptionRetryDelay);
-                    } catch (InterruptedException ie) {
-                        Thread.currentThread().interrupt();
-                    }
+                log.error("接收和处理事件时发生异常: {}", e.getMessage(), e);
+                // 短暂休眠后继续
+                try {
+                    TimeUnit.SECONDS.sleep(1);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
                 }
             }
         }
-        return false;
     }
 
     /**
-     * 处理订阅错误
+     * 检查订阅状态
      */
-    private void handleSubscriptionError() {
-        log.info("处理订阅错误，尝试重新订阅");
-        executorService.schedule(() -> {
-            if (!subscribed.get()) {
-                log.info("重新启动 Salesforce Pub/Sub API 订阅");
-                startSubscriptionWithRetry(3);
-            }
-        }, 5, TimeUnit.SECONDS);
-    }
-
-    /**
-     * 处理订阅完成
-     */
-    private void handleSubscriptionComplete() {
-        log.info("处理订阅完成，尝试重新订阅");
-        executorService.schedule(() -> {
-            if (!subscribed.get()) {
-                log.info("重新启动 Salesforce Pub/Sub API 订阅");
-                startSubscriptionWithRetry(3);
-            }
-        }, 5, TimeUnit.SECONDS);
-    }
-
-    /**
-     * 启动订阅监控
-     */
-    private void startSubscriptionMonitor() {
-        executorService = Executors.newSingleThreadScheduledExecutor(r -> {
-            Thread t = new Thread(r, "pubsub-subscription-monitor");
-            t.setDaemon(true);
-            return t;
-        });
-
-        // 每60秒检查一次订阅状态
-        executorService.scheduleAtFixedRate(() -> {
+    private void checkSubscriptionStatus() {
+        if (!subscribed.get()) {
+            log.warn("Salesforce Pub/Sub API 订阅已断开，尝试重新连接");
             try {
-                if (!subscribed.get()) {
-                    log.warn("检测到 Pub/Sub API 订阅已断开，尝试重新订阅");
-                    startSubscriptionWithRetry(3);
-                }
+                // 重新启动订阅
+                stopSubscription();
+                startSubscription();
             } catch (Exception e) {
-                log.error("订阅监控时发生异常: {}", e.getMessage(), e);
+                log.error("重新连接 Salesforce Pub/Sub API 订阅时发生异常: {}", e.getMessage(), e);
             }
-        }, 60, 60, TimeUnit.SECONDS);
+        }
     }
 
     @Override
+    @PreDestroy
     public void stopSubscription() {
-        log.info("开始停止 Salesforce Pub/Sub API 订阅");
+        if (!subscribed.get()) {
+            log.info("Salesforce Pub/Sub API 订阅未启动，跳过停止操作");
+            return;
+        }
+
+        log.info("停止 Salesforce Pub/Sub API 订阅: {}", TOPIC);
 
         try {
-            // 停止订阅监控
-            if (executorService != null) {
-                executorService.shutdown();
-                if (!executorService.awaitTermination(5, TimeUnit.SECONDS)) {
-                    executorService.shutdownNow();
+            // 停止监控线程
+            if (monitorExecutor != null) {
+                monitorExecutor.shutdown();
+                if (!monitorExecutor.awaitTermination(5, TimeUnit.SECONDS)) {
+                    monitorExecutor.shutdownNow();
                 }
             }
 
-            // 获取 Pub/Sub API 客户端
-            var pubSubClient = pubSubConnectionFactory.getConnection();
-            if (pubSubClient != null) {
-                // 取消订阅
-                pubSubClient.unsubscribe();
-                log.info("成功取消订阅事件通道: {}", subscribedTopic);
+            // 关闭订阅客户端
+            if (subscriptionClient != null) {
+                subscriptionClient.close();
+                connectionFactory.closeClient(TOPIC);
             }
 
             subscribed.set(false);
-            subscribedTopic = null;
+            subscriptionClient = null;
             log.info("Salesforce Pub/Sub API 订阅停止成功");
         } catch (Exception e) {
             log.error("停止 Salesforce Pub/Sub API 订阅时发生异常: {}", e.getMessage(), e);
@@ -228,6 +156,6 @@ public class PubSubEventSubscriberImpl implements EventSubscriber {
      * @return 订阅主题
      */
     public String getSubscribedTopic() {
-        return subscribedTopic;
+        return TOPIC;
     }
 }

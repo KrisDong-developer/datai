@@ -1,220 +1,237 @@
 package com.datai.integration.factory.impl;
 
-import com.datai.integration.core.SalesforcePubSubClient;
-import com.datai.integration.factory.AbstractConnectionFactory;
-import com.datai.salesforce.auth.service.ISalesforceAuthService;
+import com.datai.common.utils.CacheUtils;
+import com.datai.common.utils.StringUtils;
+import com.datai.integration.core.SessionManager;
+import com.datai.setting.config.SalesforceConfigCacheManager;
+import com.salesforce.multicloudj.pubsub.client.SubscriptionClient;
+import com.salesforce.multicloudj.sts.model.CredentialsOverrider;
+import com.salesforce.multicloudj.sts.model.CredentialsType;
+import com.salesforce.multicloudj.sts.model.StsCredentials;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * Salesforce Pub/Sub API 连接工厂
- * 用于创建和管理 PubSubClient 实例
+ * Pub/Sub API 连接工厂
+ * 负责管理与 Salesforce Pub/Sub API 的连接
  */
 @Slf4j
 @Component
-public class PubSubConnectionFactory extends AbstractConnectionFactory<SalesforcePubSubClient> {
+public class PubSubConnectionFactory {
+
+    private static final String SUBSCRIPTION_NAME_PREFIX = "datai-sf-sub-";
+    private static final String SESSION_NAME = "datai-sf-pubsub-session";
+    private static final String TOPIC_SEPARATOR = "/";
+
+    private static final String ERROR_TOPIC_EMPTY = "订阅主题不能为空";
+    private static final String ERROR_NO_ACCESS_TOKEN = "无法获取有效的访问令牌";
+    private static final String ERROR_NO_INSTANCE_URL = "无法获取实例 URL";
+    private static final String ERROR_ENDPOINT_RESOLUTION = "解析端点 URI 失败";
+    private static final String ERROR_CLIENT_CREATION = "Salesforce Pub/Sub Client 实例化异常";
+    private static final String ERROR_TOPIC_INVALID = "订阅主题格式无效";
 
     @Autowired
-    private ISalesforceAuthService salesforceAuthService;
+    private SessionManager sessionManager;
 
     @Autowired
-    private SalesforcePubSubClient pubSubClient;
+    private SalesforceConfigCacheManager salesforceConfigCacheManager;
 
-    // 连接池
-    private final ConcurrentMap<String, SalesforcePubSubClient> connectionPool = new ConcurrentHashMap<>();
-    private final AtomicInteger connectionCount = new AtomicInteger(0);
+    private final ConcurrentMap<String, SubscriptionClient> subscriptionClients = new ConcurrentHashMap<>();
 
-    @Value("${salesforce.pubsub.connection.pool.size:5}")
-    private int maxPoolSize;
+    @Value("${salesforce.pubsub.provider.id:salesforce}")
+    private String providerId;
 
-    @Value("${salesforce.pubsub.connection.ttl:3600}")
-    private int connectionTtl;
+    @Value("${salesforce.pubsub.endpoint:}")
+    private String pubSubEndpoint;
+
+    @Value("${salesforce.pubsub.region:us-east-1}")
+    private String region;
 
     /**
-     * 获取 Salesforce Pub/Sub API 客户端
-     * @return SalesforcePubSubClient 实例
+     * 获取或创建订阅客户端
+     * @param topic 订阅主题
+     * @return 订阅客户端
      */
-    @Override
-    public SalesforcePubSubClient getConnection() {
+    public synchronized SubscriptionClient getSubscriptionClient(String topic) {
+        return subscriptionClients.computeIfAbsent(topic, this::createSubscriptionClient);
+    }
+
+    /**
+     * 创建订阅客户端
+     * @param topic 订阅主题
+     * @return 订阅客户端
+     */
+    private SubscriptionClient createSubscriptionClient(String topic) {
+        log.info("开始构建 Salesforce Pub/Sub 客户端 [Topic: {}]", topic);
+
         try {
-            // 检查是否已连接
-            if (pubSubClient.isConnected()) {
-                log.info("Pub/Sub API 客户端已连接，直接返回实例");
-                return pubSubClient;
-            }
+            validateTopic(topic);
+            
+            String accessToken = sessionManager.getCurrentSession();
+            String instanceUrl = sessionManager.getInstanceUrl();
+            
+            validateCredentials(accessToken, instanceUrl);
 
-            // 获取 Salesforce 访问令牌和实例 URL
-            String accessToken = salesforceAuthService.getAccessToken();
-            String instanceUrl = salesforceAuthService.getInstanceUrl();
+            log.debug("获取到访问令牌和实例 URL [InstanceUrl: {}]", instanceUrl);
 
-            if (accessToken == null || instanceUrl == null) {
-                log.error("无法获取 Salesforce 访问令牌或实例 URL");
-                return null;
-            }
+            URI endpointUri = resolveEndpoint(instanceUrl);
+            log.debug("解析端点 URI: {}", endpointUri);
 
-            // 初始化 Pub/Sub API 客户端
-            boolean initialized = pubSubClient.initialize(accessToken, instanceUrl);
-            if (initialized) {
-                log.info("成功获取 Pub/Sub API 客户端实例");
-                // 添加到连接池
-                addToConnectionPool(accessToken, pubSubClient);
-                return pubSubClient;
-            } else {
-                log.error("初始化 Pub/Sub API 客户端失败");
-                return null;
-            }
+            StsCredentials stsCredentials = createStsCredentials(accessToken);
+            log.debug("创建 StsCredentials 成功");
+
+            CredentialsOverrider credentialsOverrider = createCredentialsOverrider(stsCredentials);
+            log.debug("创建 CredentialsOverrider 成功");
+
+            String subscriptionName = buildSubscriptionName(topic);
+            log.debug("订阅名称: {}", subscriptionName);
+
+            SubscriptionClient client = buildSubscriptionClient(subscriptionName, endpointUri, credentialsOverrider);
+
+            log.info("成功构建 Salesforce Pub/Sub 客户端 [Topic: {}, SubscriptionName: {}]", topic, subscriptionName);
+            return client;
+
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            log.error("创建 Pub/Sub 订阅客户端失败 [Topic: {}]: {}", topic, e.getMessage());
+            throw e;
+        } catch (URISyntaxException e) {
+            log.error("解析端点 URI 失败 [Topic: {}, InstanceUrl: {}]: {}", topic, sessionManager.getInstanceUrl(), e.getMessage());
+            throw new RuntimeException(ERROR_ENDPOINT_RESOLUTION, e);
         } catch (Exception e) {
-            log.error("获取 Pub/Sub API 客户端实例失败: {}", e.getMessage(), e);
-            return null;
+            log.error("创建 Pub/Sub 订阅客户端失败 [Topic: {}]: {}", topic, e.getMessage(), e);
+            throw new RuntimeException(ERROR_CLIENT_CREATION, e);
         }
     }
 
-    /**
-     * 从连接池获取客户端
-     * @param key 连接键
-     * @return SalesforcePubSubClient 实例
-     */
-    public SalesforcePubSubClient getConnectionFromPool(String key) {
-        return connectionPool.get(key);
-    }
-
-    /**
-     * 添加客户端到连接池
-     * @param key 连接键
-     * @param client SalesforcePubSubClient 实例
-     */
-    private void addToConnectionPool(String key, SalesforcePubSubClient client) {
-        // 检查连接池大小
-        if (connectionCount.get() >= maxPoolSize) {
-            // 清理过期连接
-            cleanupExpiredConnections();
-            // 如果仍然超过最大大小，移除最早的连接
-            if (connectionCount.get() >= maxPoolSize) {
-                removeOldestConnection();
-            }
+    private void validateTopic(String topic) {
+        if (topic == null || topic.trim().isEmpty()) {
+            log.error(ERROR_TOPIC_EMPTY);
+            throw new IllegalArgumentException(ERROR_TOPIC_EMPTY);
         }
-
-        connectionPool.put(key, client);
-        connectionCount.incrementAndGet();
-        log.info("添加连接到连接池，当前连接数: {}", connectionCount.get());
-    }
-
-    /**
-     * 清理过期连接
-     */
-    private void cleanupExpiredConnections() {
-        // 这里可以实现过期连接清理逻辑
-        // 例如，检查连接创建时间，移除超过TTL的连接
-        log.info("清理过期连接");
-    }
-
-    /**
-     * 移除最早的连接
-     */
-    private void removeOldestConnection() {
-        // 这里可以实现移除最早连接的逻辑
-        // 例如，根据连接添加时间排序，移除最早的
-        if (!connectionPool.isEmpty()) {
-            String oldestKey = connectionPool.keySet().iterator().next();
-            SalesforcePubSubClient client = connectionPool.remove(oldestKey);
-            if (client != null) {
-                client.disconnect();
-                connectionCount.decrementAndGet();
-                log.info("移除最早的连接，当前连接数: {}", connectionCount.get());
-            }
-        }
-    }
-
-    /**
-     * 关闭 Salesforce Pub/Sub API 连接
-     * @param connection SalesforcePubSubClient 实例
-     */
-    @Override
-    public void closeConnection(SalesforcePubSubClient connection) {
-        try {
-            if (connection != null) {
-                connection.disconnect();
-                log.info("成功关闭 Pub/Sub API 连接");
-                // 从连接池移除
-                removeFromConnectionPool(connection);
-            }
-        } catch (Exception e) {
-            log.error("关闭 Pub/Sub API 连接失败: {}", e.getMessage(), e);
-        }
-    }
-
-    /**
-     * 从连接池移除连接
-     * @param client SalesforcePubSubClient 实例
-     */
-    private void removeFromConnectionPool(SalesforcePubSubClient client) {
-        // 遍历连接池，找到并移除对应连接
-        for (String key : connectionPool.keySet()) {
-            if (connectionPool.get(key) == client) {
-                connectionPool.remove(key);
-                connectionCount.decrementAndGet();
-                log.info("从连接池移除连接，当前连接数: {}", connectionCount.get());
-                break;
-            }
-        }
-    }
-
-    /**
-     * 清理所有连接
-     */
-    public void cleanupAllConnections() {
-        log.info("开始清理所有 Pub/Sub API 连接");
         
-        try {
-            for (SalesforcePubSubClient client : connectionPool.values()) {
-                if (client != null) {
-                    client.disconnect();
-                }
-            }
-            connectionPool.clear();
-            connectionCount.set(0);
-            log.info("成功清理所有 Pub/Sub API 连接");
-        } catch (Exception e) {
-            log.error("清理所有 Pub/Sub API 连接失败: {}", e.getMessage(), e);
+        String trimmedTopic = topic.trim();
+        if (trimmedTopic.length() > 255) {
+            log.error(ERROR_TOPIC_INVALID);
+            throw new IllegalArgumentException(ERROR_TOPIC_INVALID);
+        }
+        
+        if (!trimmedTopic.matches("^[a-zA-Z0-9/_\\-]+$")) {
+            log.error(ERROR_TOPIC_INVALID);
+            throw new IllegalArgumentException(ERROR_TOPIC_INVALID);
         }
     }
 
-    /**
-     * 获取连接池大小
-     * @return 连接池大小
-     */
-    public int getPoolSize() {
-        return connectionCount.get();
+    private void validateCredentials(String accessToken, String instanceUrl) {
+        if (accessToken == null || accessToken.trim().isEmpty()) {
+            log.error(ERROR_NO_ACCESS_TOKEN);
+            throw new IllegalStateException(ERROR_NO_ACCESS_TOKEN);
+        }
+
+        if (instanceUrl == null || instanceUrl.trim().isEmpty()) {
+            log.error(ERROR_NO_INSTANCE_URL);
+            throw new IllegalStateException(ERROR_NO_INSTANCE_URL);
+        }
+    }
+
+    private StsCredentials createStsCredentials(String accessToken) {
+        if (accessToken == null || accessToken.trim().isEmpty()) {
+            log.error(ERROR_NO_ACCESS_TOKEN);
+            throw new IllegalStateException(ERROR_NO_ACCESS_TOKEN);
+        }
+        String cacheKey = salesforceConfigCacheManager.getEnvironmentCacheKey();
+        String consumerKey = CacheUtils.get(cacheKey, "salesforce.pubsub.consumer.key", String.class);
+        String consumerSecret = CacheUtils.get(cacheKey, "salesforce.pubsub.consumer.secret", String.class);
+        return new StsCredentials(consumerKey, consumerSecret, accessToken.trim());
+    }
+
+    private CredentialsOverrider createCredentialsOverrider(StsCredentials stsCredentials) {
+        if (stsCredentials == null) {
+            log.error("StsCredentials 不能为空");
+            throw new IllegalStateException("StsCredentials 不能为空");
+        }
+        return new CredentialsOverrider.Builder(CredentialsType.SESSION)
+                .withSessionCredentials(stsCredentials)
+                .withSessionName(SESSION_NAME)
+                .build();
+    }
+
+    private String buildSubscriptionName(String topic) {
+        return SUBSCRIPTION_NAME_PREFIX + topic.replace(TOPIC_SEPARATOR, "_");
+    }
+
+    private SubscriptionClient buildSubscriptionClient(String subscriptionName, URI endpointUri, CredentialsOverrider credentialsOverrider) {
+        return SubscriptionClient.builder(providerId)
+                .withSubscriptionName(subscriptionName)
+                .withRegion(region)
+                .withEndpoint(endpointUri)
+                .withCredentialsOverrider(credentialsOverrider)
+                .build();
     }
 
     /**
-     * 健康检查
-     * @return 是否健康
+     * 健壮的端点解析逻辑
      */
-    public boolean healthCheck() {
-        try {
-            // 检查主客户端连接状态
-            if (pubSubClient.isConnected()) {
-                return true;
+    private URI resolveEndpoint(String instanceUrl) throws URISyntaxException {
+        if (StringUtils.hasText(pubSubEndpoint)) {
+            log.info("使用配置的 Pub/Sub 端点: {}", pubSubEndpoint);
+            return new URI(pubSubEndpoint);
+        }
+
+        log.debug("从实例 URL 自动推导 Pub/Sub 端点: {}", instanceUrl);
+        URI uri = new URI(instanceUrl);
+        
+        String scheme = uri.getScheme();
+        String host = uri.getHost();
+        
+        if (scheme == null || scheme.isEmpty()) {
+            log.error("实例 URL 缺少协议方案: {}", instanceUrl);
+            throw new URISyntaxException(instanceUrl, "缺少协议方案");
+        }
+        
+        if (host == null || host.isEmpty()) {
+            log.error("实例 URL 缺少主机名: {}", instanceUrl);
+            throw new URISyntaxException(instanceUrl, "缺少主机名");
+        }
+        
+        String baseUri = scheme + "://" + host;
+        log.debug("推导的 Pub/Sub 端点: {}", baseUri);
+        return new URI(baseUri);
+    }
+    /**
+     * 关闭所有订阅客户端
+     */
+    public void closeAllClients() {
+        subscriptionClients.forEach((topic, client) -> {
+            try {
+                client.close();
+                log.info("关闭 Salesforce Pub/Sub API 订阅客户端，主题: {}", topic);
+            } catch (Exception e) {
+                log.error("关闭 Salesforce Pub/Sub API 订阅客户端时发生异常: {}", e.getMessage(), e);
             }
-            
-            // 检查连接池中的连接
-            for (SalesforcePubSubClient client : connectionPool.values()) {
-                if (client != null && client.isConnected()) {
-                    return true;
-                }
+        });
+        subscriptionClients.clear();
+    }
+
+    /**
+     * 关闭指定主题的订阅客户端
+     * @param topic 订阅主题
+     */
+    public void closeClient(String topic) {
+        SubscriptionClient client = subscriptionClients.remove(topic);
+        if (client != null) {
+            try {
+                client.close();
+                log.info("关闭 Salesforce Pub/Sub API 订阅客户端，主题: {}", topic);
+            } catch (Exception e) {
+                log.error("关闭 Salesforce Pub/Sub API 订阅客户端时发生异常: {}", e.getMessage(), e);
             }
-            
-            return false;
-        } catch (Exception e) {
-            log.error("健康检查失败: {}", e.getMessage(), e);
-            return false;
         }
     }
 }
