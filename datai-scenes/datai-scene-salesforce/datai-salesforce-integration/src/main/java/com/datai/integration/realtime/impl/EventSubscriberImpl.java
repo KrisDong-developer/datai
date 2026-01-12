@@ -4,6 +4,8 @@ import com.datai.integration.core.IPartnerV1Connection;
 import com.datai.integration.factory.impl.SOAPConnectionFactory;
 import com.datai.integration.realtime.EventSubscriber;
 import com.sforce.soap.partner.PartnerConnection;
+import com.sforce.soap.partner.SubscribeRequest;
+import com.sforce.soap.partner.SubscribeResult;
 
 import com.sforce.soap.partner.sobject.SObject;
 import com.sforce.ws.ConnectionException;

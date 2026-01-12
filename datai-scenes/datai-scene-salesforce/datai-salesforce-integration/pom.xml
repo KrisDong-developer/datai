@@ -32,9 +32,9 @@
         </dependency>
 
         <dependency>
-            <groupId>com.salesforce.eventbus</groupId>
-            <artifactId>salesforce-pubsub-api</artifactId>
-            <version>1.0.0</version>
+            <groupId>com.salesforce.multicloudj</groupId>
+            <artifactId>pubsub-client</artifactId>
+            <version>0.2.10</version>
         </dependency>
 
         <dependency>

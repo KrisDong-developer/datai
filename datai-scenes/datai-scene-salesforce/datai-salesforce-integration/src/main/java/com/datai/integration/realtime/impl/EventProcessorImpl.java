@@ -2,13 +2,17 @@ package com.datai.integration.realtime.impl;
 
 import com.datai.integration.realtime.EventProcessor;
 import com.datai.integration.realtime.DataSynchronizer;
-import com.salesforce.eventbus.protobuf.EventBatch;
+import com.salesforce.multicloudj.protobuf.EventBatch;
 import com.sforce.soap.partner.sobject.SObject;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -61,7 +65,7 @@ public class EventProcessorImpl implements EventProcessor {
         log.info("提取变更数据");
         
         // 示例实现，实际项目中需要根据具体的Change Event结构来实现
-        Map<String, Object> changeData = new java.util.HashMap<>();
+        Map<String, Object> changeData = new HashMap<>();
         
         // 提取标准字段
         try {
@@ -100,24 +104,22 @@ public class EventProcessorImpl implements EventProcessor {
             // 遍历处理每个事件
             for (int i = 0; i < eventBatch.getEventsCount(); i++) {
                 var event = eventBatch.getEvents(i);
-                log.info("处理事件 {} 中的事件", i + 1);
+                log.info("处理事件批次中的事件 {}/{}", i + 1, eventBatch.getEventsCount());
 
                 try {
                     // 提取事件信息
-                    var eventPayload = event.getPayload();
-                    // 这里需要根据实际的 Event 结构来提取信息
-                    // 示例实现，实际项目中需要根据具体的 Event 结构来实现
+                    Map<String, Object> eventInfo = extractEventInfo(event);
                     
-                    String objectType = "Account"; // 示例值，实际需要从事件中提取
-                    String recordId = event.getReplayId().toString(); // 示例值，实际需要从事件中提取
-                    String changeType = "UPDATE"; // 示例值，实际需要从事件中提取
-                    Date changeDate = new Date(); // 示例值，实际需要从事件中提取
+                    String objectType = (String) eventInfo.get("objectType");
+                    String recordId = (String) eventInfo.get("recordId");
+                    String changeType = (String) eventInfo.get("changeType");
+                    Date changeDate = (Date) eventInfo.get("changeDate");
 
                     log.info("事件信息: 类型={}, 对象={}, 记录ID={}, 变更时间={}", 
                         changeType, objectType, recordId, changeDate);
 
                     // 提取变更数据
-                    Map<String, Object> changeData = extractChangeDataFromEventBatch(event);
+                    Map<String, Object> changeData = extractChangeDataFromEventBatch(event, objectType);
 
                     // 同步数据
                     dataSynchronizer.synchronizeData(objectType, recordId, changeType, changeData, changeDate);
@@ -136,28 +138,87 @@ public class EventProcessorImpl implements EventProcessor {
     }
 
     /**
+     * 提取事件基本信息
+     * @param event Pub/Sub API 事件
+     * @return 事件信息映射
+     */
+    private Map<String, Object> extractEventInfo(com.salesforce.multicloudj.protobuf.Event event) {
+        Map<String, Object> eventInfo = new HashMap<>();
+        
+        try {
+            // 从事件负载中提取信息
+            // 注意：实际的负载结构取决于事件类型
+            // 这里假设是Change Events格式
+            
+            // 示例实现：从payload中提取信息
+            // 实际项目中需要根据Salesforce的Change Events格式进行解析
+            
+            // 提取对象类型
+            String objectType = "Account"; // 默认值，实际需要从payload中提取
+            
+            // 提取记录ID
+            String recordId = event.getReplayId().toString(); // 临时使用replayId，实际需要从payload中提取
+            
+            // 提取变更类型
+            String changeType = "UPDATE"; // 默认值，实际需要从payload中提取
+            
+            // 提取变更时间
+            Date changeDate = new Date(); // 默认值，实际需要从payload中提取
+            
+            eventInfo.put("objectType", objectType);
+            eventInfo.put("recordId", recordId);
+            eventInfo.put("changeType", changeType);
+            eventInfo.put("changeDate", changeDate);
+            
+        } catch (Exception e) {
+            log.error("提取事件信息时发生异常: {}", e.getMessage(), e);
+            // 设置默认值
+            eventInfo.put("objectType", "Unknown");
+            eventInfo.put("recordId", event.getReplayId().toString());
+            eventInfo.put("changeType", "UNKNOWN");
+            eventInfo.put("changeDate", new Date());
+        }
+        
+        return eventInfo;
+    }
+
+    /**
      * 从 Pub/Sub API 事件中提取变更数据
      * @param event Pub/Sub API 事件
+     * @param objectType 对象类型
      * @return 变更数据映射
      */
-    private Map<String, Object> extractChangeDataFromEventBatch(com.salesforce.eventbus.protobuf.Event event) {
+    private Map<String, Object> extractChangeDataFromEventBatch(com.salesforce.multicloudj.protobuf.Event event, String objectType) {
         // 这里需要根据实际的 Pub/Sub API Event 结构来提取变更数据
         // 简化实现，实际项目中需要根据具体情况进行调整
         
-        log.info("从 Pub/Sub API 事件中提取变更数据");
+        log.info("从 Pub/Sub API 事件中提取变更数据，对象类型: {}", objectType);
         
-        // 示例实现，实际项目中需要根据具体的 Event 结构来实现
-        Map<String, Object> changeData = new java.util.HashMap<>();
+        Map<String, Object> changeData = new HashMap<>();
         
         try {
             // 提取事件负载
-            var payload = event.getPayload();
-            // 这里需要根据实际的 payload 结构来提取数据
-            // 示例：假设 payload 是 JSON 格式
+            byte[] payloadBytes = event.getPayload().toByteArray();
             
-            // 提取标准字段
-            changeData.put("Id", event.getReplayId().toString()); // 示例值
-            changeData.put("Name", "Test Account"); // 示例值
+            // 解析payload
+            // 注意：实际的payload格式取决于事件类型和对象类型
+            // 这里需要根据Salesforce的Change Events格式进行解析
+            
+            // 示例实现：根据对象类型提取不同字段
+            switch (objectType) {
+                case "Account":
+                    extractAccountFields(payloadBytes, changeData);
+                    break;
+                case "Contact":
+                    extractContactFields(payloadBytes, changeData);
+                    break;
+                case "Opportunity":
+                    extractOpportunityFields(payloadBytes, changeData);
+                    break;
+                default:
+                    extractDefaultFields(payloadBytes, changeData);
+                    break;
+            }
             
         } catch (Exception e) {
             log.error("从 Pub/Sub API 事件中提取变更数据时发生异常: {}", e.getMessage(), e);
@@ -165,5 +226,82 @@ public class EventProcessorImpl implements EventProcessor {
         
         log.info("变更数据提取完成，共提取 {} 个字段", changeData.size());
         return changeData;
+    }
+
+    /**
+     * 提取Account对象字段
+     * @param payloadBytes 事件负载字节数组
+     * @param changeData 变更数据映射
+     */
+    private void extractAccountFields(byte[] payloadBytes, Map<String, Object> changeData) {
+        // 解析Account对象的变更数据
+        // 实际项目中需要根据Salesforce的Change Events格式进行解析
+        
+        try (InputStream is = new ByteArrayInputStream(payloadBytes)) {
+            // 示例实现：模拟解析
+            changeData.put("Id", "001xxxxxxxxxxxxxxx"); // 示例ID
+            changeData.put("Name", "Test Account");
+            changeData.put("BillingCity", "San Francisco");
+            changeData.put("Industry", "Technology");
+        } catch (IOException e) {
+            log.error("解析Account字段时发生异常: {}", e.getMessage(), e);
+        }
+    }
+
+    /**
+     * 提取Contact对象字段
+     * @param payloadBytes 事件负载字节数组
+     * @param changeData 变更数据映射
+     */
+    private void extractContactFields(byte[] payloadBytes, Map<String, Object> changeData) {
+        // 解析Contact对象的变更数据
+        // 实际项目中需要根据Salesforce的Change Events格式进行解析
+        
+        try (InputStream is = new ByteArrayInputStream(payloadBytes)) {
+            // 示例实现：模拟解析
+            changeData.put("Id", "003xxxxxxxxxxxxxxx"); // 示例ID
+            changeData.put("FirstName", "John");
+            changeData.put("LastName", "Doe");
+            changeData.put("Email", "john.doe@example.com");
+        } catch (IOException e) {
+            log.error("解析Contact字段时发生异常: {}", e.getMessage(), e);
+        }
+    }
+
+    /**
+     * 提取Opportunity对象字段
+     * @param payloadBytes 事件负载字节数组
+     * @param changeData 变更数据映射
+     */
+    private void extractOpportunityFields(byte[] payloadBytes, Map<String, Object> changeData) {
+        // 解析Opportunity对象的变更数据
+        // 实际项目中需要根据Salesforce的Change Events格式进行解析
+        
+        try (InputStream is = new ByteArrayInputStream(payloadBytes)) {
+            // 示例实现：模拟解析
+            changeData.put("Id", "006xxxxxxxxxxxxxxx"); // 示例ID
+            changeData.put("Name", "Test Opportunity");
+            changeData.put("StageName", "Prospecting");
+            changeData.put("Amount", 100000.0);
+        } catch (IOException e) {
+            log.error("解析Opportunity字段时发生异常: {}", e.getMessage(), e);
+        }
+    }
+
+    /**
+     * 提取默认字段
+     * @param payloadBytes 事件负载字节数组
+     * @param changeData 变更数据映射
+     */
+    private void extractDefaultFields(byte[] payloadBytes, Map<String, Object> changeData) {
+        // 解析默认字段
+        // 实际项目中需要根据Salesforce的Change Events格式进行解析
+        
+        try (InputStream is = new ByteArrayInputStream(payloadBytes)) {
+            // 示例实现：模拟解析
+            changeData.put("Id", "001xxxxxxxxxxxxxxx"); // 示例ID
+        } catch (IOException e) {
+            log.error("解析默认字段时发生异常: {}", e.getMessage(), e);
+        }
     }
 }
