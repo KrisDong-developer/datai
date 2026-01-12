@@ -147,6 +147,11 @@ public class DataiIntegrationObject extends BaseEntity
     @Schema(title = "失败原因")
     @Excel(name = "失败原因")
     private String errorMessage;
+
+    /** 实时同步 */
+    @Schema(title = "实时同步")
+    @Excel(name = "实时同步")
+    private Boolean isRealtimeSync;
     public void setId(Integer id) 
     {
         this.id = id;
@@ -432,6 +437,16 @@ public class DataiIntegrationObject extends BaseEntity
         return errorMessage;
     }
 
+    public void setIsRealtimeSync(Boolean isRealtimeSync) 
+    {
+        this.isRealtimeSync = isRealtimeSync;
+    }
+
+    public Boolean getIsRealtimeSync() 
+    {
+        return isRealtimeSync;
+    }
+
 
 
     @Override
@@ -463,6 +478,7 @@ public class DataiIntegrationObject extends BaseEntity
             .append("lastBatchDate", getLastBatchDate())
             .append("syncStatus", getSyncStatus())
             .append("errorMessage", getErrorMessage())
+            .append("isRealtimeSync", getIsRealtimeSync())
             .append("remark", getRemark())
             .append("createBy", getCreateBy())
             .append("createTime", getCreateTime())

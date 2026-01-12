@@ -83,4 +83,11 @@ public interface IDataiIntegrationBatchService
      * @return 同步结果
      */
     public Map<String, Object> syncBatchData(Integer id);
+    
+    /**
+     * 获取所有批次统计信息
+     * 
+     * @return 所有批次统计信息
+     */
+    public Map<String, Object> getAllBatchStatistics();
 }

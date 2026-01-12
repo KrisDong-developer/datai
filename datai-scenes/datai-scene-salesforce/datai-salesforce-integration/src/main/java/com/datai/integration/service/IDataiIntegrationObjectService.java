@@ -103,6 +103,15 @@ public interface IDataiIntegrationObjectService
     public Map<String, Object> updateIncrementalStatus(Integer id, Boolean isIncremental);
 
     /**
+     * 变更对象实时同步状态
+     * 
+     * @param id 对象ID
+     * @param isRealtimeSync 实时同步状态
+     * @return 变更结果
+     */
+    public Map<String, Object> updateRealtimeSyncStatus(Integer id, Boolean isRealtimeSync);
+
+    /**
      * 获取对象整体统计信息
      * 
      * @return 统计信息

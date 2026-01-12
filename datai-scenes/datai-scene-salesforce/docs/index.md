@@ -14,17 +14,25 @@
 
 - **目录**: [requirements/](requirements/)
 - **描述**: 包含项目的功能需求、非功能需求和验收标准
+- **需求文档**:
+  - [0001-salesforce-realtime-sync.md](requirements/0001-salesforce-realtime-sync.md) - Salesforce数据及时同步至本地数据库
+  - [0000-template.md](requirements/0000-template.md) - 需求文档模板
 
 ### 2. 设计文档
 
 - **目录**: [design/](design/)
 - **描述**: 包含系统架构设计、模块设计和接口设计
+- **设计文档**:
+  - [0001-salesforce-cdc-realtime-sync.md](design/0001-salesforce-cdc-realtime-sync.md) - Salesforce CDC实时同步设计
+  - [0000-template.md](design/0000-template.md) - 设计文档模板
 
 ### 3. 架构决策
 
 - **目录**: [decisions/adr/](decisions/adr/)
 - **描述**: 包含架构决策记录 (ADR)，记录重要的架构决策过程
-- **模板**: [0000-template.md](decisions/adr/0000-template.md)
+- **ADR文档**:
+  - [0001-salesforce-cdc-sync.md](decisions/adr/0001-salesforce-cdc-sync.md) - Salesforce CDC同步方案
+  - [0000-template.md](decisions/adr/0000-template.md) - ADR文档模板
 
 ### 4. 提示词库
 
@@ -38,11 +46,13 @@
   - [04工作流整合白板提示词.md](prompts/04工作流整合白板提示词.md)
   - [05创建项目规则提示词.md](prompts/05创建项目规则提示词.md)
 
-### 5. 会话记录
+### 6. 会话记录
 
 - **目录**: [sessions/](sessions/)
 - **描述**: 包含每次重要操作的会话记录
-- **模板**: [YYYYMMDD-template.md](sessions/YYYYMMDD-template.md)
+- **会话记录**:
+  - [20260109-salesforce-cdc-sync.md](sessions/20260109-salesforce-cdc-sync.md) - Salesforce CDC实时同步实现
+  - [YYYYMMDD-template.md](sessions/YYYYMMDD-template.md) - 会话记录模板
 
 ### 6. 迭代复盘
 
@@ -54,11 +64,33 @@
 
 - **目录**: [changelog/](changelog/)
 - **描述**: 包含详细的变更记录
+- **变更记录文档**:
+  - [0001-core-components-implementation.md](changelog/0001-core-components-implementation.md) - 核心组件实现
+  - [0002-database-structure-adjustment.md](changelog/0002-database-structure-adjustment.md) - 数据库结构调整
+  - [0003-sync-configuration-management.md](changelog/0003-sync-configuration-management.md) - 同步配置管理实现
+  - [0004-realtime-sync-log-enhancement.md](changelog/0004-realtime-sync-log-enhancement.md) - 实时同步日志功能完善
+  - [0005-testing-and-verification.md](changelog/0005-testing-and-verification.md) - 测试和验证
+  - [0006-documentation-improvement.md](changelog/0006-documentation-improvement.md) - 文档完善
+  - [0000-template.md](changelog/0000-template.md) - 变更记录模板
 
 ### 8. 接口文档
 
 - **目录**: [api-docs/](api-docs/)
 - **描述**: 包含提供给前端调用的接口文档
+- **接口文档**: 
+  - [DataiIntegrationRealtimeSyncController](api-docs/integration/DataiIntegrationRealtimeSyncController/) - 实时同步服务管理接口
+  - [DataiIntegrationObjectController](api-docs/integration/DataiIntegrationObjectController/) - 对象同步控制接口
+  - [DataiIntegrationBatchController](api-docs/integration/DataiIntegrationBatchController/) - 批次同步控制接口
+  - [DataiIntegrationMetadataChangeController](api-docs/integration/DataiIntegrationMetadataChangeController/) - 元数据变更控制接口
+
+### 9. SQL文件
+
+- **目录**: [sql/](sql/)
+- **描述**: 包含数据库结构和初始化SQL文件
+- **SQL文件**:
+  - [create-realtime-sync-log-table.sql](sql/create-realtime-sync-log-table.sql) - 实时同步日志表创建SQL
+  - [add_is_partitioned_column.sql](sql/add_is_partitioned_column.sql) - 添加分区列SQL
+  - [datai_table.sql](sql/datai_table.sql) - 数据表初始化SQL
 
 ## 协作基线文件
 
@@ -74,5 +106,5 @@
 
 ## 最后更新
 
-- 更新时间: 2026-01-09
-- 更新内容: 添加接口文档目录和接口文档提示词模板
+- 更新时间: 2026-01-10
+- 更新内容: 创建Salesforce CDC实时同步的6个变更记录文档，并更新文档索引，添加新创建的变更记录文档链接；同时为DataiIntegrationRealtimeSyncController创建了API文档，并更新了文档索引

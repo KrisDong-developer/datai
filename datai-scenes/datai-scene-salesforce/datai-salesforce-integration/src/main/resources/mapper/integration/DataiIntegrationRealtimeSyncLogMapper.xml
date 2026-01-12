@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.datai.integration.mapper.DataiIntegrationRealtimeSyncLogMapper">
+    
+    <resultMap type="DataiIntegrationRealtimeSyncLog" id="DataiIntegrationRealtimeSyncLogResult">
+        <result property="id" column="id" />
+        <result property="objectName" column="object_name" />
+        <result property="recordId" column="record_id" />
+        <result property="operationType" column="operation_type" />
+        <result property="changeData" column="change_data" />
+        <result property="syncStatus" column="sync_status" />
+        <result property="errorMessage" column="error_message" />
+        <result property="retryCount" column="retry_count" />
+        <result property="salesforceTimestamp" column="salesforce_timestamp" />
+        <result property="syncTimestamp" column="sync_timestamp" />
+        <result property="createTime" column="create_time" />
+        <result property="updateTime" column="update_time" />
+    </resultMap>
+
+    <sql id="selectDataiIntegrationRealtimeSyncLogVo">
+        select 
+            dirsl.id,
+            dirsl.object_name,
+            dirsl.record_id,
+            dirsl.operation_type,
+            dirsl.change_data,
+            dirsl.sync_status,
+            dirsl.error_message,
+            dirsl.retry_count,
+            dirsl.salesforce_timestamp,
+            dirsl.sync_timestamp,
+            dirsl.create_time,
+            dirsl.update_time
+        from datai_integration_realtime_sync_log dirsl
+    </sql>
+
+    <select id="selectDataiIntegrationRealtimeSyncLogList" parameterType="DataiIntegrationRealtimeSyncLog" resultMap="DataiIntegrationRealtimeSyncLogResult">
+        <include refid="selectDataiIntegrationRealtimeSyncLogVo"/>
+        <where>
+            <if test="objectName != null  and objectName != ''"> and dirsl.object_name like concat('%', #{objectName}, '%')</if>
+            <if test="recordId != null  and recordId != ''"> and dirsl.record_id = #{recordId}</if>
+            <if test="operationType != null  and operationType != ''"> and dirsl.operation_type = #{operationType}</if>
+            <if test="changeData != null  and changeData != ''"> and dirsl.change_data = #{changeData}</if>
+            <if test="syncStatus != null  and syncStatus != ''"> and dirsl.sync_status = #{syncStatus}</if>
+            <if test="errorMessage != null  and errorMessage != ''"> and dirsl.error_message = #{errorMessage}</if>
+            <if test="retryCount != null "> and dirsl.retry_count = #{retryCount}</if>
+            <if test="salesforceTimestamp != null "> and dirsl.salesforce_timestamp = #{salesforceTimestamp}</if>
+            <if test="syncTimestamp != null "> and dirsl.sync_timestamp = #{syncTimestamp}</if>
+        </where>
+    </select>
+    
+    <select id="selectDataiIntegrationRealtimeSyncLogById" parameterType="Long" resultMap="DataiIntegrationRealtimeSyncLogResult">
+        <include refid="selectDataiIntegrationRealtimeSyncLogVo"/>
+        where dirsl.id = #{id}
+    </select>
+        
+    <insert id="insertDataiIntegrationRealtimeSyncLog" parameterType="DataiIntegrationRealtimeSyncLog" useGeneratedKeys="true" keyProperty="id">
+        insert into datai_integration_realtime_sync_log
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="objectName != null and objectName != ''">object_name,</if>
+            <if test="recordId != null and recordId != ''">record_id,</if>
+            <if test="operationType != null and operationType != ''">operation_type,</if>
+            <if test="changeData != null and changeData != ''">change_data,</if>
+            <if test="syncStatus != null and syncStatus != ''">sync_status,</if>
+            <if test="errorMessage != null">error_message,</if>
+            <if test="retryCount != null">retry_count,</if>
+            <if test="salesforceTimestamp != null">salesforce_timestamp,</if>
+            <if test="syncTimestamp != null">sync_timestamp,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="objectName != null and objectName != ''">#{objectName},</if>
+            <if test="recordId != null and recordId != ''">#{recordId},</if>
+            <if test="operationType != null and operationType != ''">#{operationType},</if>
+            <if test="changeData != null and changeData != ''">#{changeData},</if>
+            <if test="syncStatus != null and syncStatus != ''">#{syncStatus},</if>
+            <if test="errorMessage != null">#{errorMessage},</if>
+            <if test="retryCount != null">#{retryCount},</if>
+            <if test="salesforceTimestamp != null">#{salesforceTimestamp},</if>
+            <if test="syncTimestamp != null">#{syncTimestamp},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateDataiIntegrationRealtimeSyncLog" parameterType="DataiIntegrationRealtimeSyncLog">
+        update datai_integration_realtime_sync_log
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="objectName != null and objectName != ''">object_name = #{objectName},</if>
+            <if test="recordId != null and recordId != ''">record_id = #{recordId},</if>
+            <if test="operationType != null and operationType != ''">operation_type = #{operationType},</if>
+            <if test="changeData != null and changeData != ''">change_data = #{changeData},</if>
+            <if test="syncStatus != null and syncStatus != ''">sync_status = #{syncStatus},</if>
+            <if test="errorMessage != null">error_message = #{errorMessage},</if>
+            <if test="retryCount != null">retry_count = #{retryCount},</if>
+            <if test="salesforceTimestamp != null">salesforce_timestamp = #{salesforceTimestamp},</if>
+            <if test="syncTimestamp != null">sync_timestamp = #{syncTimestamp},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where datai_integration_realtime_sync_log.id = #{id}
+    </update>
+
+    <delete id="deleteDataiIntegrationRealtimeSyncLogById" parameterType="Long">
+        delete from datai_integration_realtime_sync_log where id = #{id}
+    </delete>
+
+    <delete id="deleteDataiIntegrationRealtimeSyncLogByIds" parameterType="String">
+        delete from datai_integration_realtime_sync_log where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

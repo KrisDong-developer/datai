@@ -129,7 +129,7 @@ public class DataiIntegrationApiCallLogServiceImpl implements IDataiIntegrationA
             String cacheKey = generateCacheKey(params);
             
             // 尝试从缓存获取
-            Object cachedResult = CacheUtils.get("apiCallLog", cacheKey);
+            Object cachedResult = CacheUtils.get("apiCallLog", cacheKey, Map.class);
             if (cachedResult != null) {
                 log.info("从缓存获取API调用日志统计信息成功");
                 return (Map<String, Object>) cachedResult;

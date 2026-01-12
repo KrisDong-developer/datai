@@ -58,6 +58,9 @@ public class DataiIntegrationObjectServiceImpl implements IDataiIntegrationObjec
     @Autowired
     private SalesforceExecutor salesforceExecutor;
 
+    @Autowired
+    private com.datai.integration.realtime.impl.ObjectRegistryImpl objectRegistry;
+
     /**
      * 查询对象同步控制
      *
@@ -528,6 +531,109 @@ public class DataiIntegrationObjectServiceImpl implements IDataiIntegrationObjec
     }
 
     @Override
+    public Map<String, Object> updateRealtimeSyncStatus(Integer id, Boolean isRealtimeSync)
+    {
+        Map<String, Object> result = new HashMap<>();
+        
+        try {
+            if (id == null) {
+                log.error("对象ID不能为空");
+                result.put("success", false);
+                result.put("message", "对象ID不能为空");
+                return result;
+            }
+            
+            if (isRealtimeSync == null) {
+                log.error("实时同步状态不能为空");
+                result.put("success", false);
+                result.put("message", "实时同步状态不能为空");
+                return result;
+            }
+            
+            log.info("开始变更对象实时同步状态，对象ID: {}, isRealtimeSync: {}", id, isRealtimeSync);
+            
+            DataiIntegrationObject object = dataiIntegrationObjectMapper.selectDataiIntegrationObjectById(id);
+            if (object == null) {
+                log.error("对象不存在，对象ID: {}", id);
+                result.put("success", false);
+                result.put("message", "对象不存在");
+                return result;
+            }
+            
+            // 当启用实时同步时，检查batch表是否全量拉取存量数据
+            if (Boolean.TRUE.equals(isRealtimeSync)) {
+                String objectApi = object.getApi();
+                DataiIntegrationBatch queryBatch = new DataiIntegrationBatch();
+                queryBatch.setApi(objectApi);
+                queryBatch.setSyncType("FULL");
+                List<DataiIntegrationBatch> batches = dataiIntegrationBatchService.selectDataiIntegrationBatchList(queryBatch);
+                
+                if (batches.isEmpty()) {
+                    log.warn("对象 {} 尚未执行全量数据拉取，建议先执行全量同步", objectApi);
+                    result.put("warning", "对象尚未执行全量数据拉取，建议先执行全量同步");
+                }
+            }
+            
+            // 当变更实时同步状态时，查询Salesforce的PlatformEventChannelMember表，检查是否启用了实时同步
+            if (Boolean.TRUE.equals(isRealtimeSync)) {
+                try {
+                    IPartnerV1Connection connection = soapConnectionFactory.getConnection();
+                    if (connection != null) {
+                        String soql = "SELECT Id, ChannelId, EntityName, IsEnabled FROM PlatformEventChannelMember WHERE EntityName = '" + object.getApi() + "' AND IsEnabled = true";
+                        QueryResult queryResult = connection.query(soql);
+                        if (queryResult == null || queryResult.getSize() == 0) {
+                            log.warn("Salesforce中对象 {} 未启用实时同步配置", object.getApi());
+                            result.put("warning", "Salesforce中对象未启用实时同步配置，建议在Salesforce中启用");
+                        }
+                    }
+                } catch (Exception e) {
+                    log.warn("查询Salesforce实时同步配置失败: {}", e.getMessage());
+                    // 不影响主流程，继续执行
+                }
+            }
+            
+            Boolean oldStatus = object.getIsRealtimeSync();
+            object.setIsRealtimeSync(isRealtimeSync);
+            
+            int updateResult = updateDataiIntegrationObject(object);
+            
+            if (updateResult > 0) {
+                log.info("成功变更对象 {} 的实时同步状态，从 {} 变更为 {}", object.getApi(), oldStatus, isRealtimeSync);
+                
+                // 更新对象注册表中的信息，确保缓存中的配置信息得到及时更新
+                if (Boolean.TRUE.equals(isRealtimeSync)) {
+                    objectRegistry.registerObject(object);
+                } else {
+                    objectRegistry.unregisterObject(object.getApi());
+                }
+                
+                result.put("success", true);
+                if (result.containsKey("warning")) {
+                    result.put("message", "变更实时同步状态成功，但有警告信息");
+                } else {
+                    result.put("message", "变更实时同步状态成功");
+                }
+                result.put("objectId", object.getId());
+                result.put("objectApi", object.getApi());
+                result.put("objectLabel", object.getLabel());
+                result.put("oldStatus", oldStatus);
+                result.put("newStatus", isRealtimeSync);
+            } else {
+                log.error("变更对象 {} 的实时同步状态失败", object.getApi());
+                result.put("success", false);
+                result.put("message", "变更实时同步状态失败");
+            }
+            
+        } catch (Exception e) {
+            log.error("变更对象 {} 实时同步状态时发生异常", id, e);
+            result.put("success", false);
+            result.put("message", "变更实时同步状态失败: " + e.getMessage());
+        }
+        
+        return result;
+    }
+
+    @Override
     public Map<String, Object> getObjectStatistics()
     {
         Map<String, Object> statistics = new HashMap<>();
@@ -546,6 +652,7 @@ public class DataiIntegrationObjectServiceImpl implements IDataiIntegrationObjec
             int standardObjects = 0;
             int successSyncObjects = 0;
             int failedSyncObjects = 0;
+            int realtimeSyncObjects = 0;
             int totalRows = 0;
             LocalDateTime latestSyncDate = null;
             LocalDateTime latestFullSyncDate = null;
@@ -575,6 +682,10 @@ public class DataiIntegrationObjectServiceImpl implements IDataiIntegrationObjec
                     failedSyncObjects++;
                 }
 
+                if (Boolean.TRUE.equals(object.getIsRealtimeSync())) {
+                    realtimeSyncObjects++;
+                }
+
                 if (object.getTotalRows() != null) {
                     totalRows += object.getTotalRows();
                 }
@@ -596,6 +707,7 @@ public class DataiIntegrationObjectServiceImpl implements IDataiIntegrationObjec
             double incrementalRate = totalObjects > 0 ? (double) incrementalObjects / totalObjects * 100 : 0;
             double customRate = totalObjects > 0 ? (double) customObjects / totalObjects * 100 : 0;
             double successRate = enabledObjects > 0 ? (double) successSyncObjects / enabledObjects * 100 : 0;
+            double realtimeSyncRate = totalObjects > 0 ? (double) realtimeSyncObjects / totalObjects * 100 : 0;
 
             statistics.put("success", true);
             statistics.put("message", "获取对象统计信息成功");
@@ -614,12 +726,14 @@ public class DataiIntegrationObjectServiceImpl implements IDataiIntegrationObjec
             data.put("successSyncObjects", successSyncObjects);
             data.put("failedSyncObjects", failedSyncObjects);
             data.put("successRate", successRate);
+            data.put("realtimeSyncObjects", realtimeSyncObjects);
+            data.put("realtimeSyncRate", realtimeSyncRate);
             data.put("totalRows", totalRows);
             data.put("latestSyncDate", latestSyncDate);
             data.put("latestFullSyncDate", latestFullSyncDate);
             statistics.put("data", data);
 
-            log.info("成功获取对象整体统计信息，总对象数: {}, 启用同步: {}, 增量更新: {}", totalObjects, enabledObjects, incrementalObjects);
+            log.info("成功获取对象整体统计信息，总对象数: {}, 启用同步: {}, 增量更新: {}, 实时同步: {}", totalObjects, enabledObjects, incrementalObjects, realtimeSyncObjects);
 
         } catch (Exception e) {
             log.error("获取对象整体统计信息失败", e);

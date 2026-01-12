@@ -887,5 +887,110 @@ public class DataiIntegrationBatchServiceImpl implements IDataiIntegrationBatchS
         return partitionName;
     }
 
+    /**
+     * 获取所有批次统计信息
+     *
+     * @return 所有批次统计信息
+     */
+    @Override
+    public Map<String, Object> getAllBatchStatistics() {
+        Map<String, Object> statistics = new HashMap<>();
 
+        try {
+            log.info("开始获取所有批次统计信息");
+            
+            // 查询所有批次
+            List<DataiIntegrationBatch> batches = selectDataiIntegrationBatchList(new DataiIntegrationBatch());
+            
+            if (batches.isEmpty()) {
+                log.warn("未找到批次数据");
+                statistics.put("success", false);
+                statistics.put("message", "未找到批次数据");
+                return statistics;
+            }
+            
+            int totalCount = batches.size();
+            int successCount = 0;
+            int failedCount = 0;
+            int totalSfNum = 0;
+            int totalDbNum = 0;
+            long totalCost = 0;
+            int historyCount = 0;
+            
+            // 统计批次基本信息
+            for (DataiIntegrationBatch batch : batches) {
+                if (Boolean.TRUE.equals(batch.getSyncStatus())) {
+                    successCount++;
+                } else {
+                    failedCount++;
+                }
+                
+                if (batch.getSfNum() != null) {
+                    totalSfNum += batch.getSfNum();
+                }
+                
+                if (batch.getDbNum() != null) {
+                    totalDbNum += batch.getDbNum();
+                }
+            }
+            
+            // 查询所有批次历史记录，用于计算更详细的统计信息
+            DataiIntegrationBatchHistory queryHistory = new DataiIntegrationBatchHistory();
+            List<DataiIntegrationBatchHistory> histories = batchHistoryService.selectDataiIntegrationBatchHistoryList(queryHistory);
+            
+            for (DataiIntegrationBatchHistory history : histories) {
+                historyCount++;
+                if (history.getCost() != null) {
+                    totalCost += history.getCost();
+                }
+            }
+            
+            double successRate = totalCount > 0 ? (double) successCount / totalCount * 100 : 0;
+            double avgSfNum = totalCount > 0 ? (double) totalSfNum / totalCount : 0;
+            double avgDbNum = totalCount > 0 ? (double) totalDbNum / totalCount : 0;
+            long avgCost = historyCount > 0 ? totalCost / historyCount : 0;
+            
+            // 构建统计结果
+            statistics.put("success", true);
+            statistics.put("message", "获取所有批次统计信息成功");
+            
+            Map<String, Object> data = new HashMap<>();
+            data.put("totalCount", totalCount);
+            data.put("successCount", successCount);
+            data.put("failedCount", failedCount);
+            data.put("successRate", Math.round(successRate * 100.0) / 100.0);
+            data.put("totalSfNum", totalSfNum);
+            data.put("totalDbNum", totalDbNum);
+            data.put("avgSfNum", Math.round(avgSfNum * 100.0) / 100.0);
+            data.put("avgDbNum", Math.round(avgDbNum * 100.0) / 100.0);
+            data.put("totalHistoryCount", historyCount);
+            data.put("totalCost", totalCost);
+            data.put("avgCost", avgCost);
+            
+            // 按同步类型统计
+            Map<String, Object> syncTypeStats = new HashMap<>();
+            Map<String, Integer> syncTypeCount = new HashMap<>();
+            
+            for (DataiIntegrationBatch batch : batches) {
+                String syncType = batch.getSyncType();
+                if (syncType != null) {
+                    syncTypeCount.put(syncType, syncTypeCount.getOrDefault(syncType, 0) + 1);
+                }
+            }
+            
+            syncTypeStats.put("typeCount", syncTypeCount);
+            data.put("syncTypeStats", syncTypeStats);
+            
+            statistics.put("data", data);
+            
+            log.info("获取所有批次统计信息成功，总批次数: {}, 成功批次数: {}, 失败批次数: {}, 成功率: {:.2f}%", 
+                    totalCount, successCount, failedCount, successRate);
+        } catch (Exception e) {
+            log.error("获取所有批次统计信息时发生异常", e);
+            statistics.put("success", false);
+            statistics.put("message", "获取所有批次统计信息失败: " + e.getMessage());
+        }
+
+        return statistics;
+    }
 }

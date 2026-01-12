@@ -102,6 +102,9 @@ public class DataiIntegrationObjectDto implements Serializable
         /** 失败原因 */
     private String errorMessage;
 
+        /** 实时同步 */
+    private Boolean isRealtimeSync;
+
         /** 备注 */
     private String remark;
 

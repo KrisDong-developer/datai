@@ -164,4 +164,20 @@ public class DataiIntegrationBatchController extends BaseController
             return error((String) result.get("message"));
         }
     }
+
+    /**
+     * 获取所有批次统计信息
+     */
+    @Operation(summary = "获取所有批次统计信息")
+    @PreAuthorize("@ss.hasPermi('integration:batch:statistics')")
+    @GetMapping("/statistics")
+    public AjaxResult getAllBatchStatistics()
+    {
+        Map<String, Object> result = dataiIntegrationBatchService.getAllBatchStatistics();
+        if ((Boolean) result.get("success")) {
+            return success(result);
+        } else {
+            return error((String) result.get("message"));
+        }
+    }
 }

@@ -203,6 +203,23 @@ public class DataiIntegrationObjectController extends BaseController
     }
 
     /**
+     * 变更对象实时同步状态
+     */
+    @Operation(summary = "变更对象实时同步状态")
+    @PreAuthorize("@ss.hasPermi('integration:object:updateRealtimeSyncStatus')")
+    @Log(title = "对象同步控制", businessType = BusinessType.UPDATE)
+    @PutMapping("/{id}/realtimeSyncStatus")
+    public AjaxResult updateRealtimeSyncStatus(@PathVariable("id") Integer id, @org.springframework.web.bind.annotation.RequestParam("isRealtimeSync") Boolean isRealtimeSync)
+    {
+        Map<String, Object> result = dataiIntegrationObjectService.updateRealtimeSyncStatus(id, isRealtimeSync);
+        if ((Boolean) result.get("success")) {
+            return success(result);
+        } else {
+            return error((String) result.get("message"));
+        }
+    }
+
+    /**
      * 获取对象整体统计信息
      */
     @Operation(summary = "获取对象整体统计信息")
