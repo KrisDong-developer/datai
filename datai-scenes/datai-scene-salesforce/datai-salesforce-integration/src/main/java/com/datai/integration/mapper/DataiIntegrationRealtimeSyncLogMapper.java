@@ -3,6 +3,7 @@ package com.datai.integration.mapper;
 import com.datai.integration.model.domain.DataiIntegrationRealtimeSyncLog;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 实时同步日志Mapper接口
@@ -59,4 +60,44 @@ public interface DataiIntegrationRealtimeSyncLogMapper
      * @return 结果
      */
     public int deleteDataiIntegrationRealtimeSyncLogByIds(Long[] ids);
+
+    /**
+     * 查询综合统计信息
+     * 
+     * @param params 查询参数
+     * @return 统计信息
+     */
+    Map<String, Object> selectOverallStatistics(Map<String, Object> params);
+
+    /**
+     * 按对象统计
+     * 
+     * @param params 查询参数
+     * @return 对象统计列表
+     */
+    List<Map<String, Object>> selectStatisticsByObject(Map<String, Object> params);
+
+    /**
+     * 按操作类型统计
+     * 
+     * @param params 查询参数
+     * @return 操作类型统计列表
+     */
+    List<Map<String, Object>> selectStatisticsByOperationType(Map<String, Object> params);
+
+    /**
+     * 按状态统计
+     * 
+     * @param params 查询参数
+     * @return 状态统计列表
+     */
+    List<Map<String, Object>> selectStatisticsByStatus(Map<String, Object> params);
+
+    /**
+     * 按时间趋势统计
+     * 
+     * @param params 查询参数
+     * @return 时间趋势统计列表
+     */
+    List<Map<String, Object>> selectStatisticsByTrend(Map<String, Object> params);
 }

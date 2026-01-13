@@ -1,10 +1,10 @@
 package com.datai.integration.realtime.impl;
 
 import com.datai.integration.factory.impl.PubSubConnectionFactory;
+import com.datai.integration.realtime.EventProcessor;
 import com.datai.integration.realtime.EventSubscriber;
 import com.salesforce.multicloudj.pubsub.client.SubscriptionClient;
 import com.salesforce.multicloudj.pubsub.driver.Message;
-import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,41 +23,49 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @Component
 public class PubSubEventSubscriberImpl implements EventSubscriber {
 
+    private static final String DEFAULT_TOPIC = "/event/ChangeEvents";
+    private static final String MONITOR_THREAD_NAME = "pubsub-monitor";
+    private static final String EVENT_RECEIVER_THREAD_NAME = "pubsub-event-receiver";
+    
+    private static final String ERROR_SUBSCRIPTION_ALREADY_STARTED = "Salesforce Pub/Sub API 订阅已经启动，跳过启动操作";
+    private static final String ERROR_SUBSCRIPTION_ALREADY_STOPPED = "Salesforce Pub/Sub API 订阅未启动，跳过停止操作";
+    private static final String ERROR_SUBSCRIPTION_DISCONNECTED = "Salesforce Pub/Sub API 订阅已断开，尝试重新连接";
+    private static final String ERROR_TOPIC_EMPTY = "订阅主题不能为空";
+    private static final String ERROR_EVENT_PROCESSING = "接收和处理事件时发生异常";
+    private static final String ERROR_RECONNECT_FAILED = "重新连接 Salesforce Pub/Sub API 订阅时发生异常";
+    private static final String ERROR_MONITOR_SHUTDOWN = "监控线程关闭超时，强制关闭";
+    
+    private static final long MONITOR_SHUTDOWN_TIMEOUT_SECONDS = 5;
+    private static final long ERROR_SLEEP_SECONDS = 1;
+
     @Autowired
     private PubSubConnectionFactory connectionFactory;
 
     @Autowired
-    private EventProcessorImpl eventProcessor;
+    private EventProcessor eventProcessor;
 
     private SubscriptionClient subscriptionClient;
     private final AtomicBoolean subscribed = new AtomicBoolean(false);
-    private final String TOPIC = "/event/ChangeEvents"; // 监听所有变更事件
     private ScheduledExecutorService monitorExecutor;
+
+    @Value("${salesforce.pubsub.topic:" + DEFAULT_TOPIC + "}")
+    private String topic;
 
     @Value("${salesforce.pubsub.retry.delay:30}")
     private int retryDelay;
 
     @Override
-    @PostConstruct
     public void startSubscription() {
         if (subscribed.get()) {
-            log.info("Salesforce Pub/Sub API 订阅已经启动，跳过启动操作");
+            log.warn(ERROR_SUBSCRIPTION_ALREADY_STARTED);
             return;
         }
 
-        log.info("启动 Salesforce Pub/Sub API 订阅: {}", TOPIC);
+        validateTopic();
+        log.info("启动 Salesforce Pub/Sub API 订阅: {}", topic);
 
         try {
-            // 获取订阅客户端
-            subscriptionClient = connectionFactory.getSubscriptionClient(TOPIC);
-
-            // 启动事件接收线程
-            monitorExecutor = Executors.newSingleThreadScheduledExecutor();
-            monitorExecutor.execute(this::receiveEvents);
-
-            // 启动监控线程，处理断线重连
-            monitorExecutor.scheduleWithFixedDelay(this::checkSubscriptionStatus, 0, retryDelay, TimeUnit.SECONDS);
-
+            initializeSubscription();
             subscribed.set(true);
             log.info("Salesforce Pub/Sub API 订阅启动成功");
         } catch (Exception e) {
@@ -66,34 +74,62 @@ public class PubSubEventSubscriberImpl implements EventSubscriber {
         }
     }
 
+    private void validateTopic() {
+        if (topic == null || topic.trim().isEmpty()) {
+            log.error(ERROR_TOPIC_EMPTY);
+            throw new IllegalStateException(ERROR_TOPIC_EMPTY);
+        }
+    }
+
+    private void initializeSubscription() {
+        subscriptionClient = connectionFactory.getSubscriptionClient(topic);
+        monitorExecutor = Executors.newSingleThreadScheduledExecutor(r -> {
+            Thread thread = new Thread(r, MONITOR_THREAD_NAME);
+            thread.setDaemon(true);
+            return thread;
+        });
+        monitorExecutor.execute(this::receiveEvents);
+        monitorExecutor.scheduleWithFixedDelay(this::checkSubscriptionStatus, 0, retryDelay, TimeUnit.SECONDS);
+    }
+
     /**
      * 接收并处理事件
      */
     private void receiveEvents() {
+        Thread.currentThread().setName(EVENT_RECEIVER_THREAD_NAME);
+        
         while (subscribed.get()) {
             try {
                 if (subscriptionClient != null) {
-                    // 接收事件
                     Message message = subscriptionClient.receive();
                     if (message != null) {
-                        log.debug("接收到事件: {}", message.getLoggableID());
-                        
-                        // 处理事件
-                        eventProcessor.processMessage(message);
-
-                        // 确认接收
-                        subscriptionClient.sendAck(message.getAckID());
+                        processMessage(message);
                     }
                 }
             } catch (Exception e) {
-                log.error("接收和处理事件时发生异常: {}", e.getMessage(), e);
-                // 短暂休眠后继续
-                try {
-                    TimeUnit.SECONDS.sleep(1);
-                } catch (InterruptedException ie) {
-                    Thread.currentThread().interrupt();
-                }
+                log.error(ERROR_EVENT_PROCESSING + ": {}", e.getMessage(), e);
+                sleepOnError();
             }
+        }
+    }
+
+    private void processMessage(Message message) {
+        String loggableId = message.getLoggableID();
+        log.debug("接收到事件: {}", loggableId);
+        
+        try {
+            eventProcessor.processMessage(message);
+            subscriptionClient.sendAck(message.getAckID());
+        } catch (Exception e) {
+            log.error("处理事件失败 [LoggableID: {}]: {}", loggableId, e.getMessage(), e);
+        }
+    }
+
+    private void sleepOnError() {
+        try {
+            TimeUnit.SECONDS.sleep(ERROR_SLEEP_SECONDS);
+        } catch (InterruptedException ie) {
+            Thread.currentThread().interrupt();
         }
     }
 
@@ -102,14 +138,17 @@ public class PubSubEventSubscriberImpl implements EventSubscriber {
      */
     private void checkSubscriptionStatus() {
         if (!subscribed.get()) {
-            log.warn("Salesforce Pub/Sub API 订阅已断开，尝试重新连接");
-            try {
-                // 重新启动订阅
-                stopSubscription();
-                startSubscription();
-            } catch (Exception e) {
-                log.error("重新连接 Salesforce Pub/Sub API 订阅时发生异常: {}", e.getMessage(), e);
-            }
+            log.warn(ERROR_SUBSCRIPTION_DISCONNECTED);
+            attemptReconnect();
+        }
+    }
+
+    private void attemptReconnect() {
+        try {
+            stopSubscription();
+            startSubscription();
+        } catch (Exception e) {
+            log.error(ERROR_RECONNECT_FAILED + ": {}", e.getMessage(), e);
         }
     }
 
@@ -117,32 +156,41 @@ public class PubSubEventSubscriberImpl implements EventSubscriber {
     @PreDestroy
     public void stopSubscription() {
         if (!subscribed.get()) {
-            log.info("Salesforce Pub/Sub API 订阅未启动，跳过停止操作");
+            log.warn(ERROR_SUBSCRIPTION_ALREADY_STOPPED);
             return;
         }
 
-        log.info("停止 Salesforce Pub/Sub API 订阅: {}", TOPIC);
+        log.info("停止 Salesforce Pub/Sub API 订阅: {}", topic);
 
         try {
-            // 停止监控线程
-            if (monitorExecutor != null) {
-                monitorExecutor.shutdown();
-                if (!monitorExecutor.awaitTermination(5, TimeUnit.SECONDS)) {
-                    monitorExecutor.shutdownNow();
-                }
-            }
-
-            // 关闭订阅客户端
-            if (subscriptionClient != null) {
-                subscriptionClient.close();
-                connectionFactory.closeClient(TOPIC);
-            }
-
+            shutdownMonitorExecutor();
+            closeSubscriptionClient();
             subscribed.set(false);
             subscriptionClient = null;
             log.info("Salesforce Pub/Sub API 订阅停止成功");
         } catch (Exception e) {
             log.error("停止 Salesforce Pub/Sub API 订阅时发生异常: {}", e.getMessage(), e);
+        }
+    }
+
+    private void shutdownMonitorExecutor() throws InterruptedException {
+        if (monitorExecutor != null) {
+            monitorExecutor.shutdown();
+            if (!monitorExecutor.awaitTermination(MONITOR_SHUTDOWN_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
+                log.warn(ERROR_MONITOR_SHUTDOWN);
+                monitorExecutor.shutdownNow();
+            }
+        }
+    }
+
+    private void closeSubscriptionClient() {
+        if (subscriptionClient != null) {
+            try {
+                subscriptionClient.close();
+                connectionFactory.closeClient(topic);
+            } catch (Exception e) {
+                log.error("关闭订阅客户端时发生异常: {}", e.getMessage(), e);
+            }
         }
     }
 
@@ -156,6 +204,6 @@ public class PubSubEventSubscriberImpl implements EventSubscriber {
      * @return 订阅主题
      */
     public String getSubscribedTopic() {
-        return TOPIC;
+        return topic;
     }
 }

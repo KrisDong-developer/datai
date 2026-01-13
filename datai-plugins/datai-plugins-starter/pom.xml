@@ -28,10 +28,10 @@
         </dependency>
 
         <!-- websocket -->
-        <dependency>
-            <groupId>com.datai</groupId>
-            <artifactId>datai-websocket</artifactId>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.datai</groupId>-->
+<!--            <artifactId>datai-websocket</artifactId>-->
+<!--        </dependency>-->
 
         <!-- mybatis-jpa -->
         <dependency>
@@ -50,10 +50,10 @@
             <artifactId>datai-mybatis-interceptor</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>com.datai</groupId>
-            <artifactId>datai-netty</artifactId>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.datai</groupId>-->
+<!--            <artifactId>datai-netty</artifactId>-->
+<!--        </dependency>-->
 
 <!--        <dependency>-->
 <!--            <groupId>com.datai</groupId>-->

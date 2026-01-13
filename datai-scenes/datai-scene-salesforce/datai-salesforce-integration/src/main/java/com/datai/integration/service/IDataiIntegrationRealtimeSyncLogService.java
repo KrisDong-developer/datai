@@ -3,6 +3,7 @@ package com.datai.integration.service;
 import com.datai.integration.model.domain.DataiIntegrationRealtimeSyncLog;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 实时同步日志Service接口
@@ -59,4 +60,12 @@ public interface IDataiIntegrationRealtimeSyncLogService
      * @return 结果
      */
     public int deleteDataiIntegrationRealtimeSyncLogById(Long id);
+
+    /**
+     * 获取实时同步日志统计信息
+     * 
+     * @param params 查询参数
+     * @return 统计信息
+     */
+    Map<String, Object> getStatistics(Map<String, Object> params);
 }

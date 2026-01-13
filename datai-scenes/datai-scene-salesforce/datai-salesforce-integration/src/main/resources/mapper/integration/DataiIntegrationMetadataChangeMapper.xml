@@ -213,15 +213,15 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <select id="selectChangeStatistics" resultType="java.util.Map">
         select 
             count(*) as totalCount,
-            sum(case when sync_status = true then 1 else 0 end) as syncedCount,
-            sum(case when sync_status = false then 1 else 0 end) as unsyncedCount,
+            sum(case when sync_status = 1 then 1 else 0 end) as syncedCount,
+            sum(case when sync_status = 0 then 1 else 0 end) as unsyncedCount,
             sum(case when change_type = 'object' then 1 else 0 end) as objectChangeCount,
             sum(case when change_type = 'field' then 1 else 0 end) as fieldChangeCount,
             sum(case when operation_type = 'create' then 1 else 0 end) as createCount,
             sum(case when operation_type = 'update' then 1 else 0 end) as updateCount,
             sum(case when operation_type = 'delete' then 1 else 0 end) as deleteCount,
-            sum(case when is_custom = true then 1 else 0 end) as customCount,
-            sum(case when is_custom = false then 1 else 0 end) as standardCount,
+            sum(case when is_custom = 1 then 1 else 0 end) as customCount,
+            sum(case when is_custom = 0 then 1 else 0 end) as standardCount,
             count(distinct object_api) as objectCount,
             count(distinct field_api) as fieldCount,
             sum(retry_count) as totalRetryCount,
@@ -267,15 +267,15 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="groupBy == 'syncStatus'">sync_status as groupKey, '同步状态' as groupName</if>
             <if test="groupBy == 'isCustom'">is_custom as groupKey, '是否自定义' as groupName</if>
             , count(*) as totalCount,
-            sum(case when sync_status = true then 1 else 0 end) as syncedCount,
-            sum(case when sync_status = false then 1 else 0 end) as unsyncedCount,
+            sum(case when sync_status = 1 then 1 else 0 end) as syncedCount,
+            sum(case when sync_status = 0 then 1 else 0 end) as unsyncedCount,
             sum(case when change_type = 'object' then 1 else 0 end) as objectChangeCount,
             sum(case when change_type = 'field' then 1 else 0 end) as fieldChangeCount,
             sum(case when operation_type = 'create' then 1 else 0 end) as createCount,
             sum(case when operation_type = 'update' then 1 else 0 end) as updateCount,
             sum(case when operation_type = 'delete' then 1 else 0 end) as deleteCount,
-            sum(case when is_custom = true then 1 else 0 end) as customCount,
-            sum(case when is_custom = false then 1 else 0 end) as standardCount,
+            sum(case when is_custom = 1 then 1 else 0 end) as customCount,
+            sum(case when is_custom = 0 then 1 else 0 end) as standardCount,
             count(distinct object_api) as objectCount,
             count(distinct field_api) as fieldCount,
             sum(retry_count) as totalRetryCount,
@@ -312,15 +312,19 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="timeUnit == 'month'">DATE_FORMAT(change_time, '%Y-%m') as timeKey</if>
             <if test="timeUnit == 'quarter'">CONCAT(YEAR(change_time), '-Q', QUARTER(change_time)) as timeKey</if>
             , count(*) as totalCount,
-            sum(case when sync_status = true then 1 else 0 end) as syncedCount,
-            sum(case when sync_status = false then 1 else 0 end) as unsyncedCount,
+            sum(case when sync_status = 1 then 1 else 0 end) as syncedCount,
+            sum(case when sync_status = 0 then 1 else 0 end) as unsyncedCount,
             sum(case when change_type = 'object' then 1 else 0 end) as objectChangeCount,
             sum(case when change_type = 'field' then 1 else 0 end) as fieldChangeCount,
             sum(case when operation_type = 'create' then 1 else 0 end) as createCount,
             sum(case when operation_type = 'update' then 1 else 0 end) as updateCount,
             sum(case when operation_type = 'delete' then 1 else 0 end) as deleteCount,
-            sum(case when is_custom = true then 1 else 0 end) as customCount,
-            sum(case when is_custom = false then 1 else 0 end) as standardCount
+            sum(case when is_custom = 1 then 1 else 0 end) as customCount,
+            sum(case when is_custom = 0 then 1 else 0 end) as standardCount,
+            sum(retry_count) as totalRetryCount,
+            max(retry_count) as maxRetryCount,
+            count(distinct object_api) as objectCount,
+            count(distinct field_api) as fieldCount
         from datai_integration_metadata_change
         <where>
             <if test="changeType != null and changeType != ''"> and change_type = #{changeType}</if>

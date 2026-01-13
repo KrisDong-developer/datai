@@ -5,85 +5,98 @@ import com.datai.integration.realtime.ObjectRegistry;
 import com.datai.integration.service.IDataiIntegrationObjectService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
-/**
- * 对象注册表实现
- * 用于管理所有启用实时同步的对象
- */
-@Component
 @Slf4j
+@Component
 public class ObjectRegistryImpl implements ObjectRegistry {
 
     @Autowired
-    private IDataiIntegrationObjectService objectService;
+    @Lazy
+    private IDataiIntegrationObjectService integrationObjectService;
 
-    private final Map<String, DataiIntegrationObject> objectRegistry = new ConcurrentHashMap<>();
-
-    @Override
-    public void registerObject(DataiIntegrationObject object) {
-        if (object == null || object.getApi() == null) {
-            log.warn("尝试注册空对象或API为空的对象，跳过注册");
-            return;
-        }
-
-        objectRegistry.put(object.getApi(), object);
-        log.info("成功注册启用实时同步的对象: {}", object.getApi());
-    }
-
-    @Override
-    public void unregisterObject(String objectApi) {
-        if (objectApi == null) {
-            log.warn("尝试注销API为空的对象，跳过注销");
-            return;
-        }
-
-        if (objectRegistry.remove(objectApi) != null) {
-            log.info("成功注销对象: {}", objectApi);
-        } else {
-            log.warn("尝试注销不存在的对象: {}", objectApi);
-        }
-    }
+    private final ConcurrentMap<String, DataiIntegrationObject> objectRegistry = new ConcurrentHashMap<>();
 
     @Override
     public void refreshRegistry() {
-        log.info("开始刷新对象注册表");
+        log.info("刷新对象注册表");
 
         try {
-            // 清空现有注册表
+            Set<DataiIntegrationObject> realtimeSyncObjects = integrationObjectService.getRealtimeSyncObjects();
+
             objectRegistry.clear();
 
-            // 获取所有启用实时同步的对象
-            List<DataiIntegrationObject> realtimeSyncObjects = objectService.getRealtimeSyncObjects();
-
-            // 注册每个对象
             for (DataiIntegrationObject object : realtimeSyncObjects) {
-                registerObject(object);
+                objectRegistry.put(object.getApi(), object);
+                log.debug("注册实时同步对象: {}", object.getApi());
             }
 
-            log.info("对象注册表刷新完成，共注册 {} 个启用实时同步的对象", realtimeSyncObjects.size());
+            log.info("对象注册表刷新完成，共注册 {} 个实时同步对象", objectRegistry.size());
         } catch (Exception e) {
             log.error("刷新对象注册表时发生异常: {}", e.getMessage(), e);
         }
     }
 
     @Override
-    public List<DataiIntegrationObject> getRealtimeSyncObjects() {
-        return new ArrayList<>(objectRegistry.values());
+    public boolean isObjectRegistered(String objectApi) {
+        return objectRegistry.containsKey(objectApi);
     }
 
     @Override
-    public boolean isObjectRealtimeSyncEnabled(String objectApi) {
-        if (objectApi == null) {
-            return false;
+    public DataiIntegrationObject getObject(String objectApi) {
+        return objectRegistry.get(objectApi);
+    }
+
+    @Override
+    public Set<String> getRegisteredObjects() {
+        return objectRegistry.keySet();
+    }
+
+    @Override
+    public int getRegisteredObjectCount() {
+        return objectRegistry.size();
+    }
+
+    @Override
+    public void registerObject(DataiIntegrationObject object) {
+        if (object == null || object.getApi() == null) {
+            log.warn("尝试注册空对象或对象API为空，跳过注册");
+            return;
         }
 
-        DataiIntegrationObject object = objectRegistry.get(objectApi);
-        return object != null && Boolean.TRUE.equals(object.getIsRealtimeSync());
+        if (!object.getIsRealtimeSync()) {
+            log.warn("尝试注册未启用实时同步的对象: {}, 跳过注册", object.getApi());
+            return;
+        }
+
+        objectRegistry.put(object.getApi(), object);
+        log.info("注册实时同步对象: {}", object.getApi());
+    }
+
+    @Override
+    public void unregisterObject(String objectApi) {
+        if (objectApi == null) {
+            log.warn("尝试注销空对象API，跳过注销");
+            return;
+        }
+
+        DataiIntegrationObject removedObject = objectRegistry.remove(objectApi);
+        if (removedObject != null) {
+            log.info("注销实时同步对象: {}", objectApi);
+        } else {
+            log.warn("尝试注销未注册的对象: {}", objectApi);
+        }
+    }
+
+    @Override
+    public List<DataiIntegrationObject> getRealtimeSyncObjects() {
+        return new ArrayList<>(objectRegistry.values());
     }
 }

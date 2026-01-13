@@ -169,4 +169,33 @@ public class DataiIntegrationRealtimeSyncController {
         
         return result;
     }
+    
+    /**
+     * 获取实时同步统计信息
+     * 获取实时同步服务的详细统计信息，包括服务状态、对象统计、订阅统计等
+     */
+    @Operation(summary = "获取实时同步统计信息")
+    @PreAuthorize("@ss.hasPermi('integration:realtime:statistics')")
+    @GetMapping("/statistics")
+    public Map<String, Object> getStatistics() {
+        log.info("获取实时同步统计信息");
+        
+        Map<String, Object> result = new HashMap<>();
+        
+        try {
+            Map<String, Object> statistics = realtimeSyncService.getStatistics();
+            
+            result.put("success", statistics.get("success"));
+            result.put("message", statistics.get("message"));
+            result.put("data", statistics.get("data"));
+            
+            log.info("获取实时同步统计信息成功");
+        } catch (Exception e) {
+            log.error("获取实时同步统计信息时发生异常: {}", e.getMessage(), e);
+            result.put("success", false);
+            result.put("message", "获取实时同步统计信息失败: " + e.getMessage());
+        }
+        
+        return result;
+    }
 }

@@ -114,4 +114,100 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             #{id}
         </foreach>
     </delete>
+
+    <select id="selectOverallStatistics" parameterType="java.util.Map" resultType="java.util.Map">
+        select 
+            count(*) as totalCount,
+            sum(case when sync_status = 'SUCCESS' then 1 else 0 end) as successCount,
+            sum(case when sync_status = 'FAILED' then 1 else 0 end) as failureCount,
+            sum(case when sync_status = 'PENDING' then 1 else 0 end) as pendingCount,
+            avg(timestampdiff(SECOND, salesforce_timestamp, sync_timestamp)) as avgProcessingTime
+        from datai_integration_realtime_sync_log
+        <where>
+            <if test="objectName != null and objectName != ''"> and object_name = #{objectName}</if>
+            <if test="operationType != null and operationType != ''"> and operation_type = #{operationType}</if>
+            <if test="syncStatus != null and syncStatus != ''"> and sync_status = #{syncStatus}</if>
+            <if test="startTime != null"> and sync_timestamp &gt;= #{startTime}</if>
+            <if test="endTime != null"> and sync_timestamp &lt;= #{endTime}</if>
+        </where>
+    </select>
+
+    <select id="selectStatisticsByObject" parameterType="java.util.Map" resultType="java.util.Map">
+        select 
+            object_name as objectName,
+            count(*) as totalCount,
+            sum(case when sync_status = 'SUCCESS' then 1 else 0 end) as successCount,
+            sum(case when sync_status = 'FAILED' then 1 else 0 end) as failureCount,
+            sum(case when sync_status = 'PENDING' then 1 else 0 end) as pendingCount,
+            max(sync_timestamp) as lastSyncTime
+        from datai_integration_realtime_sync_log
+        <where>
+            <if test="operationType != null and operationType != ''"> and operation_type = #{operationType}</if>
+            <if test="syncStatus != null and syncStatus != ''"> and sync_status = #{syncStatus}</if>
+            <if test="startTime != null"> and sync_timestamp &gt;= #{startTime}</if>
+            <if test="endTime != null"> and sync_timestamp &lt;= #{endTime}</if>
+        </where>
+        group by object_name
+        order by totalCount desc
+    </select>
+
+    <select id="selectStatisticsByOperationType" parameterType="java.util.Map" resultType="java.util.Map">
+        select 
+            operation_type as operationType,
+            count(*) as totalCount,
+            sum(case when sync_status = 'SUCCESS' then 1 else 0 end) as successCount,
+            sum(case when sync_status = 'FAILED' then 1 else 0 end) as failureCount,
+            sum(case when sync_status = 'PENDING' then 1 else 0 end) as pendingCount
+        from datai_integration_realtime_sync_log
+        <where>
+            <if test="objectName != null and objectName != ''"> and object_name = #{objectName}</if>
+            <if test="syncStatus != null and syncStatus != ''"> and sync_status = #{syncStatus}</if>
+            <if test="startTime != null"> and sync_timestamp &gt;= #{startTime}</if>
+            <if test="endTime != null"> and sync_timestamp &lt;= #{endTime}</if>
+        </where>
+        group by operation_type
+        order by totalCount desc
+    </select>
+
+    <select id="selectStatisticsByStatus" parameterType="java.util.Map" resultType="java.util.Map">
+        select 
+            sync_status as syncStatus,
+            count(*) as totalCount,
+            sum(retry_count) as totalRetryCount,
+            avg(retry_count) as avgRetryCount
+        from datai_integration_realtime_sync_log
+        <where>
+            <if test="objectName != null and objectName != ''"> and object_name = #{objectName}</if>
+            <if test="operationType != null and operationType != ''"> and operation_type = #{operationType}</if>
+            <if test="startTime != null"> and sync_timestamp &gt;= #{startTime}</if>
+            <if test="endTime != null"> and sync_timestamp &lt;= #{endTime}</if>
+        </where>
+        group by sync_status
+        order by totalCount desc
+    </select>
+
+    <select id="selectStatisticsByTrend" parameterType="java.util.Map" resultType="java.util.Map">
+        select 
+            <if test="timeUnit == 'day'">DATE_FORMAT(sync_timestamp, '%Y-%m-%d') as timeKey</if>
+            <if test="timeUnit == 'week'">DATE_FORMAT(sync_timestamp, '%Y-%u') as timeKey</if>
+            <if test="timeUnit == 'month'">DATE_FORMAT(sync_timestamp, '%Y-%m') as timeKey</if>
+            <if test="timeUnit == 'quarter'">CONCAT(YEAR(sync_timestamp), '-Q', QUARTER(sync_timestamp)) as timeKey</if>
+            , count(*) as totalCount,
+            sum(case when sync_status = 'SUCCESS' then 1 else 0 end) as successCount,
+            sum(case when sync_status = 'FAILED' then 1 else 0 end) as failureCount,
+            sum(case when sync_status = 'PENDING' then 1 else 0 end) as pendingCount,
+            sum(retry_count) as totalRetryCount,
+            max(retry_count) as maxRetryCount,
+            avg(timestampdiff(SECOND, salesforce_timestamp, sync_timestamp)) as avgProcessingTime
+        from datai_integration_realtime_sync_log
+        <where>
+            <if test="objectName != null and objectName != ''"> and object_name = #{objectName}</if>
+            <if test="operationType != null and operationType != ''"> and operation_type = #{operationType}</if>
+            <if test="syncStatus != null and syncStatus != ''"> and sync_status = #{syncStatus}</if>
+            <if test="startTime != null"> and sync_timestamp &gt;= #{startTime}</if>
+            <if test="endTime != null"> and sync_timestamp &lt;= #{endTime}</if>
+        </where>
+        group by timeKey
+        order by timeKey asc
+    </select>
 </mapper>

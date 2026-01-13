@@ -15,6 +15,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 
 @Slf4j
 @Component
@@ -29,6 +30,7 @@ public class DataSynchronizerImpl implements DataSynchronizer {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void synchronizeData(String objectType, String recordId, String changeType, Map<String, Object> changeData, Date changeDate) {
+        
         if (objectType == null || recordId == null) {
             log.warn("尝试同步数据时对象API或记录ID为空，跳过同步");
             return;

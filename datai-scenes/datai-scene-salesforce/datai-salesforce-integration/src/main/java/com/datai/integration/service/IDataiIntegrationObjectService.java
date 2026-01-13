@@ -2,6 +2,8 @@ package com.datai.integration.service;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+
 import com.datai.integration.model.domain.DataiIntegrationObject;
 
 /**
@@ -133,4 +135,6 @@ public interface IDataiIntegrationObjectService
      * @return 同步结果
      */
     public Map<String, Object> syncMultipleObjectData(Integer[] ids);
+
+    Set<DataiIntegrationObject> getRealtimeSyncObjects();
 }

@@ -1,6 +1,7 @@
 package com.datai.integration.controller;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.datai.common.utils.PageUtils;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import com.datai.common.annotation.Log;
 import com.datai.common.core.controller.BaseController;
@@ -117,5 +119,46 @@ public class DataiIntegrationRealtimeSyncLogController extends BaseController
     public AjaxResult remove(@PathVariable( name = "ids" ) Long[] ids) 
     {
         return toAjax(dataiIntegrationRealtimeSyncLogService.deleteDataiIntegrationRealtimeSyncLogByIds(ids));
+    }
+
+    /**
+     * 获取实时同步日志统计信息
+     * 获取实时同步日志的详细统计信息，支持多种分组维度
+     */
+    @Operation(summary = "获取实时同步日志统计信息")
+    @PreAuthorize("@ss.hasPermi('integration:realtimelog:statistics')")
+    @GetMapping("/statistics")
+    public Map<String, Object> getStatistics(
+            @RequestParam(required = false) String groupBy,
+            @RequestParam(required = false) String timeUnit,
+            @RequestParam(required = false) String objectName,
+            @RequestParam(required = false) String operationType,
+            @RequestParam(required = false) String syncStatus,
+            @RequestParam(required = false) String startTime,
+            @RequestParam(required = false) String endTime) {
+        Map<String, Object> params = new java.util.HashMap<>();
+        params.put("groupBy", groupBy);
+        params.put("timeUnit", timeUnit);
+        params.put("objectName", objectName);
+        params.put("operationType", operationType);
+        params.put("syncStatus", syncStatus);
+        params.put("startTime", startTime);
+        params.put("endTime", endTime);
+
+        Map<String, Object> result = new java.util.HashMap<>();
+
+        try {
+            Map<String, Object> statistics = dataiIntegrationRealtimeSyncLogService.getStatistics(params);
+
+            result.put("success", statistics.get("success"));
+            result.put("message", statistics.get("message"));
+            result.put("data", statistics.get("data"));
+
+        } catch (Exception e) {
+            result.put("success", false);
+            result.put("message", "获取实时同步日志统计信息失败: " + e.getMessage());
+        }
+
+        return result;
     }
 }

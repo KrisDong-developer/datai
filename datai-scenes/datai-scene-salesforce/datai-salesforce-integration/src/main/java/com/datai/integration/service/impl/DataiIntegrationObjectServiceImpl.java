@@ -22,12 +22,12 @@ import com.sforce.soap.partner.DescribeSObjectResult;
 import com.sforce.soap.partner.Field;
 import com.datai.integration.core.IPartnerV1Connection;
 import com.sforce.soap.partner.QueryResult;
-import com.sforce.soap.partner.sobject.SObject;
 import com.sforce.ws.ConnectionException;
 import org.apache.commons.lang3.StringUtils;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 
@@ -58,6 +58,7 @@ public class DataiIntegrationObjectServiceImpl implements IDataiIntegrationObjec
     @Autowired
     private SalesforceExecutor salesforceExecutor;
 
+    @Lazy
     @Autowired
     private com.datai.integration.realtime.impl.ObjectRegistryImpl objectRegistry;
 
@@ -1304,5 +1305,35 @@ public class DataiIntegrationObjectServiceImpl implements IDataiIntegrationObjec
             log.error("批量保存数据到分区 {} 失败: {}", partitionName, e.getMessage(), e);
             throw e;
         }
+    }
+
+    @Override
+    public Set<DataiIntegrationObject> getRealtimeSyncObjects() {
+        Set<DataiIntegrationObject> realtimeSyncObjects = new HashSet<>();
+        
+        try {
+            log.info("开始获取所有启用实时同步的对象");
+            
+            DataiIntegrationObject queryObject = new DataiIntegrationObject();
+            queryObject.setIsRealtimeSync(true);
+            
+            List<DataiIntegrationObject> objects = dataiIntegrationObjectMapper.selectDataiIntegrationObjectList(queryObject);
+            
+            if (objects != null && !objects.isEmpty()) {
+                realtimeSyncObjects.addAll(objects);
+                log.info("成功获取 {} 个启用实时同步的对象", realtimeSyncObjects.size());
+                
+                for (DataiIntegrationObject object : realtimeSyncObjects) {
+                    log.debug("实时同步对象: {} - {}", object.getApi(), object.getLabel());
+                }
+            } else {
+                log.info("未找到启用实时同步的对象");
+            }
+            
+        } catch (Exception e) {
+            log.error("获取实时同步对象列表时发生异常", e);
+        }
+        
+        return realtimeSyncObjects;
     }
 }

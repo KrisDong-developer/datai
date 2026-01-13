@@ -37,11 +37,11 @@
             </dependency>
 
             <!-- netty -->
-            <dependency>
-                <groupId>io.netty</groupId>
-                <artifactId>netty-all</artifactId>
-                <version>${netty.version}</version>
-            </dependency>
+<!--            <dependency>-->
+<!--                <groupId>io.netty</groupId>-->
+<!--                <artifactId>netty-all</artifactId>-->
+<!--                <version>${netty.version}</version>-->
+<!--            </dependency>-->
 
             <!-- atomikos分布式事务 -->
             <dependency>
@@ -79,11 +79,11 @@
             </dependency>
 
             <!-- websocket -->
-            <dependency>
-                <groupId>com.datai</groupId>
-                <artifactId>datai-websocket</artifactId>
-                <version>${datai.version}</version>
-            </dependency>
+<!--            <dependency>-->
+<!--                <groupId>com.datai</groupId>-->
+<!--                <artifactId>datai-websocket</artifactId>-->
+<!--                <version>${datai.version}</version>-->
+<!--            </dependency>-->
 
             <dependency>
                 <groupId>com.datai</groupId>
@@ -122,10 +122,10 @@
         <module>datai-cache-ehcache</module>
         <module>datai-mybatis-jpa</module>
         <module>datai-mybatis-plus</module>
-        <module>datai-websocket</module>
+<!--        <module>datai-websocket</module>-->
         <module>datai-plugins-starter</module>
         <module>datai-mybatis-interceptor</module>
-        <module>datai-netty</module>
+<!--        <module>datai-netty</module>-->
         <module>datai-atomikos</module>
 <!--        <module>datai-rabbitmq</module>-->
         <module>datai-cache-redis</module>
