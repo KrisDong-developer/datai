@@ -318,4 +318,79 @@ public class DataiIntegrationObjectController extends BaseController
             return error("同步多个对象数据时发生异常: " + e.getMessage());
         }
     }
+
+    @Operation(summary = "推送单对象数据到目标系统")
+    @PreAuthorize("@ss.hasPermi('integration:object:pushData')")
+    @Log(title = "对象同步控制", businessType = BusinessType.UPDATE)
+    @PostMapping("/{id}/pushData")
+    public AjaxResult pushObjectData(@PathVariable("id") Integer id, 
+                                     @org.springframework.web.bind.annotation.RequestParam("targetOrgType") String targetOrgType)
+    {
+        if (id == null) {
+            log.error("对象ID为空，无法推送数据");
+            return error("对象ID不能为空");
+        }
+
+        if (targetOrgType == null || targetOrgType.trim().isEmpty()) {
+            log.error("目标ORG类型为空，无法推送数据");
+            return error("目标ORG类型不能为空");
+        }
+
+        try {
+            log.info("开始推送对象数据到目标系统，对象ID: {}, 目标ORG类型: {}", id, targetOrgType);
+
+            Map<String, Object> result = dataiIntegrationObjectService.pushSingleObjectDataToTarget(id, targetOrgType);
+
+            if ((Boolean) result.get("success")) {
+                log.info("对象数据推送成功，对象ID: {}, 目标ORG类型: {}", id, targetOrgType);
+                return success(result);
+            } else {
+                log.error("对象数据推送失败，对象ID: {}, 目标ORG类型: {}, 错误信息: {}", 
+                    id, targetOrgType, result.get("message"));
+                return error((String) result.get("message"));
+            }
+
+        } catch (Exception e) {
+            log.error("推送对象数据时发生异常，对象ID: {}, 目标ORG类型: {}", id, targetOrgType, e);
+            return error("推送对象数据时发生异常: " + e.getMessage());
+        }
+    }
+
+
+    @Operation(summary = "推送多个对象数据到目标系统")
+    @PreAuthorize("@ss.hasPermi('integration:object:pushData')")
+    @Log(title = "对象同步控制", businessType = BusinessType.UPDATE)
+    @PostMapping("/pushMultipleData")
+    public AjaxResult pushMultipleObjectData(@RequestBody Integer[] ids, 
+                                             @org.springframework.web.bind.annotation.RequestParam("targetOrgType") String targetOrgType)
+    {
+        if (ids == null || ids.length == 0) {
+            log.error("对象ID数组为空，无法推送数据");
+            return error("对象ID不能为空");
+        }
+
+        if (targetOrgType == null || targetOrgType.trim().isEmpty()) {
+            log.error("目标ORG类型为空，无法推送数据");
+            return error("目标ORG类型不能为空");
+        }
+
+        try {
+            log.info("开始推送多个对象数据到目标系统，对象ID数量: {}, 目标ORG类型: {}", ids.length, targetOrgType);
+
+            Map<String, Object> result = dataiIntegrationObjectService.pushMultipleObjectDataToTarget(ids, targetOrgType);
+
+            if ((Boolean) result.get("success")) {
+                log.info("多对象数据推送完成，成功数量: {}, 失败数量: {}", 
+                    result.get("successCount"), result.get("failureCount"));
+                return success(result);
+            } else {
+                log.error("多对象数据推送失败，错误信息: {}", result.get("message"));
+                return error((String) result.get("message"));
+            }
+
+        } catch (Exception e) {
+            log.error("推送多个对象数据时发生异常", e);
+            return error("推送多个对象数据时发生异常: " + e.getMessage());
+        }
+    }
 }

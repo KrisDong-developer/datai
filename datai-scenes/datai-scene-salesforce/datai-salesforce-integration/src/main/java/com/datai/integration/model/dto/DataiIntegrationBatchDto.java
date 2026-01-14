@@ -42,6 +42,12 @@ public class DataiIntegrationBatchDto implements Serializable
         /** 本地数据量 */
     private Integer dbNum;
 
+        /** SF插入数据量 */
+    private Integer sfInsertNum;
+
+        /** SF更新数据量 */
+    private Integer sfUpdateNum;
+
         /** 同步类型 */
     private String syncType;
 
@@ -62,6 +68,12 @@ public class DataiIntegrationBatchDto implements Serializable
 
         /** 最后同步时间 */
     private LocalDateTime lastSyncTime;
+
+        /** 首次推送时间 */
+    private LocalDateTime firstPushTime;
+
+        /** 最后推送时间 */
+    private LocalDateTime lastPushTime;
 
         /** 备注 */
     private String remark;

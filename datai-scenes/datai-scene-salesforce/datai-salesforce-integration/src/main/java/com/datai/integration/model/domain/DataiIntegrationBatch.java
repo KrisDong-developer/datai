@@ -9,7 +9,7 @@ import com.datai.common.annotation.Excel;
 import com.datai.common.core.domain.BaseEntity;
 
 /**
- * 数据批次对象 datai_integration_batch
+ * 数据批次对象 datai_integr    ation_batch
  * 
  * 字段更新规则：
  * 1. 创建批次时设置的字段（后续不允许修改）：
@@ -29,6 +29,12 @@ import com.datai.common.core.domain.BaseEntity;
  *    - firstSyncTime: 首次同步时间（仅在首次同步时设置）
  *    - lastSyncTime: 最后同步时间（每次同步时更新）
  *    - updateTime: 更新时间（每次更新时自动设置）
+ * 
+ * 3. 推送时更新的字段：
+ *    - sfInsertNum: SF插入数据量（每次推送时更新）
+ *    - sfUpdateNum: SF更新数据量（每次推送时更新）
+ *    - firstPushTime: 首次推送时间（仅在首次推送时设置）
+ *    - lastPushTime: 最后推送时间（每次推送时更新）
  * 
  * @author datai
  * @date 2026-01-01
@@ -67,6 +73,16 @@ public class DataiIntegrationBatch extends BaseEntity
     @Excel(name = "本地数据量")
     private Integer dbNum;
 
+    /** SF插入数据量 */
+    @Schema(title = "SF插入数据量")
+    @Excel(name = "SF插入数据量")
+    private Integer sfInsertNum;
+
+    /** SF更新数据量 */
+    @Schema(title = "SF更新数据量")
+    @Excel(name = "SF更新数据量")
+    private Integer sfUpdateNum;
+
     /** 同步类型 */
     @Schema(title = "同步类型")
     @Excel(name = "同步类型")
@@ -101,6 +117,16 @@ public class DataiIntegrationBatch extends BaseEntity
     @Schema(title = "最后同步时间")
     @Excel(name = "最后同步时间")
     private LocalDateTime lastSyncTime;
+
+    /** 首次推送时间 */
+    @Schema(title = "首次推送时间")
+    @Excel(name = "首次推送时间")
+    private LocalDateTime firstPushTime;
+
+    /** 最后推送时间 */
+    @Schema(title = "最后推送时间")
+    @Excel(name = "最后推送时间")
+    private LocalDateTime lastPushTime;
     public void setId(Integer id) 
     {
         this.id = id;
@@ -164,6 +190,28 @@ public class DataiIntegrationBatch extends BaseEntity
     public Integer getDbNum() 
     {
         return dbNum;
+    }
+
+
+    public void setSfInsertNum(Integer sfInsertNum) 
+    {
+        this.sfInsertNum = sfInsertNum;
+    }
+
+    public Integer getSfInsertNum() 
+    {
+        return sfInsertNum;
+    }
+
+
+    public void setSfUpdateNum(Integer sfUpdateNum) 
+    {
+        this.sfUpdateNum = sfUpdateNum;
+    }
+
+    public Integer getSfUpdateNum() 
+    {
+        return sfUpdateNum;
     }
 
 
@@ -244,6 +292,28 @@ public class DataiIntegrationBatch extends BaseEntity
     }
 
 
+    public void setFirstPushTime(LocalDateTime firstPushTime) 
+    {
+        this.firstPushTime = firstPushTime;
+    }
+
+    public LocalDateTime getFirstPushTime() 
+    {
+        return firstPushTime;
+    }
+
+
+    public void setLastPushTime(LocalDateTime lastPushTime) 
+    {
+        this.lastPushTime = lastPushTime;
+    }
+
+    public LocalDateTime getLastPushTime() 
+    {
+        return lastPushTime;
+    }
+
+
 
     @Override
     public String toString() {
@@ -254,6 +324,8 @@ public class DataiIntegrationBatch extends BaseEntity
             .append("label", getLabel())
             .append("sfNum", getSfNum())
             .append("dbNum", getDbNum())
+            .append("sfInsertNum", getSfInsertNum())
+            .append("sfUpdateNum", getSfUpdateNum())
             .append("syncType", getSyncType())
             .append("batchField", getBatchField())
             .append("syncStatus", getSyncStatus())
@@ -261,6 +333,8 @@ public class DataiIntegrationBatch extends BaseEntity
             .append("syncEndDate", getSyncEndDate())
             .append("firstSyncTime", getFirstSyncTime())
             .append("lastSyncTime", getLastSyncTime())
+            .append("firstPushTime", getFirstPushTime())
+            .append("lastPushTime", getLastPushTime())
             .append("remark", getRemark())
             .append("createBy", getCreateBy())
             .append("createTime", getCreateTime())

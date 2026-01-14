@@ -136,5 +136,23 @@ public interface IDataiIntegrationObjectService
      */
     public Map<String, Object> syncMultipleObjectData(Integer[] ids);
 
+    /**
+     * 推送单对象数据到目标系统
+     * 
+     * @param id 对象ID
+     * @param targetOrgType 目标ORG类型
+     * @return 推送结果
+     */
+    public Map<String, Object> pushSingleObjectDataToTarget(Integer id, String targetOrgType);
+
+    /**
+     * 推送多个对象数据到目标系统
+     * 
+     * @param ids 对象ID集合
+     * @param targetOrgType 目标ORG类型
+     * @return 推送结果
+     */
+    public Map<String, Object> pushMultipleObjectDataToTarget(Integer[] ids, String targetOrgType);
+
     Set<DataiIntegrationObject> getRealtimeSyncObjects();
 }

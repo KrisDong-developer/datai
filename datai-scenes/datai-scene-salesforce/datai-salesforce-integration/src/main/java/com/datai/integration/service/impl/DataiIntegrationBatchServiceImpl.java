@@ -993,4 +993,400 @@ public class DataiIntegrationBatchServiceImpl implements IDataiIntegrationBatchS
 
         return statistics;
     }
+
+    @Override
+    public Map<String, Object> insertBatchDataToTarget(Integer id, String targetOrgType) {
+        Map<String, Object> result = new HashMap<>();
+        long startTime = System.currentTimeMillis();
+        
+        try {
+            log.info("开始插入批次数据到目标系统，批次ID: {}, 目标ORG类型: {}", id, targetOrgType);
+
+            if (id == null) {
+                log.error("批次ID不能为空");
+                result.put("success", false);
+                result.put("message", "批次ID不能为空");
+                return result;
+            }
+
+            if (targetOrgType == null || targetOrgType.trim().isEmpty()) {
+                log.error("目标ORG类型不能为空");
+                result.put("success", false);
+                result.put("message", "目标ORG类型不能为空");
+                return result;
+            }
+
+            DataiIntegrationBatch batch = selectDataiIntegrationBatchById(id);
+            if (batch == null) {
+                log.error("批次不存在，批次ID: {}", id);
+                result.put("success", false);
+                result.put("message", "批次不存在");
+                return result;
+            }
+
+            String objectApi = batch.getApi();
+            if (objectApi == null || objectApi.trim().isEmpty()) {
+                log.error("批次对象API为空，批次ID: {}", id);
+                result.put("success", false);
+                result.put("message", "批次对象API不能为空");
+                return result;
+            }
+
+            String tableName = objectApi.trim();
+            if (customMapper.checkTable(tableName) == null) {
+                log.error("本地表不存在，表名: {}", tableName);
+                result.put("success", false);
+                result.put("message", "本地表不存在: " + tableName);
+                return result;
+            }
+
+            log.info("准备插入批次 {} 的对象 {} 数据到目标系统", id, objectApi);
+
+            IPartnerV1Connection targetConnection = null;
+            try {
+                targetConnection = soapConnectionFactory.getConnection(targetOrgType);
+                if (targetConnection == null) {
+                    log.error("无法获取目标系统连接，ORG类型: {}", targetOrgType);
+                    result.put("success", false);
+                    result.put("message", "无法获取目标系统连接");
+                    return result;
+                }
+
+                DescribeSObjectResult objDetail = targetConnection.describeSObject(objectApi);
+                if (objDetail == null) {
+                    log.error("目标系统不存在该对象，对象API: {}", objectApi);
+                    result.put("success", false);
+                    result.put("message", "目标系统不存在该对象: " + objectApi);
+                    return result;
+                }
+
+                String batchField = batch.getBatchField();
+                String whereClause = "";
+                if (batchField != null && !batchField.trim().isEmpty()) {
+                    whereClause = "WHERE " + batchField.trim() + " = '" + batch.getBatchValue() + "'";
+                }
+
+                log.info("开始查询本地批次数据，表名: {}, 条件: {}", tableName, whereClause);
+                List<Map<String, Object>> dataList = customMapper.list("*", tableName, whereClause);
+
+                if (dataList == null || dataList.isEmpty()) {
+                    log.warn("本地批次没有数据，表名: {}, 条件: {}", tableName, whereClause);
+                    result.put("success", false);
+                    result.put("message", "本地批次没有数据");
+                    return result;
+                }
+
+                log.info("查询到 {} 条本地批次数据，准备插入到目标系统", dataList.size());
+
+                int successCount = 0;
+                int failureCount = 0;
+                List<Map<String, Object>> failedRecords = new ArrayList<>();
+
+                for (int i = 0; i < dataList.size(); i++) {
+                    Map<String, Object> dataMap = dataList.get(i);
+                    try {
+                        String localId = (String) dataMap.get("id");
+                        if (localId == null || localId.isEmpty()) {
+                            log.warn("记录ID为空，跳过该记录，索引: {}", i);
+                            failureCount++;
+                            Map<String, Object> failedRecord = new HashMap<>();
+                            failedRecord.put("index", i);
+                            failedRecord.put("reason", "记录ID为空");
+                            failedRecords.add(failedRecord);
+                            continue;
+                        }
+
+                        Map<String, Object> fieldsToInsert = new HashMap<>();
+                        for (String key : dataMap.keySet()) {
+                            if (!"id".equalsIgnoreCase(key) && !"new_id".equalsIgnoreCase(key) && 
+                                !"is_insert".equalsIgnoreCase(key) && !"is_update".equalsIgnoreCase(key) && 
+                                dataMap.get(key) != null) {
+                                fieldsToInsert.put(key, dataMap.get(key));
+                            }
+                        }
+
+                        if (fieldsToInsert.isEmpty()) {
+                            log.warn("记录没有需要插入的字段，跳过该记录，ID: {}", localId);
+                            continue;
+                        }
+
+                        SObject sObject = new SObject();
+                        sObject.setType(objectApi);
+                        for (Map.Entry<String, Object> entry : fieldsToInsert.entrySet()) {
+                            sObject.setField(entry.getKey(), entry.getValue());
+                        }
+
+                        SaveResult[] saveResults = targetConnection.create(new SObject[]{sObject});
+                        if (saveResults != null && saveResults.length > 0 && saveResults[0].isSuccess()) {
+                            String newId = saveResults[0].getId();
+                            
+                            List<Map<String, Object>> updateMaps = new ArrayList<>();
+                            Map<String, Object> newIdMap = new HashMap<>();
+                            newIdMap.put("key", "new_id");
+                            newIdMap.put("value", newId);
+                            updateMaps.add(newIdMap);
+                            
+                            Map<String, Object> isInsertMap = new HashMap<>();
+                            isInsertMap.put("key", "is_insert");
+                            isInsertMap.put("value", 1);
+                            updateMaps.add(isInsertMap);
+                            
+                            customMapper.updateById(tableName, updateMaps, localId);
+                            
+                            successCount++;
+                            log.debug("记录插入成功，本地ID: {}, 新ID: {}", localId, newId);
+                        } else {
+                            String errorMsg = saveResults != null && saveResults.length > 0 ? 
+                                saveResults[0].getErrors()[0].getMessage() : "未知错误";
+                            log.error("记录插入失败，本地ID: {}, 错误: {}", localId, errorMsg);
+                            failureCount++;
+                            Map<String, Object> failedRecord = new HashMap<>();
+                            failedRecord.put("index", i);
+                            failedRecord.put("localId", localId);
+                            failedRecord.put("reason", errorMsg);
+                            failedRecords.add(failedRecord);
+                        }
+
+                        if ((i + 1) % 100 == 0) {
+                            log.info("已插入 {}/{} 条记录", i + 1, dataList.size());
+                        }
+
+                    } catch (Exception e) {
+                        log.error("插入记录失败，索引: {}, 错误: {}", i, e.getMessage());
+                        failureCount++;
+                        Map<String, Object> failedRecord = new HashMap<>();
+                        failedRecord.put("index", i);
+                        failedRecord.put("reason", e.getMessage());
+                        failedRecords.add(failedRecord);
+                    }
+                }
+
+                long endTime = System.currentTimeMillis();
+                long duration = endTime - startTime;
+
+                result.put("success", true);
+                result.put("message", "批次数据插入完成");
+                result.put("batchId", id);
+                result.put("api", objectApi);
+                result.put("label", batch.getLabel());
+                result.put("targetOrgType", targetOrgType);
+                result.put("totalCount", dataList.size());
+                result.put("successCount", successCount);
+                result.put("failureCount", failureCount);
+                result.put("duration", duration);
+                result.put("failedRecords", failedRecords);
+
+                log.info("批次数据插入完成，批次ID: {}, 对象API: {}, 总数: {}, 成功: {}, 失败: {}, 耗时: {}ms",
+                    id, objectApi, dataList.size(), successCount, failureCount, duration);
+
+            } finally {
+                if (targetConnection != null) {
+                    try {
+                        targetConnection.logout();
+                    } catch (Exception e) {
+                        log.error("关闭目标系统连接失败", e);
+                    }
+                }
+            }
+
+        } catch (Exception e) {
+            log.error("插入批次数据到目标系统失败，批次ID: {}", id, e);
+            result.put("success", false);
+            result.put("message", "插入批次数据到目标系统失败: " + e.getMessage());
+        }
+
+        return result;
+    }
+
+    public Map<String, Object> updateBatchDataToTarget(Integer id, String targetOrgType) {
+        Map<String, Object> result = new HashMap<>();
+        long startTime = System.currentTimeMillis();
+        
+        try {
+            log.info("开始更新批次数据到目标系统，批次ID: {}, 目标ORG类型: {}", id, targetOrgType);
+
+            if (id == null) {
+                log.error("批次ID不能为空");
+                result.put("success", false);
+                result.put("message", "批次ID不能为空");
+                return result;
+            }
+
+            if (targetOrgType == null || targetOrgType.trim().isEmpty()) {
+                log.error("目标ORG类型不能为空");
+                result.put("success", false);
+                result.put("message", "目标ORG类型不能为空");
+                return result;
+            }
+
+            DataiIntegrationBatch batch = selectDataiIntegrationBatchById(id);
+            if (batch == null) {
+                log.error("批次不存在，批次ID: {}", id);
+                result.put("success", false);
+                result.put("message", "批次不存在");
+                return result;
+            }
+
+            String objectApi = batch.getApi();
+            if (objectApi == null || objectApi.trim().isEmpty()) {
+                log.error("批次对象API为空，批次ID: {}", id);
+                result.put("success", false);
+                result.put("message", "批次对象API不能为空");
+                return result;
+            }
+
+            String tableName = objectApi.trim();
+            if (customMapper.checkTable(tableName) == null) {
+                log.error("本地表不存在，表名: {}", tableName);
+                result.put("success", false);
+                result.put("message", "本地表不存在: " + tableName);
+                return result;
+            }
+
+            log.info("准备更新批次 {} 的对象 {} 数据到目标系统", id, objectApi);
+
+            IPartnerV1Connection targetConnection = null;
+            try {
+                targetConnection = soapConnectionFactory.getConnection(targetOrgType);
+                if (targetConnection == null) {
+                    log.error("无法获取目标系统连接，ORG类型: {}", targetOrgType);
+                    result.put("success", false);
+                    result.put("message", "无法获取目标系统连接");
+                    return result;
+                }
+
+                DescribeSObjectResult objDetail = targetConnection.describeSObject(objectApi);
+                if (objDetail == null) {
+                    log.error("目标系统不存在该对象，对象API: {}", objectApi);
+                    result.put("success", false);
+                    result.put("message", "目标系统不存在该对象: " + objectApi);
+                    return result;
+                }
+
+                String batchField = batch.getBatchField();
+                String whereClause = "";
+                if (batchField != null && !batchField.trim().isEmpty()) {
+                    whereClause = "WHERE " + batchField.trim() + " = '" + batch.getBatchValue() + "'";
+                }
+
+                log.info("开始查询本地批次数据，表名: {}, 条件: {}", tableName, whereClause);
+                List<Map<String, Object>> dataList = customMapper.list("*", tableName, whereClause);
+
+                if (dataList == null || dataList.isEmpty()) {
+                    log.warn("本地批次没有数据，表名: {}, 条件: {}", tableName, whereClause);
+                    result.put("success", false);
+                    result.put("message", "本地批次没有数据");
+                    return result;
+                }
+
+                log.info("查询到 {} 条本地批次数据，准备更新到目标系统", dataList.size());
+
+                int successCount = 0;
+                int failureCount = 0;
+                List<Map<String, Object>> failedRecords = new ArrayList<>();
+
+                for (int i = 0; i < dataList.size(); i++) {
+                    Map<String, Object> dataMap = dataList.get(i);
+                    try {
+                        String localId = (String) dataMap.get("id");
+                        String newId = (String) dataMap.get("new_id");
+                        
+                        if (localId == null || localId.isEmpty()) {
+                            log.warn("记录ID为空，跳过该记录，索引: {}", i);
+                            failureCount++;
+                            Map<String, Object> failedRecord = new HashMap<>();
+                            failedRecord.put("index", i);
+                            failedRecord.put("reason", "记录ID为空");
+                            failedRecords.add(failedRecord);
+                            continue;
+                        }
+
+                        if (newId == null || newId.isEmpty()) {
+                            log.warn("记录new_id为空，跳过该记录，本地ID: {}", localId);
+                            failureCount++;
+                            Map<String, Object> failedRecord = new HashMap<>();
+                            failedRecord.put("index", i);
+                            failedRecord.put("localId", localId);
+                            failedRecord.put("reason", "new_id为空，请先执行插入操作");
+                            failedRecords.add(failedRecord);
+                            continue;
+                        }
+
+                        Map<String, Object> fieldsToUpdate = new HashMap<>();
+                        for (String key : dataMap.keySet()) {
+                            if (!"id".equalsIgnoreCase(key) && !"new_id".equalsIgnoreCase(key) && 
+                                !"is_insert".equalsIgnoreCase(key) && !"is_update".equalsIgnoreCase(key) && 
+                                dataMap.get(key) != null) {
+                                fieldsToUpdate.put(key, dataMap.get(key));
+                            }
+                        }
+
+                        if (fieldsToUpdate.isEmpty()) {
+                            log.warn("记录没有需要更新的字段，跳过该记录，本地ID: {}", localId);
+                            continue;
+                        }
+
+                        targetConnection.update(objectApi, newId, fieldsToUpdate);
+                        
+                        List<Map<String, Object>> updateMaps = new ArrayList<>();
+                        Map<String, Object> isUpdateMap = new HashMap<>();
+                        isUpdateMap.put("key", "is_update");
+                        isUpdateMap.put("value", 1);
+                        updateMaps.add(isUpdateMap);
+                        
+                        customMapper.updateById(tableName, updateMaps, localId);
+                        
+                        successCount++;
+                        log.debug("记录更新成功，本地ID: {}, 目标ID: {}", localId, newId);
+
+                        if ((i + 1) % 100 == 0) {
+                            log.info("已更新 {}/{} 条记录", i + 1, dataList.size());
+                        }
+
+                    } catch (Exception e) {
+                        log.error("更新记录失败，索引: {}, 错误: {}", i, e.getMessage());
+                        failureCount++;
+                        Map<String, Object> failedRecord = new HashMap<>();
+                        failedRecord.put("index", i);
+                        failedRecord.put("reason", e.getMessage());
+                        failedRecords.add(failedRecord);
+                    }
+                }
+
+                long endTime = System.currentTimeMillis();
+                long duration = endTime - startTime;
+
+                result.put("success", true);
+                result.put("message", "批次数据更新完成");
+                result.put("batchId", id);
+                result.put("api", objectApi);
+                result.put("label", batch.getLabel());
+                result.put("targetOrgType", targetOrgType);
+                result.put("totalCount", dataList.size());
+                result.put("successCount", successCount);
+                result.put("failureCount", failureCount);
+                result.put("duration", duration);
+                result.put("failedRecords", failedRecords);
+
+                log.info("批次数据更新完成，批次ID: {}, 对象API: {}, 总数: {}, 成功: {}, 失败: {}, 耗时: {}ms",
+                    id, objectApi, dataList.size(), successCount, failureCount, duration);
+
+            } finally {
+                if (targetConnection != null) {
+                    try {
+                        targetConnection.logout();
+                    } catch (Exception e) {
+                        log.error("关闭目标系统连接失败", e);
+                    }
+                }
+            }
+
+        } catch (Exception e) {
+            log.error("更新批次数据到目标系统失败，批次ID: {}", id, e);
+            result.put("success", false);
+            result.put("message", "更新批次数据到目标系统失败: " + e.getMessage());
+        }
+
+        return result;
+    }
 }

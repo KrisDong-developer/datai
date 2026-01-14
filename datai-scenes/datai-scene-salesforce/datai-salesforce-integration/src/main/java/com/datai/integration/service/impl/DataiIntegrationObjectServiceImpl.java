@@ -1336,4 +1336,17 @@ public class DataiIntegrationObjectServiceImpl implements IDataiIntegrationObjec
         
         return realtimeSyncObjects;
     }
+
+    @Override
+    public Map<String, Object> pushSingleObjectDataToTarget(Integer id, String targetOrgType) {
+
+        
+        return null;
+    }
+
+    @Override
+    public Map<String, Object> pushMultipleObjectDataToTarget(Integer[] ids, String targetOrgType) {
+
+        return null;
+    }
 }

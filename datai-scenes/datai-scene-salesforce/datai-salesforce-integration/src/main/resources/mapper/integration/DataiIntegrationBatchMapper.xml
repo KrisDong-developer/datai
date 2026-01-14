@@ -11,6 +11,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="label" column="label" />
         <result property="sfNum" column="sf_num" />
         <result property="dbNum" column="db_num" />
+        <result property="sfInsertNum" column="sf_insert_num" />
+        <result property="sfUpdateNum" column="sf_update_num" />
         <result property="syncType" column="sync_type" />
         <result property="batchField" column="batch_field" />
         <result property="syncStatus" column="sync_status" />
@@ -18,6 +20,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="syncEndDate" column="sync_end_date" />
         <result property="firstSyncTime" column="first_sync_time" />
         <result property="lastSyncTime" column="last_sync_time" />
+        <result property="firstPushTime" column="first_push_time" />
+        <result property="lastPushTime" column="last_push_time" />
         <result property="remark" column="remark" />
         <result property="createBy" column="create_by" />
         <result property="createTime" column="create_time" />
@@ -33,6 +37,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             dib.label,
             dib.sf_num,
             dib.db_num,
+            dib.sf_insert_num,
+            dib.sf_update_num,
             dib.sync_type,
             dib.batch_field,
             dib.sync_status,
@@ -40,6 +46,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             dib.sync_end_date,
             dib.first_sync_time,
             dib.last_sync_time,
+            dib.first_push_time,
+            dib.last_push_time,
             dib.remark,
             dib.create_by,
             dib.create_time,
@@ -79,6 +87,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="label != null">label,</if>
             <if test="sfNum != null">sf_num,</if>
             <if test="dbNum != null">db_num,</if>
+            <if test="sfInsertNum != null">sf_insert_num,</if>
+            <if test="sfUpdateNum != null">sf_update_num,</if>
             <if test="syncType != null">sync_type,</if>
             <if test="batchField != null">batch_field,</if>
             <if test="syncStatus != null">sync_status,</if>
@@ -86,6 +96,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="syncEndDate != null">sync_end_date,</if>
             <if test="firstSyncTime != null">first_sync_time,</if>
             <if test="lastSyncTime != null">last_sync_time,</if>
+            <if test="firstPushTime != null">first_push_time,</if>
+            <if test="lastPushTime != null">last_push_time,</if>
             <if test="remark != null">remark,</if>
             <if test="createBy != null">create_by,</if>
             <if test="createTime != null">create_time,</if>
@@ -98,6 +110,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="label != null">#{label},</if>
             <if test="sfNum != null">#{sfNum},</if>
             <if test="dbNum != null">#{dbNum},</if>
+            <if test="sfInsertNum != null">#{sfInsertNum},</if>
+            <if test="sfUpdateNum != null">#{sfUpdateNum},</if>
             <if test="syncType != null">#{syncType},</if>
             <if test="batchField != null">#{batchField},</if>
             <if test="syncStatus != null">#{syncStatus},</if>
@@ -105,6 +119,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="syncEndDate != null">#{syncEndDate},</if>
             <if test="firstSyncTime != null">#{firstSyncTime},</if>
             <if test="lastSyncTime != null">#{lastSyncTime},</if>
+            <if test="firstPushTime != null">#{firstPushTime},</if>
+            <if test="lastPushTime != null">#{lastPushTime},</if>
             <if test="remark != null">#{remark},</if>
             <if test="createBy != null">#{createBy},</if>
             <if test="createTime != null">#{createTime},</if>
@@ -121,6 +137,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="label != null">label = #{label},</if>
             <if test="sfNum != null">sf_num = #{sfNum},</if>
             <if test="dbNum != null">db_num = #{dbNum},</if>
+            <if test="sfInsertNum != null">sf_insert_num = #{sfInsertNum},</if>
+            <if test="sfUpdateNum != null">sf_update_num = #{sfUpdateNum},</if>
             <if test="syncType != null">sync_type = #{syncType},</if>
             <if test="batchField != null">batch_field = #{batchField},</if>
             <if test="syncStatus != null">sync_status = #{syncStatus},</if>
@@ -128,6 +146,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="syncEndDate != null">sync_end_date = #{syncEndDate},</if>
             <if test="firstSyncTime != null">first_sync_time = #{firstSyncTime},</if>
             <if test="lastSyncTime != null">last_sync_time = #{lastSyncTime},</if>
+            <if test="firstPushTime != null">first_push_time = #{firstPushTime},</if>
+            <if test="lastPushTime != null">last_push_time = #{lastPushTime},</if>
             <if test="remark != null">remark = #{remark},</if>
             <if test="createBy != null">create_by = #{createBy},</if>
             <if test="createTime != null">create_time = #{createTime},</if>

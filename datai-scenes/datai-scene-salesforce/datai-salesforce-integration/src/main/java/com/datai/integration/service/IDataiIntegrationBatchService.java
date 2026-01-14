@@ -90,4 +90,22 @@ public interface IDataiIntegrationBatchService
      * @return 所有批次统计信息
      */
     public Map<String, Object> getAllBatchStatistics();
+
+    /**
+     * 批次数据插入目标系统
+     * 
+     * @param id 批次ID
+     * @param targetOrgType 目标ORG类型
+     * @return 插入结果
+     */
+    public Map<String, Object> insertBatchDataToTarget(Integer id, String targetOrgType);
+
+    /**
+     * 批次数据更新目标系统
+     * 
+     * @param id 批次ID
+     * @param targetOrgType 目标ORG类型
+     * @return 更新结果
+     */
+    public Map<String, Object> updateBatchDataToTarget(Integer id, String targetOrgType);
 }
