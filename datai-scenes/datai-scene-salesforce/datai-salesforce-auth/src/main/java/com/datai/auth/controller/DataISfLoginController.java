@@ -127,20 +127,20 @@ public class DataISfLoginController extends BaseController {
      */
     @Operation(summary = "自动登录（支持源ORG和目标ORG）")
     @PostMapping("/autoLogin")
-    public AjaxResult autoLogin() {
-        logger.info("接收到自动登录请求");
+    public AjaxResult autoLogin(@RequestParam String orgType) {
+        logger.info("接收到自动登录请求，ORG类型: {}", orgType);
         
         try {
-            DataiSfLoginHistory latestLoginHistory = loginHistoryService.selectLatestSuccessLoginHistory();
+            DataiSfLoginHistory latestLoginHistory = loginHistoryService.selectLatestSuccessLoginHistoryByOrgType(orgType);
             
             if (latestLoginHistory == null) {
-                logger.warn("未找到登录历史记录");
-                return AjaxResult.error("未找到登录历史记录");
+                logger.warn("未找到ORG类型为 {} 的登录历史记录", orgType);
+                return AjaxResult.error("未找到ORG类型为 " + orgType + " 的登录历史记录");
             }
             
             Long historyId = latestLoginHistory.getId();
-            String orgType = latestLoginHistory.getOrgType();
-            logger.info("从登录历史中获取到历史ID: {}, ORG类型: {}", historyId, orgType);
+            String historyOrgType = latestLoginHistory.getOrgType();
+            logger.info("从登录历史中获取到历史ID: {}, ORG类型: {}", historyId, historyOrgType);
             
             SalesforceLoginResult result = salesforceLoginService.autoLogin(historyId);
             

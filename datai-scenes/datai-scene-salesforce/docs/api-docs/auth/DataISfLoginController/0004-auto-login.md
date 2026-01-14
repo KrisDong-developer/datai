@@ -6,17 +6,22 @@
 - **接口路径**: /salesforce/login/autoLogin
 - **请求方法**: POST
 - **模块归属**: datai-salesforce-auth
-- **版本号**: v1.0
+- **版本号**: v1.1
 - **创建日期**: 2026-01-14
 - **最后更新**: 2026-01-14
 
 ## 功能描述
 
-使用登录历史记录中的信息自动登录Salesforce。系统会从登录历史记录中获取最新的成功登录信息，使用相同的登录参数重新登录，支持源ORG和目标ORG的自动登录。
+使用登录历史记录中的信息自动登录Salesforce。系统会根据指定的ORG类型（source/target）从登录历史记录中获取对应的最新成功登录信息，使用相同的登录参数重新登录，支持源ORG和目标ORG的独立自动登录。
 
 ## 请求参数
 
-无需请求参数。
+### Query 参数
+
+| 参数名 | 类型 | 必填 | 描述 | 示例 |
+|--------|------|------|------|------|
+| orgType | String | 是 | ORG类型，可选值：source（源ORG）、target（目标ORG） | source |
+
 
 ## 响应数据
 
@@ -88,7 +93,8 @@
 
 | 错误码 | 错误信息 | 描述 |
 |--------|----------|------|
-| 400 | 未找到登录历史记录 | 系统中没有找到登录历史记录 |
+| 400 | 未找到ORG类型为 source 的登录历史记录 | 系统中没有找到指定ORG类型的登录历史记录 |
+| 400 | 未找到ORG类型为 target 的登录历史记录 | 系统中没有找到指定ORG类型的登录历史记录 |
 | 400 | 自动登录失败: 用户名或密码错误 | 登录凭证无效 |
 | 400 | 自动登录失败: Session已过期 | Session已过期 |
 | 500 | 自动登录失败: 系统错误 | 系统内部错误 |
@@ -97,8 +103,17 @@
 
 ### 请求示例
 
+**自动登录源ORG**:
+
 ```bash
-curl -X POST "http://localhost:8080/salesforce/login/autoLogin" \
+curl -X POST "http://localhost:8080/salesforce/login/autoLogin?orgType=source" \
+  -H "Content-Type: application/json"
+```
+
+**自动登录目标ORG**:
+
+```bash
+curl -X POST "http://localhost:8080/salesforce/login/autoLogin?orgType=target" \
   -H "Content-Type: application/json"
 ```
 
@@ -145,8 +160,9 @@ curl -X POST "http://localhost:8080/salesforce/login/autoLogin" \
 1. 自动登录使用登录历史记录中的登录参数
 2. 如果登录凭证已变更（如密码已修改），自动登录可能失败
 3. 自动登录会创建新的登录历史记录
-4. 支持源ORG和目标ORG的自动登录
-5. 如果有多个ORG的登录历史记录，会使用最新的记录
+4. 必须指定 orgType 参数（source 或 target）
+5. 系统会根据 orgType 查询对应 ORG 类型的最新成功登录历史
+6. 源 ORG 和目标 ORG 的登录历史完全独立，互不影响
 
 ## 相关接口
 
@@ -156,10 +172,11 @@ curl -X POST "http://localhost:8080/salesforce/login/autoLogin" \
 
 ## 实现细节
 
-1. 从登录历史记录中获取最新的成功登录信息
-2. 提取历史记录ID和ORG类型
-3. 调用SalesforceLoginService的autoLogin方法
-4. 返回新的登录结果信息
+1. 接收 orgType 参数（source 或 target）
+2. 根据指定的 orgType 查询对应 ORG 类型的最新成功登录历史记录
+3. 提取历史记录ID和ORG类型
+4. 调用SalesforceLoginService的autoLogin方法
+5. 返回新的登录结果信息
 
 ## 测试信息
 
@@ -172,7 +189,10 @@ curl -X POST "http://localhost:8080/salesforce/login/autoLogin" \
 
 | 测试场景 | 输入参数 | 预期结果 | 实际结果 | 状态 |
 |----------|----------|----------|----------|------|
-| 自动登录成功 | 无 | 返回新的Session ID | 返回新的Session ID | 通过 |
-| 未登录时自动登录 | 无 | 返回未找到登录历史记录 | 返回未找到登录历史记录 | 通过 |
-| 密码已修改后自动登录 | 无 | 返回登录失败 | 返回登录失败 | 通过 |
-| Session已过期后自动登录 | 无 | 返回新的Session ID | 返回新的Session ID | 通过 |
+| 自动登录源ORG成功 | orgType=source | 返回新的源ORG Session ID | 返回新的源ORG Session ID | 通过 |
+| 自动登录目标ORG成功 | orgType=target | 返回新的目标ORG Session ID | 返回新的目标ORG Session ID | 通过 |
+| 未登录时自动登录源ORG | orgType=source | 返回未找到ORG类型为 source 的登录历史记录 | 返回未找到ORG类型为 source 的登录历史记录 | 通过 |
+| 未登录时自动登录目标ORG | orgType=target | 返回未找到ORG类型为 target 的登录历史记录 | 返回未找到ORG类型为 target 的登录历史记录 | 通过 |
+| 密码已修改后自动登录 | orgType=source | 返回登录失败 | 返回登录失败 | 通过 |
+| Session已过期后自动登录 | orgType=target | 返回新的Session ID | 返回新的Session ID | 通过 |
+| orgType参数为空 | 无 | 返回参数错误 | 返回参数错误 | 通过 |
