@@ -2,9 +2,16 @@
 
 ## 项目概述
 
-Datai 是一个基于若依Geek框架构建的企业级管理系统，采用模块化架构设计，提供可扩展的插件和场景模块。系统集成了 Salesforce 平台，支持多种 API 交互方式，实现数据同步、认证管理和元数据处理等核心功能。
+Datai 是一个基于若依 Geek 框架构建的企业级管理系统，采用模块化架构设计，提供可扩展的插件和场景模块。系统集成了 Salesforce 平台，支持多种 API 交互方式，实现数据同步、认证管理和元数据处理等核心功能。
 
 **当前实现状态**：项目目前专注于从 Salesforce 源系统同步数据到本地数据库，包括元数据管理、批量数据同步、实时数据同步等功能。
+
+### 项目地址
+
+- **前端地址**: https://github.com/KrisDong-developer/datai-vue
+- **后端地址**: https://github.com/KrisDong-developer/datai
+
+---
 
 ## 技术栈
 
@@ -25,16 +32,18 @@ Datai 是一个基于若依Geek框架构建的企业级管理系统，采用模�
 | JWT | 0.12.6 | Token 生成与解析 |
 | PageHelper | 2.1.1 | 分页插件 |
 
+---
+
 ## 项目结构
 
 ```
 datai/
 ├── datai-admin/              # 管理后台启动模块
-├── datai-framework/           # 框架核心模块
-├── datai-system/              # 系统管理模块
-├── datai-common/              # 通用工具模块
-├── datai-scenes/              # 场景模块
-│   ├── datai-scene-salesforce/ # Salesforce 集成场景
+├── datai-framework/          # 框架核心模块
+├── datai-system/             # 系统管理模块
+├── datai-common/             # 通用工具模块
+├── datai-scenes/             # 场景模块
+│   ├── datai-scene-salesforce/  # Salesforce 集成场景
 │   │   ├── datai-salesforce-auth/       # 认证相关模块
 │   │   ├── datai-salesforce-common/      # 通用工具和常量
 │   │   ├── datai-salesforce-integration/ # 核心集成模块
@@ -59,7 +68,7 @@ datai/
 │       ├── datai-file-local/              # 本地文件存储
 │       ├── datai-file-minio/              # MinIO 文件存储
 │       └── datai-file-aliyun-oss/        # 阿里云 OSS 文件存储
-├── datai-plugins/             # 插件模块
+├── datai-plugins/            # 插件模块
 │   ├── datai-plugins-starter/  # 插件启动器
 │   ├── datai-mybatis-plus/     # MyBatis Plus 插件
 │   ├── datai-cache-redis/      # Redis 缓存插件
@@ -78,6 +87,8 @@ datai/
     └── datai-flowable/        # 工作流
 ```
 
+---
+
 ## 核心功能
 
 ### Salesforce 集成模块（当前实现）
@@ -85,23 +96,27 @@ datai/
 提供与 Salesforce 源系统的数据集成解决方案，支持从 Salesforce 同步数据到本地数据库。
 
 #### 认证管理
+
 - **多种登录方式**: OAuth2、SessionId、CLI、Legacy Credential
 - **会话管理**: 登录会话的创建、查询和销毁
 - **历史记录**: 登录历史记录的查询和统计
 
 #### 数据同步（源系统 → 本地）
+
 - **Bulk API v1/v2**: 批量数据同步，支持大规模数据导入导出
 - **Partner API**: SOAP API 数据交互，支持 CRUD 操作
 - **REST API**: RESTful API 数据交互
 - **CDC 实时同步**: Change Data Capture 实时数据同步
 
 #### 元数据管理
+
 - **对象管理**: Salesforce 对象的查询、同步和结构创建
 - **字段管理**: 对象字段的查询和管理
 - **Picklist 管理**: Picklist 值的查询和管理
 - **Lookup 过滤器**: Lookup 过滤器的查询和管理
 
 #### 批次管理
+
 - **批次创建**: 创建数据同步批次
 - **批次数据插入**: 将本地数据插入到 Salesforce，保存返回 ID
 - **批次数据更新**: 使用保存的 ID 更新 Salesforce 数据
@@ -109,20 +124,53 @@ datai/
 - **批次历史**: 批次操作历史记录
 
 #### 实时同步
+
 - **Pub/Sub API**: Salesforce Event Bus 实时数据订阅
 - **事件处理**: CDC 事件的接收和处理
 - **数据同步**: 实时数据同步到本地数据库
 - **服务管理**: 实时同步服务的启动、停止和重启
 
 #### 监控日志
+
 - **API 调用日志**: Salesforce API 调用记录和统计
 - **同步日志**: 数据同步操作日志
 - **速率限制监控**: Salesforce API 速率限制监控
 - **实时同步日志**: CDC 实时同步日志
 
+---
+
+### 项目截图
+
+#### 配置中心
+
+![配置中心](datai-scenes/datai-scene-salesforce/docs/picture/img.png)
+
+#### 登录认证中心
+
+![登录认证中心](datai-scenes/datai-scene-salesforce/docs/picture/img_1.png)
+
+#### 监控统计中心
+
+![监控统计中心](datai-scenes/datai-scene-salesforce/docs/picture/img_2.png)
+
+#### 数据同步中心
+
+![数据同步中心](datai-scenes/datai-scene-salesforce/docs/picture/img_3.png)
+
+#### 实时同步中心
+
+![实时同步中心](datai-scenes/datai-scene-salesforce/docs/picture/img_4.png)
+
+#### 元数据变更中心
+
+![元数据变更中心](datai-scenes/datai-scene-salesforce/docs/picture/img_5.png)
+
+---
+
 ### 开发计划
 
 #### 1. 数据推送到目标 Salesforce 系统
+
 - **目标系统认证**: 支持目标 Salesforce 系统的多种认证方式
 - **数据推送**: 支持将本地数据批量推送到目标 Salesforce 系统
 - **双向同步**: 实现源系统 → 本地 → 目标系统的数据流转
@@ -130,6 +178,7 @@ datai/
 - **推送监控**: 数据推送任务的监控和日志记录
 
 #### 2. 源 Salesforce 系统文件下载
+
 - **文件元数据**: 获取 Salesforce 附件和文档的元数据信息
 - **文件下载**: 支持批量下载 Salesforce 中的文件（Attachment、Document、ContentVersion）
 - **文件存储**: 支持本地存储、MinIO、阿里云 OSS 等多种存储方式
@@ -137,6 +186,7 @@ datai/
 - **下载监控**: 文件下载任务的监控和进度追踪
 
 #### 3. User 权限同步集成系统
+
 - **权限元数据**: 同步 Salesforce User、Profile、PermissionSet、Role 等权限相关对象
 - **权限映射**: 将 Salesforce 权限映射到系统用户权限
 - **数据权限控制**: 基于用户权限控制数据访问范围
@@ -144,6 +194,7 @@ datai/
 - **权限审计**: 权限变更的审计日志
 
 #### 4. 集成可视化报表插件
+
 - **报表设计器**: 可视化拖拽式报表设计器，支持自定义报表布局
 - **数据源配置**: 支持从本地数据库和 Salesforce 系统配置数据源
 - **图表组件**: 提供丰富的图表类型（柱状图、折线图、饼图、表格等）
@@ -153,12 +204,13 @@ datai/
 - **实时刷新**: 支持报表数据的实时刷新和定时更新
 - **报表模板**: 提供常用报表模板，快速生成标准报表
 
+---
+
 ### 认证场景模块
 
 - **OAuth 集成**: JustAuth 和微信 OAuth 登录
 - **双因子认证**: 邮箱和手机双因子认证
 - **用户管理**: OAuth 用户信息管理
-
 
 ### 文件场景模块
 
@@ -185,6 +237,8 @@ datai/
 - **代码生成器**: 代码自动生成工具
 - **在线用户**: 在线用户管理
 - **工作流**: Flowable 工作流引擎
+
+---
 
 ## 快速开始
 
@@ -233,8 +287,11 @@ mvn spring-boot:run
 ```
 
 启动成功后，访问：
+
 - 应用地址: http://localhost:8080
 - API 文档: http://localhost:8080/doc.html
+
+---
 
 ## 文档
 
@@ -259,19 +316,29 @@ mvn spring-boot:run
 - **会话记录**: [datai-scenes/datai-scene-salesforce/docs/sessions/](datai-scenes/datai-scene-salesforce/docs/sessions/)
 - **变更日志**: [datai-scenes/datai-scene-salesforce/docs/changelog/](datai-scenes/datai-scene-salesforce/docs/changelog/)
 
+---
+
 ## 贡献指南
 
 请参考 [CONTRIBUTING.md](CONTRIBUTING.md) 了解如何参与项目贡献。
+
+---
 
 ## 变更日志
 
 请参考 [CHANGELOG.md](CHANGELOG.md) 查看项目变更记录。
 
+---
+
 ## 许可证
 
-本项目基于若依Geek框架开发，遵循相应的开源许可证。
+本项目基于若依 Geek 框架开发，遵循相应的开源许可证。
+
+---
 
 ## 联系方式
 
-- 项目地址: https://gitee.com/geek-xd/datai-springboot3.git
-- 文档中心: [datai-scenes/datai-scene-salesforce/docs/index.md](datai-scenes/datai-scene-salesforce/docs/index.md)
+- **项目地址**: https://gitee.com/geek-xd/datai-springboot3.git
+- **前端地址**: https://github.com/KrisDong-developer/datai-vue
+- **后端地址**: https://github.com/KrisDong-developer/datai
+- **文档中心**: [datai-scenes/datai-scene-salesforce/docs/index.md](datai-scenes/datai-scene-salesforce/docs/index.md)
