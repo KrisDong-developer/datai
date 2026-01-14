@@ -163,7 +163,7 @@ curl -X GET "http://localhost:8080/integration/apilog/statistics?apiType=REST&st
 ### 测试环境
 
 - **环境**: 开发环境
-- **版本**: v3.8.9-G
+- **版本**: v1.0.0
 
 ### 测试用例
 
