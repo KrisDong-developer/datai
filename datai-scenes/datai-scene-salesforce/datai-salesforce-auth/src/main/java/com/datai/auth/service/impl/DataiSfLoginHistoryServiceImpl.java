@@ -115,4 +115,16 @@ public class DataiSfLoginHistoryServiceImpl implements IDataiSfLoginHistoryServi
     {
         return dataiSfLoginHistoryMapper.selectLatestSuccessLoginHistory();
     }
+
+    /**
+     * 根据ORG类型查询最近一条登录成功的历史记录
+     *
+     * @param orgType ORG类型
+     * @return 登录历史信息
+     */
+    @Override
+    public DataiSfLoginHistory selectLatestSuccessLoginHistoryByOrgType(String orgType)
+    {
+        return dataiSfLoginHistoryMapper.selectLatestSuccessLoginHistoryByOrgType(orgType);
+    }
 }

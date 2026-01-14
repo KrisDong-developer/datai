@@ -75,6 +75,9 @@ public class DataiSfLoginHistoryDto implements Serializable
         /** 组织ID */
     private String organizationId;
 
+        /** ORG类型 */
+    private String orgType;
+
         /** 请求IP */
     private String requestIp;
 

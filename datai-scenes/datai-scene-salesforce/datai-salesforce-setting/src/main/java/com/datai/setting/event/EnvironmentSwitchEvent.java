@@ -18,13 +18,15 @@ public class EnvironmentSwitchEvent extends ApplicationEvent {
     private final DataiConfigEnvironment oldEnvironment;
     private final DataiConfigEnvironment newEnvironment;
     private final String switchReason;
+    private final String orgType;
 
     public EnvironmentSwitchEvent(Object source, DataiConfigEnvironment oldEnvironment, 
-                                   DataiConfigEnvironment newEnvironment, String switchReason) {
+                                   DataiConfigEnvironment newEnvironment, String switchReason, String orgType) {
         super(source);
         this.oldEnvironment = oldEnvironment;
         this.newEnvironment = newEnvironment;
         this.switchReason = switchReason;
+        this.orgType = orgType;
     }
 
     public DataiConfigEnvironment getOldEnvironment() {
@@ -39,12 +41,17 @@ public class EnvironmentSwitchEvent extends ApplicationEvent {
         return switchReason;
     }
 
+    public String getOrgType() {
+        return orgType;
+    }
+
     @Override
     public String toString() {
         return "EnvironmentSwitchEvent{" +
                 "oldEnvironment=" + (oldEnvironment != null ? oldEnvironment.getEnvironmentCode() : "null") +
                 ", newEnvironment=" + (newEnvironment != null ? newEnvironment.getEnvironmentCode() : "null") +
                 ", switchReason='" + switchReason + '\'' +
+                ", orgType='" + orgType + '\'' +
                 '}';
     }
 }

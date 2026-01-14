@@ -44,6 +44,9 @@ public class DataiConfigSnapshotDto implements Serializable
         /** 快照状态 */
     private String status;
 
+        /** ORG类型 */
+    private String orgType;
+
         /** 备注 */
     private String remark;
 

@@ -36,6 +36,7 @@ CREATE TABLE `datai_config_audit_log`  (
   `request_id` varchar(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '请求ID',
   `result` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT 'SUCCESS' COMMENT '操作结果',
   `error_message` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL COMMENT '错误信息',
+  `org_type` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT 'ORG类型',
   `dept_id` bigint NULL DEFAULT NULL COMMENT '部门ID',
   `create_by` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '创建人',
   `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -47,7 +48,8 @@ CREATE TABLE `datai_config_audit_log`  (
   INDEX `idx_operator`(`operator` ASC) USING BTREE COMMENT '普通索引',
   INDEX `idx_operation_time`(`operation_time` ASC) USING BTREE COMMENT '普通索引',
   INDEX `idx_request_id`(`request_id` ASC) USING BTREE COMMENT '普通索引',
-  INDEX `idx_object_id`(`object_id` ASC) USING BTREE COMMENT '普通索引'
+  INDEX `idx_object_id`(`object_id` ASC) USING BTREE COMMENT '普通索引',
+  INDEX `idx_org_type`(`org_type` ASC) USING BTREE COMMENT '普通索引'
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '配置审计日志表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
@@ -83,6 +85,7 @@ CREATE TABLE `datai_config_snapshot`  (
   `snapshot_content` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL COMMENT '快照内容',
   `config_count` int NULL DEFAULT NULL COMMENT '配置数量',
   `status` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '快照状态',
+  `org_type` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT 'ORG类型',
   `remark` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '备注',
   `dept_id` bigint NULL DEFAULT NULL COMMENT '部门ID',
   `create_by` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '创建人',
@@ -91,7 +94,8 @@ CREATE TABLE `datai_config_snapshot`  (
   `update_time` datetime NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   PRIMARY KEY (`id`) USING BTREE COMMENT '主键索引',
   INDEX `idx_version_id`(`snapshot_number` ASC) USING BTREE COMMENT '普通索引',
-  INDEX `idx_snapshot_time`(`snapshot_desc` ASC) USING BTREE COMMENT '普通索引'
+  INDEX `idx_snapshot_time`(`snapshot_desc` ASC) USING BTREE COMMENT '普通索引',
+  INDEX `idx_org_type`(`org_type` ASC) USING BTREE COMMENT '普通索引'
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '配置快照表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
@@ -103,6 +107,7 @@ CREATE TABLE `datai_configuration`  (
   `config_key` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '配置键',
   `config_value` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL COMMENT '配置值',
   `environment_id` bigint NULL DEFAULT NULL COMMENT '环境ID',
+  `org_type` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT 'ORG类型',
   `is_sensitive` tinyint NOT NULL DEFAULT 0 COMMENT '是否敏感配置',
   `is_encrypted` tinyint NOT NULL DEFAULT 0 COMMENT '是否加密存储',
   `description` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '配置描述',
@@ -117,7 +122,8 @@ CREATE TABLE `datai_configuration`  (
   PRIMARY KEY (`id`) USING BTREE COMMENT '主键索引',
   UNIQUE INDEX `uk_config_key_environment`(`dept_id` ASC, `config_key` ASC, `environment_id` ASC) USING BTREE COMMENT '唯一约束',
   INDEX `idx_environment_id`(`environment_id` ASC) USING BTREE COMMENT '普通索引',
-  INDEX `idx_config_key`(`config_key` ASC) USING BTREE COMMENT '普通索引'
+  INDEX `idx_config_key`(`config_key` ASC) USING BTREE COMMENT '普通索引',
+  INDEX `idx_org_type`(`org_type` ASC) USING BTREE COMMENT '普通索引'
 ) ENGINE = InnoDB AUTO_INCREMENT = 170 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '配置表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------

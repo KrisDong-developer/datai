@@ -5,6 +5,8 @@ import java.util.List;
 import com.alibaba.fastjson2.JSON;
 import com.datai.common.utils.DateUtils;
 import com.datai.common.utils.SecurityUtils;
+import com.datai.setting.model.domain.DataiConfigAuditLog;
+import com.datai.setting.service.IDataiConfigAuditLogService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +34,9 @@ public class DataiConfigSnapshotServiceImpl implements IDataiConfigSnapshotServi
 
     @Autowired
     private IDataiConfigurationService dataiConfigurationService;
+    
+    @Autowired
+    private IDataiConfigAuditLogService dataiConfigAuditLogService;
 
     /**
      * 查询配置快照

@@ -67,10 +67,13 @@ public class DataiConfigAuditLogDto implements Serializable
     private String result;
 
         /** 错误信息 */
-    private String errorMessage;
+        private String errorMessage;
+
+        /** ORG类型 */
+        private String orgType;
 
         /** 创建人 */
-    private String createBy;
+        private String createBy;
 
         /** 创建时间 */
     private Date createTime;

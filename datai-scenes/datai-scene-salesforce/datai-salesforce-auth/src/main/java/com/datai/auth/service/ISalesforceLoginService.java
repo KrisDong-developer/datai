@@ -26,9 +26,10 @@ public interface ISalesforceLoginService {
      * 
      * @param sessionId 会话ID
      * @param loginType 登录类型
+     * @param orgType ORG类型（source/target）
      * @return 登出是否成功
      */
-    boolean logout(String sessionId, String loginType);
+    boolean logout(String sessionId, String loginType, String orgType);
 
     /**
      * 获取当前登录信息
@@ -44,6 +45,14 @@ public interface ISalesforceLoginService {
      * @return 登录结果
      */
     SalesforceLoginResult getCurrentLoginResult();
+
+    /**
+     * 获取指定ORG类型的登录结果（从缓存中获取）
+     * 
+     * @param orgType ORG类型（source/target）
+     * @return 登录结果
+     */
+    SalesforceLoginResult getCurrentLoginResultByOrgType(String orgType);
 
     /**
      * 自动登录

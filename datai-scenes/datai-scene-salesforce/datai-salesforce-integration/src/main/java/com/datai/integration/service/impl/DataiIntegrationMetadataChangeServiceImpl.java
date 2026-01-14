@@ -555,7 +555,7 @@ public class DataiIntegrationMetadataChangeServiceImpl implements IDataiIntegrat
                 try {
                     log.info("开始同步对象: {}", objectApi);
 
-                    IPartnerV1Connection connection = retryOperation(() -> soapConnectionFactory.getConnection(), 3, 1000);
+                    IPartnerV1Connection connection = retryOperation(() -> soapConnectionFactory.getConnection("source"), 3, 1000);
                     log.info("成功获取源ORG连接");
 
                     DescribeSObjectResult objDetail = connection.describeSObject(objectApi.trim());
@@ -945,7 +945,7 @@ public class DataiIntegrationMetadataChangeServiceImpl implements IDataiIntegrat
 //    private void updateDatabaseTable(String objectApi, String objectLabel, Map<String, Object> result) {
 //        IPartnerV1Connection connection = null;
 //        try {
-//            connection = soapConnectionFactory.getConnection();
+//            connection = soapConnectionFactory.getConnection("source");
 //            DescribeSObjectResult objDetail = connection.describeSObject(objectApi);
 //
 //            if (objDetail == null) {
@@ -998,7 +998,7 @@ public class DataiIntegrationMetadataChangeServiceImpl implements IDataiIntegrat
     private void addDatabaseColumn(String objectApi, String fieldApi, Map<String, Object> result) {
         IPartnerV1Connection connection = null;
         try {
-            connection = soapConnectionFactory.getConnection();
+            connection = soapConnectionFactory.getConnection("source");
             DescribeSObjectResult objDetail = connection.describeSObject(objectApi);
 
             if (objDetail == null) {
@@ -1034,7 +1034,7 @@ public class DataiIntegrationMetadataChangeServiceImpl implements IDataiIntegrat
     private void modifyDatabaseColumn(String objectApi, String fieldApi, Map<String, Object> result) {
         IPartnerV1Connection connection = null;
         try {
-            connection = soapConnectionFactory.getConnection();
+            connection = soapConnectionFactory.getConnection("source");
             DescribeSObjectResult objDetail = connection.describeSObject(objectApi);
 
             if (objDetail == null) {
@@ -1087,7 +1087,7 @@ public class DataiIntegrationMetadataChangeServiceImpl implements IDataiIntegrat
             log.info("开始执行全对象元数据变更拉取");
 
             // 建立与Salesforce的连接，使用重试机制确保连接成功
-            IPartnerV1Connection connection = retryOperation(() -> soapConnectionFactory.getConnection(), 3, 1000);
+            IPartnerV1Connection connection = retryOperation(() -> soapConnectionFactory.getConnection("source"), 3, 1000);
             log.info("成功获取Salesforce SOAP连接");
 
             // 获取Salesforce中所有对象的全局描述信息

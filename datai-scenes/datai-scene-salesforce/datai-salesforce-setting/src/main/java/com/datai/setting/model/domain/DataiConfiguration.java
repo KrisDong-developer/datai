@@ -119,7 +119,6 @@ public class DataiConfiguration extends BaseEntity
         return environmentId;
     }
 
-
     public void setIsSensitive(Boolean isSensitive) 
     {
         this.isSensitive = isSensitive;

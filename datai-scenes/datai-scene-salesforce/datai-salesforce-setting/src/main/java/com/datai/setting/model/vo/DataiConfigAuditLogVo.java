@@ -84,6 +84,10 @@ public class DataiConfigAuditLogVo implements Serializable {
     @Excel(name = "错误信息")
     private String errorMessage;
 
+    /** ORG类型 */
+    @Excel(name = "ORG类型")
+    private String orgType;
+
     /** 创建人 */
     @Excel(name = "创建人")
     private String createBy;

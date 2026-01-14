@@ -264,7 +264,7 @@ public class DataiIntegrationObjectServiceImpl implements IDataiIntegrationObjec
             log.info("开始创建对象表结构: {}, 标签: {}", objectApi, objectLabel);
 
             IPartnerV1Connection connection = null;
-            connection = soapConnectionFactory.getConnection();
+            connection = soapConnectionFactory.getConnection("source");
             if (connection == null) {
                 result.put("success", false);
                 result.put("message", "无法获取Salesforce连接");
@@ -578,7 +578,7 @@ public class DataiIntegrationObjectServiceImpl implements IDataiIntegrationObjec
             // 当变更实时同步状态时，查询Salesforce的PlatformEventChannelMember表，检查是否启用了实时同步
             if (Boolean.TRUE.equals(isRealtimeSync)) {
                 try {
-                    IPartnerV1Connection connection = soapConnectionFactory.getConnection();
+                    IPartnerV1Connection connection = soapConnectionFactory.getConnection("source");
                     if (connection != null) {
                         String soql = "SELECT Id, ChannelId, EntityName, IsEnabled FROM PlatformEventChannelMember WHERE EntityName = '" + object.getApi() + "' AND IsEnabled = true";
                         QueryResult queryResult = connection.query(soql);
@@ -1050,7 +1050,7 @@ public class DataiIntegrationObjectServiceImpl implements IDataiIntegrationObjec
                 return result;
             }
             
-            IPartnerV1Connection connection = soapConnectionFactory.getConnection();
+            IPartnerV1Connection connection = soapConnectionFactory.getConnection("source");
             if (connection == null) {
                 log.error("无法获取Salesforce连接");
                 result.put("success", false);

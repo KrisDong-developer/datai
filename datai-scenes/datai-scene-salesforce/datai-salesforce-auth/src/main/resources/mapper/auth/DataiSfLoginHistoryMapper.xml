@@ -66,6 +66,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             dslh.environment_id,
             dslh.instance_url,
             dslh.organization_id,
+            dslh.org_type,
             dslh.request_ip,
             dslh.request_port,
             dslh.user_agent,
@@ -156,6 +157,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="environmentId != null">environment_id,</if>
             <if test="instanceUrl != null">instance_url,</if>
             <if test="organizationId != null">organization_id,</if>
+            <if test="orgType != null">org_type,</if>
             <if test="requestIp != null">request_ip,</if>
             <if test="requestPort != null">request_port,</if>
             <if test="userAgent != null">user_agent,</if>
@@ -197,6 +199,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="environmentId != null">#{environmentId},</if>
             <if test="instanceUrl != null">#{instanceUrl},</if>
             <if test="organizationId != null">#{organizationId},</if>
+            <if test="orgType != null">#{orgType},</if>
             <if test="requestIp != null">#{requestIp},</if>
             <if test="requestPort != null">#{requestPort},</if>
             <if test="userAgent != null">#{userAgent},</if>
@@ -283,6 +286,13 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <select id="selectLatestSuccessLoginHistory" resultMap="DataiSfLoginHistoryResult">
         <include refid="selectDataiSfLoginHistoryVo"/>
         where dslh.login_status = 'success'
+        order by dslh.create_time desc
+        limit 1
+    </select>
+
+    <select id="selectLatestSuccessLoginHistoryByOrgType" parameterType="String" resultMap="DataiSfLoginHistoryResult">
+        <include refid="selectDataiSfLoginHistoryVo"/>
+        where dslh.login_status = 'success' and dslh.org_type = #{orgType}
         order by dslh.create_time desc
         limit 1
     </select>

@@ -22,17 +22,17 @@ public class SOAPConnectionFactory extends AbstractConnectionFactory<IPartnerV1C
     private ConnectionProxy connectionProxy;
 
     @Override
-    protected IPartnerV1Connection createConnection() {
+    protected IPartnerV1Connection createConnection(String orgType) {
         try {
             ConnectorConfig config = new ConnectorConfig();
-            config.setSessionId(getSessionId());
-            config.setServiceEndpoint(getInstanceUrl() + "/services/Soap/u/59.0");
+            config.setSessionId(sessionManager.getCurrentSession(orgType));
+            config.setServiceEndpoint(sessionManager.getInstanceUrl(orgType) + "/services/Soap/u/59.0");
             
             PartnerV1Connection connection = new PartnerV1Connection(config);
             
             return connectionProxy.createProxy(connection, "SOAP");
         } catch (Exception e) {
-            log.error("创建SOAP连接失败", e);
+            log.error("创建SOAP连接失败，ORG类型: {}", orgType, e);
             throw new RuntimeException("创建SOAP连接失败: " + e.getMessage(), e);
         }
     }

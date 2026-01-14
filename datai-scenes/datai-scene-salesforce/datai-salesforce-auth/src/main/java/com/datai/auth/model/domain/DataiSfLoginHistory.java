@@ -192,6 +192,12 @@ public class DataiSfLoginHistory extends BaseEntity
     /** 部门ID */
     @Schema(title = "部门ID")
     private Long deptId;
+
+    /** ORG类型 */
+    @Schema(title = "ORG类型")
+    @Excel(name = "ORG类型")
+    private String orgType;
+
     public void setId(Long id) 
     {
         this.id = id;
@@ -576,6 +582,15 @@ public class DataiSfLoginHistory extends BaseEntity
         return deptId;
     }
 
+    public void setOrgType(String orgType) 
+    {
+        this.orgType = orgType;
+    }
+
+    public String getOrgType() 
+    {
+        return orgType;
+    }
 
 
     @Override
@@ -616,6 +631,7 @@ public class DataiSfLoginHistory extends BaseEntity
             .append("durationMs", getDurationMs())
             .append("operator", getOperator())
             .append("deptId", getDeptId())
+            .append("orgType", getOrgType())
             .append("createBy", getCreateBy())
             .append("createTime", getCreateTime())
             .append("updateBy", getUpdateBy())

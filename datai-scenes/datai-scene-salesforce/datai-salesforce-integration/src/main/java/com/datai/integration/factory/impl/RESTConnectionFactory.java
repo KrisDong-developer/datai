@@ -19,16 +19,16 @@ public class RESTConnectionFactory extends AbstractConnectionFactory<IRESTConnec
     private ConnectionProxy connectionProxy;
 
     @Override
-    protected IRESTConnection createConnection() {
+    protected IRESTConnection createConnection(String orgType) {
         try {
             ConnectorConfig config = new ConnectorConfig();
-            config.setSessionId(getSessionId());
-            config.setRestEndpoint(getInstanceUrl() + "/services/data/v" + 
+            config.setSessionId(sessionManager.getCurrentSession(orgType));
+            config.setRestEndpoint(sessionManager.getInstanceUrl(orgType) + "/services/data/v" + 
                 SalesforceConstants.REST_API_VERSION.replace("v", "") + "/");
             RESTConnection connection = new RESTConnection(config);
             return connectionProxy.createProxy(connection, "REST");
         } catch (AsyncApiException e) {
-            log.error("创建REST连接失败", e);
+            log.error("创建REST连接失败，ORG类型: {}", orgType, e);
             throw new RuntimeException("创建REST连接失败: " + e.getMessage(), e);
         }
     }

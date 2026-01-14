@@ -134,16 +134,17 @@ public class DataiConfigEnvironmentController extends BaseController
     @PostMapping("/switch")
     public AjaxResult switchEnvironment(
             @Parameter(description = "环境编码", required = true) @RequestParam String environmentCode,
+            @Parameter(description = "ORG类型", required = true) @RequestParam String orgType,
             @Parameter(description = "切换原因", required = false) @RequestParam(required = false) String switchReason)
     {
         if (switchReason == null || switchReason.trim().isEmpty()) {
             switchReason = "手动切换";
         }
         
-        boolean result = dataiConfigEnvironmentService.switchEnvironment(environmentCode, switchReason);
+        boolean result = dataiConfigEnvironmentService.switchEnvironment(environmentCode, orgType, switchReason);
         
         if (result) {
-            DataiConfigEnvironment currentEnvironment = dataiConfigEnvironmentService.getCurrentActiveEnvironment();
+            DataiConfigEnvironment currentEnvironment = dataiConfigEnvironmentService.getCurrentActiveEnvironment(orgType);
             DataiConfigEnvironmentVo currentEnvironmentVo = DataiConfigEnvironmentVo.objToVo(currentEnvironment);
             return success("环境切换成功：" + currentEnvironmentVo.getEnvironmentName());
         } else {
@@ -157,9 +158,10 @@ public class DataiConfigEnvironmentController extends BaseController
     @Operation(summary = "获取当前激活的环境")
     @PreAuthorize("@ss.hasPermi('setting:environment:query')")
     @GetMapping("/current")
-    public AjaxResult getCurrentEnvironment()
+    public AjaxResult getCurrentEnvironment(
+            @Parameter(description = "ORG类型", required = true) @RequestParam String orgType)
     {
-        DataiConfigEnvironment currentEnvironment = dataiConfigEnvironmentService.getCurrentActiveEnvironment();
+        DataiConfigEnvironment currentEnvironment = dataiConfigEnvironmentService.getCurrentActiveEnvironment(orgType);
         if (currentEnvironment == null) {
             return error("未找到当前激活的环境");
         }

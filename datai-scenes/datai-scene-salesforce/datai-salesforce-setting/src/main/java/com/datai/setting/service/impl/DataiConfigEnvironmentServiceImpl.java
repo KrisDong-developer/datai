@@ -120,53 +120,55 @@ public class DataiConfigEnvironmentServiceImpl implements IDataiConfigEnvironmen
     }
 
     @Override
-    public boolean switchEnvironment(String environmentCode, String switchReason) {
-        logger.info("[环境切换] 开始切换环境: {}, 原因: {}", environmentCode, switchReason);
+    public boolean switchEnvironment(String environmentCode, String orgType, String switchReason) {
+        logger.info("[环境切换] 开始切换环境: {}, ORG类型: {}, 原因: {}", environmentCode, orgType, switchReason);
 
         try {
-            DataiConfigEnvironment oldEnvironment = getCurrentActiveEnvironment();
+            DataiConfigEnvironment oldEnvironment = getCurrentActiveEnvironment(orgType);
 
-            boolean switchResult = cacheManager.switchEnvironment(environmentCode);
+            boolean switchResult = cacheManager.switchEnvironment(environmentCode, orgType);
 
             if (switchResult) {
-                DataiConfigEnvironment newEnvironment = getCurrentActiveEnvironment();
+                DataiConfigEnvironment newEnvironment = getCurrentActiveEnvironment(orgType);
 
                 applicationContext.publishEvent(
-                    new EnvironmentSwitchEvent(this, oldEnvironment, newEnvironment, switchReason)
+                    new EnvironmentSwitchEvent(this, oldEnvironment, newEnvironment, switchReason, orgType)
                 );
 
-                logger.info("[环境切换] 环境切换成功: {} -> {}", 
+                logger.info("[环境切换] 环境切换成功: {} -> {}, ORG类型: {}", 
                     oldEnvironment != null ? oldEnvironment.getEnvironmentCode() : "null",
-                    newEnvironment != null ? newEnvironment.getEnvironmentCode() : "null");
+                    newEnvironment != null ? newEnvironment.getEnvironmentCode() : "null",
+                    orgType);
             } else {
-                logger.error("[环境切换] 环境切换失败: {}", environmentCode);
+                logger.error("[环境切换] 环境切换失败: {}, ORG类型: {}", environmentCode, orgType);
             }
 
             return switchResult;
         } catch (Exception e) {
-            logger.error("[环境切换] 环境切换异常: {}, 错误信息: {}", environmentCode, e.getMessage(), e);
+            logger.error("[环境切换] 环境切换异常: {}, ORG类型: {}, 错误信息: {}", environmentCode, orgType, e.getMessage(), e);
             return false;
         }
     }
 
     @Override
-    public DataiConfigEnvironment getCurrentActiveEnvironment() {
-        String currentEnvironmentCode = cacheManager.getCurrentEnvironmentCode();
+    public DataiConfigEnvironment getCurrentActiveEnvironment(String orgType) {
+        String currentEnvironmentCode = cacheManager.getCurrentEnvironmentCode(orgType);
         if (currentEnvironmentCode == null) {
-            logger.warn("[环境查询] 当前环境编码为空");
+            logger.warn("[环境查询] 当前环境编码为空, ORG类型: {}", orgType);
             return null;
         }
 
         DataiConfigEnvironment query = new DataiConfigEnvironment();
         query.setEnvironmentCode(currentEnvironmentCode);
         query.setIsActive(true);
+        query.setOrgType(orgType);
 
         List<DataiConfigEnvironment> environments = dataiConfigEnvironmentMapper.selectDataiConfigEnvironmentList(query);
         if (environments != null && !environments.isEmpty()) {
             return environments.get(0);
         }
 
-        logger.warn("[环境查询] 未找到激活的环境: {}", currentEnvironmentCode);
+        logger.warn("[环境查询] 未找到激活的环境: {}, ORG类型: {}", currentEnvironmentCode, orgType);
         return null;
     }
 }

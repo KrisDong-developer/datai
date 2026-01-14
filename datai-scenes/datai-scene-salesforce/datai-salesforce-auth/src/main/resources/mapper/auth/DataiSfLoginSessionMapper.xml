@@ -20,6 +20,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="sfUserId" column="sf_user_id" />
         <result property="sfOrganizationId" column="sf_organization_id" />
         <result property="instanceUrl" column="instance_url" />
+        <result property="orgType" column="org_type" />
         <result property="createBy" column="create_by" />
         <result property="createTime" column="create_time" />
         <result property="updateBy" column="update_by" />
@@ -43,6 +44,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             dsls.sf_user_id,
             dsls.sf_organization_id,
             dsls.instance_url,
+            dsls.org_type,
             dsls.create_by,
             dsls.create_time,
             dsls.update_by,
@@ -75,6 +77,20 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <select id="selectDataiSfLoginSessionBySessionId" parameterType="String" resultMap="DataiSfLoginSessionResult">
         <include refid="selectDataiSfLoginSessionVo"/>
         where dsls.session_id = #{sessionId}
+        order by dsls.login_time desc
+        limit 1
+    </select>
+
+    <select id="selectLatestActiveSession" resultMap="DataiSfLoginSessionResult">
+        <include refid="selectDataiSfLoginSessionVo"/>
+        where dsls.status = 'active'
+        order by dsls.login_time desc
+        limit 1
+    </select>
+
+    <select id="selectLatestActiveSessionByOrgType" parameterType="String" resultMap="DataiSfLoginSessionResult">
+        <include refid="selectDataiSfLoginSessionVo"/>
+        where dsls.status = 'active' and dsls.org_type = #{orgType}
         order by dsls.login_time desc
         limit 1
     </select>

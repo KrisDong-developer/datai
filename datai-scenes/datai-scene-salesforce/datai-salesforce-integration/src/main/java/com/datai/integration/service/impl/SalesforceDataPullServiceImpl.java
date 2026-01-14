@@ -102,7 +102,7 @@ public class SalesforceDataPullServiceImpl implements ISalesforceDataPullService
         }
         try {
             // 获取源ORG连接，添加重试机制
-            IPartnerV1Connection connection = retryOperation(() -> soapConnectionFactory.getConnection(), 3, 1000);
+            IPartnerV1Connection connection = retryOperation(() -> soapConnectionFactory.getConnection("source"), 3, 1000);
             log.info("成功获取源ORG连接");
 
             for (String objectApi : objectApis) {
@@ -655,7 +655,7 @@ public class SalesforceDataPullServiceImpl implements ISalesforceDataPullService
         
         try {
             // 获取Salesforce SOAP连接，添加重试机制
-            IPartnerV1Connection connection = retryOperation(() -> soapConnectionFactory.getConnection(), 3, 1000);
+            IPartnerV1Connection connection = retryOperation(() -> soapConnectionFactory.getConnection("source"), 3, 1000);
             log.info("成功获取Salesforce SOAP连接，耗时 {}ms", System.currentTimeMillis() - startTime);
 
             // 获取对象的字段信息
@@ -1154,7 +1154,7 @@ public class SalesforceDataPullServiceImpl implements ISalesforceDataPullService
         
         try {
             // 获取Salesforce SOAP连接，添加重试机制
-            IPartnerV1Connection connection = retryOperation(() -> soapConnectionFactory.getConnection(), 3, 1000);
+            IPartnerV1Connection connection = retryOperation(() -> soapConnectionFactory.getConnection("source"), 3, 1000);
             log.info("成功获取Salesforce SOAP连接");
 
             // 获取对象的字段信息
@@ -1187,7 +1187,7 @@ public class SalesforceDataPullServiceImpl implements ISalesforceDataPullService
         log.info("开始自动同步Salesforce对象信息");
 
         try {
-            IPartnerV1Connection connection = retryOperation(() -> soapConnectionFactory.getConnection(), 3, 1000);
+            IPartnerV1Connection connection = retryOperation(() -> soapConnectionFactory.getConnection("source"), 3, 1000);
             log.info("成功获取Salesforce SOAP连接");
 
             DescribeGlobalResult globalDescribe = connection.describeGlobal();
@@ -1346,7 +1346,7 @@ public class SalesforceDataPullServiceImpl implements ISalesforceDataPullService
             for (DataiIntegrationObject existingObject : existingObjects) {
                 if (!syncedObjectApis.contains(existingObject.getApi())) {
                     try {
-                        DescribeGlobalResult globalDescribe = soapConnectionFactory.getConnection().describeGlobal();
+                        DescribeGlobalResult globalDescribe = soapConnectionFactory.getConnection("source").describeGlobal();
                         DescribeGlobalSObjectResult[] sObjects = globalDescribe.getSobjects();
                         boolean objectExists = false;
                         
@@ -1389,7 +1389,7 @@ public class SalesforceDataPullServiceImpl implements ISalesforceDataPullService
         log.info("开始同步元数据变更到元数据变更信息表");
 
         try {
-            IPartnerV1Connection connection = retryOperation(() -> soapConnectionFactory.getConnection(), 3, 1000);
+            IPartnerV1Connection connection = retryOperation(() -> soapConnectionFactory.getConnection("source"), 3, 1000);
             log.info("成功获取Salesforce SOAP连接");
 
             DescribeGlobalResult globalDescribe = connection.describeGlobal();
@@ -1615,7 +1615,7 @@ public class SalesforceDataPullServiceImpl implements ISalesforceDataPullService
             for (DataiIntegrationObject existingObject : existingObjects) {
                 if (!syncedObjectApis.contains(existingObject.getApi())) {
                     try {
-                        DescribeGlobalResult globalDescribe = soapConnectionFactory.getConnection().describeGlobal();
+                        DescribeGlobalResult globalDescribe = soapConnectionFactory.getConnection("source").describeGlobal();
                         DescribeGlobalSObjectResult[] sObjects = globalDescribe.getSobjects();
                         boolean objectExists = false;
                         

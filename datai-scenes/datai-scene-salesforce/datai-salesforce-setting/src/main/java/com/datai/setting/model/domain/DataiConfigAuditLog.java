@@ -92,6 +92,11 @@ public class DataiConfigAuditLog extends BaseEntity
     @Schema(title = "错误信息")
     @Excel(name = "错误信息")
     private String errorMessage;
+
+    /** ORG类型 */
+    @Schema(title = "ORG类型")
+    @Excel(name = "ORG类型")
+    private String orgType;
     public void setId(Long id) 
     {
         this.id = id;
@@ -257,6 +262,16 @@ public class DataiConfigAuditLog extends BaseEntity
     }
 
 
+    public void setOrgType(String orgType) 
+    {
+        this.orgType = orgType;
+    }
+
+    public String getOrgType() 
+    {
+        return orgType;
+    }
+
 
     @Override
     public String toString() {
@@ -276,6 +291,7 @@ public class DataiConfigAuditLog extends BaseEntity
             .append("requestId", getRequestId())
             .append("result", getResult())
             .append("errorMessage", getErrorMessage())
+            .append("orgType", getOrgType())
             .append("createBy", getCreateBy())
             .append("createTime", getCreateTime())
             .append("updateBy", getUpdateBy())

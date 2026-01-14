@@ -81,6 +81,11 @@ public class SalesforceLoginRequest implements Serializable {
      */
     private String loginUrl;
 
+    /**
+     * 组织类型
+     */
+    private String orgType;
+
     // getter和setter方法
     public String getLoginUrl() {
         return loginUrl;
@@ -194,5 +199,13 @@ public class SalesforceLoginRequest implements Serializable {
     
     public void setSessionId(String sessionId) {
         this.sessionId = sessionId;
+    }
+    
+    public String getOrgType() {
+        return orgType;
+    }
+    
+    public void setOrgType(String orgType) {
+        this.orgType = orgType;
     }
 }

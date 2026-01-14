@@ -37,17 +37,18 @@ public class EnvironmentSwitchListener {
     @Autowired
     private IDataiConfigurationService configService;
 
-    @Async
     @EventListener
     public void handleEnvironmentSwitch(EnvironmentSwitchEvent event) {
         long startTime = System.currentTimeMillis();
         DataiConfigEnvironment oldEnv = event.getOldEnvironment();
         DataiConfigEnvironment newEnv = event.getNewEnvironment();
         String switchReason = event.getSwitchReason();
+        String orgType = event.getOrgType();
 
-        logger.info("[环境切换] 开始处理环境切换事件: {} -> {}, 原因: {}, 开始时间: {}",
+        logger.info("[环境切换] 开始处理环境切换事件: {} -> {}, ORG类型: {}, 原因: {}, 开始时间: {}",
                 oldEnv != null ? oldEnv.getEnvironmentCode() : "null",
                 newEnv != null ? newEnv.getEnvironmentCode() : "null",
+                orgType,
                 switchReason,
                 DateUtils.getNowDate());
 
@@ -56,6 +57,7 @@ public class EnvironmentSwitchListener {
                     SecurityUtils.getLoginUser().getUsername() : "system";
 
             logger.info("[环境切换] 操作用户: {}", username);
+            logger.info("[环境切换] ORG类型: {}", orgType);
             logger.info("[环境切换] 切换原因: {}", switchReason);
 
             if (oldEnv != null) {
@@ -68,32 +70,25 @@ public class EnvironmentSwitchListener {
                         newEnv.getId(), newEnv.getEnvironmentName(), newEnv.getEnvironmentCode());
             }
 
-            logger.info("[环境切换] 开始执行环境切换...");
+            logger.info("[环境切换] 开始执行环境切换后续处理...");
             if (newEnv != null) {
-                boolean switchSuccess = cacheManager.switchEnvironment(newEnv.getEnvironmentCode());
-                
-                if (switchSuccess) {
-                    logger.info("[环境切换] 环境切换成功: {}", newEnv.getEnvironmentCode());
+                logger.info("[环境切换] 环境切换已由Service层完成: {}, ORG类型: {}", newEnv.getEnvironmentCode(), orgType);
 
-                    DataiConfiguration query = new DataiConfiguration();
-                    query.setEnvironmentId(newEnv.getId());
-                    query.setIsActive(true);
-                    List<DataiConfiguration> configs = configService.selectDataiConfigurationList(query);
-                    logger.info("[环境切换] 新环境配置数量: {}", configs.size());
-                } else {
-                    logger.error("[环境切换] 环境切换失败: {}", newEnv.getEnvironmentCode());
-                    throw new RuntimeException("环境切换失败");
-                }
+                DataiConfiguration query = new DataiConfiguration();
+                query.setEnvironmentId(newEnv.getId());
+                query.setIsActive(true);
+                List<DataiConfiguration> configs = configService.selectDataiConfigurationList(query);
+                logger.info("[环境切换] 新环境配置数量: {}, ORG类型: {}", configs.size(), orgType);
             }
 
             long endTime = System.currentTimeMillis();
             logger.info("[环境切换] 环境切换处理完成，总耗时: {}ms", (endTime - startTime));
-            logger.info("[环境切换] 当前环境: {}", cacheManager.getCurrentEnvironmentCode());
+            logger.info("[环境切换] 当前环境: {}, ORG类型: {}", cacheManager.getCurrentEnvironmentCode(orgType), orgType);
 
         } catch (Exception e) {
             long endTime = System.currentTimeMillis();
-            logger.error("[环境切换] 环境切换处理失败，开始时间: {}, 耗时: {}ms, 错误信息: {}",
-                    startTime, (endTime - startTime), e.getMessage(), e);
+            logger.error("[环境切换] 环境切换处理失败，开始时间: {}, 耗时: {}ms, ORG类型: {}, 错误信息: {}",
+                    startTime, (endTime - startTime), orgType, e.getMessage(), e);
             throw new RuntimeException("环境切换处理失败", e);
         }
     }

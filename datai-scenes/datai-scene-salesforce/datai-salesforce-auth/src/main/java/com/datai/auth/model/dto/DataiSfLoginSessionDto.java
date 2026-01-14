@@ -79,6 +79,9 @@ public class DataiSfLoginSessionDto implements Serializable
     /** Salesforce组织ID */
     private String sfOrganizationId;
 
+    /** ORG类型 */
+    private String orgType;
+
     /** 实例URL */
     private String instanceUrl;
 

@@ -20,6 +20,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="requestId" column="request_id" />
         <result property="result" column="result" />
         <result property="errorMessage" column="error_message" />
+        <result property="orgType" column="org_type" />
         <result property="createBy" column="create_by" />
         <result property="createTime" column="create_time" />
         <result property="updateBy" column="update_by" />
@@ -43,6 +44,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             dcal.request_id,
             dcal.result,
             dcal.error_message,
+            dcal.org_type,
             dcal.create_by,
             dcal.create_time,
             dcal.update_by,
@@ -67,6 +69,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="requestId != null  and requestId != ''"> and dcal.request_id = #{requestId}</if>
             <if test="result != null  and result != ''"> and dcal.result = #{result}</if>
             <if test="errorMessage != null  and errorMessage != ''"> and dcal.error_message = #{errorMessage}</if>
+            <if test="orgType != null  and orgType != ''"> and dcal.org_type = #{orgType}</if>
         </where>
     </select>
     
@@ -92,6 +95,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="requestId != null">request_id,</if>
             <if test="result != null and result != ''">result,</if>
             <if test="errorMessage != null">error_message,</if>
+            <if test="orgType != null and orgType != ''">org_type,</if>
             <if test="createBy != null and createBy != ''">create_by,</if>
             <if test="createTime != null">create_time,</if>
             <if test="updateBy != null and updateBy != ''">update_by,</if>
@@ -112,6 +116,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="requestId != null">#{requestId},</if>
             <if test="result != null and result != ''">#{result},</if>
             <if test="errorMessage != null">#{errorMessage},</if>
+            <if test="orgType != null and orgType != ''">#{orgType},</if>
             <if test="createBy != null and createBy != ''">#{createBy},</if>
             <if test="createTime != null">#{createTime},</if>
             <if test="updateBy != null and updateBy != ''">#{updateBy},</if>
@@ -136,6 +141,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="requestId != null">request_id = #{requestId},</if>
             <if test="result != null and result != ''">result = #{result},</if>
             <if test="errorMessage != null">error_message = #{errorMessage},</if>
+            <if test="orgType != null and orgType != ''">org_type = #{orgType},</if>
             <if test="createBy != null and createBy != ''">create_by = #{createBy},</if>
             <if test="createTime != null">create_time = #{createTime},</if>
             <if test="updateBy != null and updateBy != ''">update_by = #{updateBy},</if>

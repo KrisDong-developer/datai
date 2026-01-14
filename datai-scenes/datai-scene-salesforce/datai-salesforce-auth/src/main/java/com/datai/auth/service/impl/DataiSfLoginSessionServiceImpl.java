@@ -39,6 +39,18 @@ public class DataiSfLoginSessionServiceImpl implements IDataiSfLoginSessionServi
         return dataiSfLoginSessionMapper.selectDataiSfLoginSessionBySessionId(sessionId);
     }
 
+    @Override
+    public DataiSfLoginSession selectLatestActiveSession()
+    {
+        return dataiSfLoginSessionMapper.selectLatestActiveSession();
+    }
+
+    @Override
+    public DataiSfLoginSession selectLatestActiveSessionByOrgType(String orgType)
+    {
+        return dataiSfLoginSessionMapper.selectLatestActiveSessionByOrgType(orgType);
+    }
+
     /**
      * 查询登录会话信息列表
      *

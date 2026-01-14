@@ -9,6 +9,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="deptId" column="dept_id" />
         <result property="environmentName" column="environment_name" />
         <result property="environmentCode" column="environment_code" />
+        <result property="orgType" column="org_type" />
         <result property="description" column="description" />
         <result property="isActive" column="is_active" />
         <result property="remark" column="remark" />
@@ -24,6 +25,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             dce.dept_id,
             dce.environment_name,
             dce.environment_code,
+            dce.org_type,
             dce.description,
             dce.is_active,
             dce.remark,
@@ -40,6 +42,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="deptId != null "> and dce.dept_id = #{deptId}</if>
             <if test="environmentName != null  and environmentName != ''"> and dce.environment_name like concat('%', #{environmentName}, '%')</if>
             <if test="environmentCode != null  and environmentCode != ''"> and dce.environment_code = #{environmentCode}</if>
+            <if test="orgType != null  and orgType != ''"> and dce.org_type = #{orgType}</if>
             <if test="description != null  and description != ''"> and dce.description = #{description}</if>
             <if test="isActive != null "> and dce.is_active = #{isActive}</if>
         </where>
@@ -56,6 +59,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="deptId != null">dept_id,</if>
             <if test="environmentName != null and environmentName != ''">environment_name,</if>
             <if test="environmentCode != null and environmentCode != ''">environment_code,</if>
+            <if test="orgType != null and orgType != ''">org_type,</if>
             <if test="description != null">description,</if>
             <if test="isActive != null">is_active,</if>
             <if test="remark != null">remark,</if>
@@ -68,6 +72,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="deptId != null">#{deptId},</if>
             <if test="environmentName != null and environmentName != ''">#{environmentName},</if>
             <if test="environmentCode != null and environmentCode != ''">#{environmentCode},</if>
+            <if test="orgType != null and orgType != ''">#{orgType},</if>
             <if test="description != null">#{description},</if>
             <if test="isActive != null">#{isActive},</if>
             <if test="remark != null">#{remark},</if>
@@ -84,6 +89,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="deptId != null">dept_id = #{deptId},</if>
             <if test="environmentName != null and environmentName != ''">environment_name = #{environmentName},</if>
             <if test="environmentCode != null and environmentCode != ''">environment_code = #{environmentCode},</if>
+            <if test="orgType != null and orgType != ''">org_type = #{orgType},</if>
             <if test="description != null">description = #{description},</if>
             <if test="isActive != null">is_active = #{isActive},</if>
             <if test="remark != null">remark = #{remark},</if>

@@ -52,6 +52,11 @@ public class DataiConfigSnapshot extends BaseEntity
     @Excel(name = "快照状态")
     private String status;
 
+    /** ORG类型 */
+    @Schema(title = "ORG类型")
+    @Excel(name = "ORG类型")
+    private String orgType;
+
     /** 部门ID */
     @Schema(title = "部门ID")
     private Long deptId;
@@ -132,6 +137,17 @@ public class DataiConfigSnapshot extends BaseEntity
     }
 
 
+    public void setOrgType(String orgType) 
+    {
+        this.orgType = orgType;
+    }
+
+    public String getOrgType() 
+    {
+        return orgType;
+    }
+
+
     public void setDeptId(Long deptId) 
     {
         this.deptId = deptId;
@@ -154,6 +170,7 @@ public class DataiConfigSnapshot extends BaseEntity
             .append("snapshotContent", getSnapshotContent())
             .append("configCount", getConfigCount())
             .append("status", getStatus())
+            .append("orgType", getOrgType())
             .append("remark", getRemark())
             .append("deptId", getDeptId())
             .append("createBy", getCreateBy())

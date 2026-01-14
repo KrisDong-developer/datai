@@ -90,6 +90,10 @@ public class DataiSfLoginSession extends BaseEntity
     @Schema(title = "实例URL")
     private String instanceUrl;
 
+    /** ORG类型 */
+    @Schema(title = "ORG类型")
+    private String orgType;
+
     public void setId(Long id)
     {
         this.id = id;
@@ -251,6 +255,15 @@ public class DataiSfLoginSession extends BaseEntity
         return instanceUrl;
     }
 
+    public void setOrgType(String orgType) 
+    {
+        this.orgType = orgType;
+    }
+
+    public String getOrgType() 
+    {
+        return orgType;
+    }
 
 
     @Override
@@ -271,6 +284,7 @@ public class DataiSfLoginSession extends BaseEntity
             .append("sfUserId", getSfUserId())
             .append("sfOrganizationId", getSfOrganizationId())
             .append("instanceUrl", getInstanceUrl())
+            .append("orgType", getOrgType())
             .append("createBy", getCreateBy())
             .append("createTime", getCreateTime())
             .append("updateBy", getUpdateBy())

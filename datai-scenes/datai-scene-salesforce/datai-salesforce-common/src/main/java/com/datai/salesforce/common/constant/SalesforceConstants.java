@@ -89,9 +89,14 @@ public final class SalesforceConstants {
 
     
     /**
-     * 配置缓存键
+     * 配置缓存键 - 源 ORG
      */
     public static final String SESSION_CONFIG_SOURCE = "SOURCE_SESSION_CONFIG";
+
+    /**
+     * 配置缓存键 - 目标 ORG
+     */
+    public static final String SESSION_CONFIG_TARGET = "TARGET_SESSION_CONFIG";
 
     // ================================= 日志消息模板 =================================
     

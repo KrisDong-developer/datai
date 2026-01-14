@@ -57,29 +57,41 @@ public class PubSubConnectionFactory {
     /**
      * 获取或创建订阅客户端
      * @param topic 订阅主题
+     * @param orgType ORG 类型（source 或 target）
+     * @return 订阅客户端
+     */
+    public synchronized SubscriptionClient getSubscriptionClient(String topic, String orgType) {
+        String cacheKey = buildCacheKey(topic, orgType);
+        return subscriptionClients.computeIfAbsent(cacheKey, key -> createSubscriptionClient(topic, orgType));
+    }
+
+    /**
+     * 获取或创建订阅客户端（默认使用源 ORG）
+     * @param topic 订阅主题
      * @return 订阅客户端
      */
     public synchronized SubscriptionClient getSubscriptionClient(String topic) {
-        return subscriptionClients.computeIfAbsent(topic, this::createSubscriptionClient);
+        return getSubscriptionClient(topic, "source");
     }
 
     /**
      * 创建订阅客户端
      * @param topic 订阅主题
+     * @param orgType ORG 类型（source 或 target）
      * @return 订阅客户端
      */
-    private SubscriptionClient createSubscriptionClient(String topic) {
-        log.info("开始构建 Salesforce Pub/Sub 客户端 [Topic: {}]", topic);
+    private SubscriptionClient createSubscriptionClient(String topic, String orgType) {
+        log.info("开始构建 Salesforce Pub/Sub 客户端 [Topic: {}, OrgType: {}]", topic, orgType);
 
         try {
             validateTopic(topic);
             
-            String accessToken = sessionManager.getCurrentSession();
-            String instanceUrl = sessionManager.getInstanceUrl();
+            String accessToken = sessionManager.getCurrentSession(orgType);
+            String instanceUrl = sessionManager.getInstanceUrl(orgType);
             
             validateCredentials(accessToken, instanceUrl);
 
-            log.debug("获取到访问令牌和实例 URL [InstanceUrl: {}]", instanceUrl);
+            log.debug("获取到访问令牌和实例 URL [InstanceUrl: {}, OrgType: {}]", instanceUrl, orgType);
 
             URI endpointUri = resolveEndpoint(instanceUrl);
             log.debug("解析端点 URI: {}", endpointUri);
@@ -90,22 +102,22 @@ public class PubSubConnectionFactory {
             CredentialsOverrider credentialsOverrider = createCredentialsOverrider(stsCredentials);
             log.debug("创建 CredentialsOverrider 成功");
 
-            String subscriptionName = buildSubscriptionName(topic);
+            String subscriptionName = buildSubscriptionName(topic, orgType);
             log.debug("订阅名称: {}", subscriptionName);
 
             SubscriptionClient client = buildSubscriptionClient(subscriptionName, endpointUri, credentialsOverrider);
 
-            log.info("成功构建 Salesforce Pub/Sub 客户端 [Topic: {}, SubscriptionName: {}]", topic, subscriptionName);
+            log.info("成功构建 Salesforce Pub/Sub 客户端 [Topic: {}, OrgType: {}, SubscriptionName: {}]", topic, orgType, subscriptionName);
             return client;
 
         } catch (IllegalArgumentException | IllegalStateException e) {
-            log.error("创建 Pub/Sub 订阅客户端失败 [Topic: {}]: {}", topic, e.getMessage());
+            log.error("创建 Pub/Sub 订阅客户端失败 [Topic: {}, OrgType: {}]: {}", topic, orgType, e.getMessage());
             throw e;
         } catch (URISyntaxException e) {
-            log.error("解析端点 URI 失败 [Topic: {}, InstanceUrl: {}]: {}", topic, sessionManager.getInstanceUrl(), e.getMessage());
+            log.error("解析端点 URI 失败 [Topic: {}, OrgType: {}, InstanceUrl: {}]: {}", topic, orgType, sessionManager.getInstanceUrl(orgType), e.getMessage());
             throw new RuntimeException(ERROR_ENDPOINT_RESOLUTION, e);
         } catch (Exception e) {
-            log.error("创建 Pub/Sub 订阅客户端失败 [Topic: {}]: {}", topic, e.getMessage(), e);
+            log.error("创建 Pub/Sub 订阅客户端失败 [Topic: {}, OrgType: {}]: {}", topic, orgType, e.getMessage(), e);
             throw new RuntimeException(ERROR_CLIENT_CREATION, e);
         }
     }
@@ -162,8 +174,12 @@ public class PubSubConnectionFactory {
                 .build();
     }
 
-    private String buildSubscriptionName(String topic) {
-        return SUBSCRIPTION_NAME_PREFIX + topic.replace(TOPIC_SEPARATOR, "_");
+    private String buildSubscriptionName(String topic, String orgType) {
+        return SUBSCRIPTION_NAME_PREFIX + orgType.toUpperCase() + "_" + topic.replace(TOPIC_SEPARATOR, "_");
+    }
+
+    private String buildCacheKey(String topic, String orgType) {
+        return orgType + ":" + topic;
     }
 
     private SubscriptionClient buildSubscriptionClient(String subscriptionName, URI endpointUri, CredentialsOverrider credentialsOverrider) {
@@ -208,29 +224,39 @@ public class PubSubConnectionFactory {
      * 关闭所有订阅客户端
      */
     public void closeAllClients() {
-        subscriptionClients.forEach((topic, client) -> {
+        subscriptionClients.forEach((cacheKey, client) -> {
             try {
                 client.close();
-                log.info("关闭 Salesforce Pub/Sub API 订阅客户端，主题: {}", topic);
+                log.info("关闭 Salesforce Pub/Sub API 订阅客户端，缓存键: {}", cacheKey);
             } catch (Exception e) {
-                log.error("关闭 Salesforce Pub/Sub API 订阅客户端时发生异常: {}", e.getMessage(), e);
+                log.error("关闭 Salesforce Pub/Sub API 订阅客户端时发生异常 [缓存键: {}]: {}", cacheKey, e.getMessage(), e);
             }
         });
         subscriptionClients.clear();
     }
 
     /**
-     * 关闭指定主题的订阅客户端
+     * 关闭指定主题的订阅客户端（默认使用源 ORG）
      * @param topic 订阅主题
      */
     public void closeClient(String topic) {
-        SubscriptionClient client = subscriptionClients.remove(topic);
+        closeClient(topic, "source");
+    }
+
+    /**
+     * 关闭指定主题和 ORG 类型的订阅客户端
+     * @param topic 订阅主题
+     * @param orgType ORG 类型（source 或 target）
+     */
+    public void closeClient(String topic, String orgType) {
+        String cacheKey = buildCacheKey(topic, orgType);
+        SubscriptionClient client = subscriptionClients.remove(cacheKey);
         if (client != null) {
             try {
                 client.close();
-                log.info("关闭 Salesforce Pub/Sub API 订阅客户端，主题: {}", topic);
+                log.info("关闭 Salesforce Pub/Sub API 订阅客户端，主题: {}, ORG 类型: {}", topic, orgType);
             } catch (Exception e) {
-                log.error("关闭 Salesforce Pub/Sub API 订阅客户端时发生异常: {}", e.getMessage(), e);
+                log.error("关闭 Salesforce Pub/Sub API 订阅客户端时发生异常 [主题: {}, ORG 类型: {}]: {}", topic, orgType, e.getMessage(), e);
             }
         }
     }

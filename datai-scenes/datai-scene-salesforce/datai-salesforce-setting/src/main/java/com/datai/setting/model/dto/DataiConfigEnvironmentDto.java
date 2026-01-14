@@ -35,6 +35,9 @@ public class DataiConfigEnvironmentDto implements Serializable
         /** 环境编码 */
     private String environmentCode;
 
+        /** ORG类型 */
+    private String orgType;
+
         /** 环境描述 */
     private String description;
 

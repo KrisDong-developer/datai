@@ -1,7 +1,9 @@
 package com.datai.setting.controller;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import com.datai.common.utils.PageUtils;
@@ -59,10 +61,19 @@ public class DataiConfigurationController extends BaseController
         DataiConfiguration dataiConfiguration = DataiConfigurationDto.toObj(dataiConfigurationDto);
         List<DataiConfiguration> list = dataiConfigurationService.selectDataiConfigurationList(dataiConfiguration);
         
+        if (list == null || list.isEmpty()) {
+            return getDataTableByPage(new ArrayList<>(), 0);
+        }
+        
         List<Long> environmentIds = list.stream()
             .map(DataiConfiguration::getEnvironmentId)
+            .filter(Objects::nonNull)
             .distinct()
-            .collect(Collectors.toList());
+            .toList();
+
+        if (environmentIds.isEmpty()) {
+            return getDataTableByPage(new ArrayList<>(), 0);
+        }
         
         Map<Long, String> environmentNameMap = environmentIds.stream()
             .collect(Collectors.toMap(
@@ -72,11 +83,17 @@ public class DataiConfigurationController extends BaseController
                     return env != null ? env.getEnvironmentName() : null;
                 }
             ));
-        
+
+        if (environmentNameMap.isEmpty()) {
+            return getDataTableByPage(new ArrayList<>(), 0);
+        }
+
         List<DataiConfigurationVo> voList = list.stream()
             .map(config -> {
                 DataiConfigurationVo vo = DataiConfigurationVo.objToVo(config);
-                vo.setEnvironmentName(environmentNameMap.get(config.getEnvironmentId()));
+                if (config.getEnvironmentId() != null) {
+                    vo.setEnvironmentName(environmentNameMap.get(config.getEnvironmentId()));
+                }
                 return vo;
             })
             .collect(Collectors.toList());

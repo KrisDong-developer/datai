@@ -22,15 +22,15 @@ public class BulkV1ConnectionFactory extends AbstractConnectionFactory<IBulkV1Co
     private ConnectionProxy connectionProxy;
 
     @Override
-    protected IBulkV1Connection createConnection() {
+    protected IBulkV1Connection createConnection(String orgType) {
         try {
             ConnectorConfig config = new ConnectorConfig();
-            config.setSessionId(getSessionId());
-            config.setServiceEndpoint(getInstanceUrl() + "/services/async/47.0");
+            config.setSessionId(sessionManager.getCurrentSession(orgType));
+            config.setServiceEndpoint(sessionManager.getInstanceUrl(orgType) + "/services/async/47.0");
             BulkV1Connection connection = new BulkV1Connection(config);
             return connectionProxy.createProxy(connection, "BULK_V1");
         } catch (Exception e) {
-            log.error("创建BulkV1连接失败", e);
+            log.error("创建BulkV1连接失败，ORG类型: {}", orgType, e);
             throw new RuntimeException("创建BulkV1连接失败: " + e.getMessage(), e);
         }
     }

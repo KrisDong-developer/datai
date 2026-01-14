@@ -1,5 +1,6 @@
 package com.datai.setting.controller;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -59,8 +60,13 @@ public class DataiConfigSnapshotController extends BaseController
         DataiConfigSnapshot dataiConfigSnapshot = DataiConfigSnapshotDto.toObj(dataiConfigSnapshotDto);
         List<DataiConfigSnapshot> list = dataiConfigSnapshotService.selectDataiConfigSnapshotList(dataiConfigSnapshot);
         
+        if (list == null || list.isEmpty()) {
+            return getDataTableByPage(new ArrayList<>(), 0);
+        }
+        
         List<Long> environmentIds = list.stream()
             .map(DataiConfigSnapshot::getEnvironmentId)
+            .filter(id -> id != null)
             .distinct()
             .collect(Collectors.toList());
         
@@ -76,7 +82,9 @@ public class DataiConfigSnapshotController extends BaseController
         List<DataiConfigSnapshotVo> voList = list.stream()
             .map(snapshot -> {
                 DataiConfigSnapshotVo vo = DataiConfigSnapshotVo.objToVo(snapshot);
-                vo.setEnvironmentName(environmentNameMap.get(snapshot.getEnvironmentId()));
+                if (snapshot.getEnvironmentId() != null) {
+                    vo.setEnvironmentName(environmentNameMap.get(snapshot.getEnvironmentId()));
+                }
                 return vo;
             })
             .collect(Collectors.toList());

@@ -24,6 +24,10 @@ public final class SalesforceConfigConstants {
 
     public static final String CURRENT_RESULT = "current_result";
 
+    public static final String CURRENT_SOURCE_ORG_RESULT = "current_source_org_result";
+
+    public static final String CURRENT_TARGET_ORG_RESULT = "current_target_org_result";
+
     /**
      * 系统数据开始时间的默认年份
      */

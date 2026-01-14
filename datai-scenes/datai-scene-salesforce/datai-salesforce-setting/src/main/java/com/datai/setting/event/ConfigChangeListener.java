@@ -49,15 +49,19 @@ public class ConfigChangeListener {
             handleGenericConfigChange(config, operationType);
             
             // 记录配置变更审计日志
-            recordConfigAuditLog(config, operationType, event.getOldValue(), event.getNewValue(), "SUCCESS", null);
+            recordConfigAuditLog(config, operationType, event.getOldValue(), event.getNewValue(), event.getOrgType(), "SUCCESS", null);
             
             long endTime = System.currentTimeMillis();
             logger.info("配置变更事件处理完成，耗时: {}ms", (endTime - startTime));
         } catch (Exception e) {
             logger.error("处理配置变更事件失败: {}", e.getMessage(), e);
             // 记录配置变更审计日志（失败）
-            recordConfigAuditLog(event.getConfig(), event.getOperationType(), 
-                                event.getOldValue(), event.getNewValue(), "FAILED", e.getMessage());
+            if (event != null && event.getConfig() != null) {
+                recordConfigAuditLog(event.getConfig(), event.getOperationType(), 
+                                    event.getOldValue(), event.getNewValue(), event.getOrgType(), "FAILED", e.getMessage());
+            } else {
+                logger.error("无法记录审计日志：事件或配置对象为null");
+            }
         }
     }
     
@@ -68,11 +72,12 @@ public class ConfigChangeListener {
      * @param operationType 操作类型
      * @param oldValue 旧值
      * @param newValue 新值
+     * @param orgType ORG类型
      * @param result 操作结果
      * @param errorMessage 错误信息
      */
     private void recordConfigAuditLog(DataiConfiguration config, String operationType, 
-                                     String oldValue, String newValue, String result, String errorMessage) {
+                                     String oldValue, String newValue, String orgType, String result, String errorMessage) {
         try {
             // 获取当前登录用户
             LoginUser loginUser = SecurityUtils.getLoginUser();
@@ -111,6 +116,7 @@ public class ConfigChangeListener {
             auditLog.setRequestId(requestId);
             auditLog.setResult(result);
             auditLog.setErrorMessage(errorMessage);
+            auditLog.setOrgType(orgType);
             
             // 设置创建人和更新人信息
             auditLog.setCreateBy(username);

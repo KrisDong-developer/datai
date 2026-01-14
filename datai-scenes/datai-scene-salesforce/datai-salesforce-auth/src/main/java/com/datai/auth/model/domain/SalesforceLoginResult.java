@@ -32,6 +32,7 @@ public class SalesforceLoginResult implements Serializable {
     /** 用户与组织标识 */
     private String userId;
     private String organizationId;
+    private String orgType;
 
     /** 扩展用户信息 (由 userInfo 节点提取) */
     private String userFullName;
@@ -75,6 +76,9 @@ public class SalesforceLoginResult implements Serializable {
 
     public String getOrganizationId() { return organizationId; }
     public void setOrganizationId(String organizationId) { this.organizationId = organizationId; }
+
+    public String getOrgType() { return orgType; }
+    public void setOrgType(String orgType) { this.orgType = orgType; }
 
     public String getUserId() { return userId; }
     public void setUserId(String userId) { this.userId = userId; }

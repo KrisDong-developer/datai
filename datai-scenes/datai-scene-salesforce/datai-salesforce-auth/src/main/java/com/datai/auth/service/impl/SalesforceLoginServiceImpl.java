@@ -56,7 +56,7 @@ public class SalesforceLoginServiceImpl implements ISalesforceLoginService {
         String traceId = UUID.randomUUID().toString();
         MDC.put("traceId", traceId);
         
-        logger.info("开始执行Salesforce登录操作，登录类型: {}, 用户名: {}", request.getLoginType(), request.getUsername());
+        logger.info("开始执行Salesforce登录操作，登录类型: {}, 用户名: {}, ORG类型: {}", request.getLoginType(), request.getUsername(), request.getOrgType());
         
         try {
             String loginType = request.getLoginType();
@@ -73,9 +73,10 @@ public class SalesforceLoginServiceImpl implements ISalesforceLoginService {
                 saveLoginSession(result, request);
                 saveLoginHistory(result, request, "success");
 
-                CacheUtils.put(SalesforceConfigConstants.CACHE_NAME, SalesforceConfigConstants.CURRENT_RESULT, result);
+                String cacheKey = getCacheKeyByOrgType(request.getOrgType());
+                CacheUtils.put(SalesforceConfigConstants.CACHE_NAME, cacheKey, result);
                 
-                logger.info("Salesforce登录成功，Session ID: {}, 用户ID: {}", result.getSessionId(), result.getUserId());
+                logger.info("Salesforce登录成功，Session ID: {}, 用户ID: {}, ORG类型: {}", result.getSessionId(), result.getUserId(), result.getOrgType());
             } else {
                 saveLoginHistory(result, request, "failed");
                 logger.error("Salesforce登录失败，错误代码: {}, 错误信息: {}", result.getErrorCode(), result.getErrorMessage());
@@ -121,6 +122,7 @@ public class SalesforceLoginServiceImpl implements ISalesforceLoginService {
             session.setSfUserId(result.getUserId());
             session.setSfOrganizationId(result.getOrganizationId());
             session.setInstanceUrl(result.getInstanceUrl());
+            session.setOrgType(request.getOrgType());
             
             HttpServletRequest httpRequest = getCurrentRequest();
             if (httpRequest != null) {
@@ -247,6 +249,7 @@ public class SalesforceLoginServiceImpl implements ISalesforceLoginService {
             history.setOperator(SecurityUtils.getUsername());
             history.setCreateBy(SecurityUtils.getUsername());
             history.setDeptId(SecurityUtils.getDeptId());
+            history.setOrgType(request.getOrgType());
             
             loginHistoryService.insertDataiSfLoginHistory(history);
             logger.debug("保存登录历史记录成功，状态: {}", status);
@@ -266,11 +269,11 @@ public class SalesforceLoginServiceImpl implements ISalesforceLoginService {
     }
 
     @Override
-    public boolean logout(String sessionId, String loginType) {
+    public boolean logout(String sessionId, String loginType, String orgType) {
         String traceId = UUID.randomUUID().toString();
         MDC.put("traceId", traceId);
         
-        logger.info("开始执行Salesforce登出操作，Session ID: {}, 登录类型: {}", sessionId, loginType);
+        logger.info("开始执行Salesforce登出操作，Session ID: {}, 登录类型: {}, ORG类型: {}", sessionId, loginType, orgType);
         
         try {
             if (StringUtils.isEmpty(sessionId)) {
@@ -278,7 +281,8 @@ public class SalesforceLoginServiceImpl implements ISalesforceLoginService {
                 return false;
             }
 
-            CacheUtils.clear(SalesforceConfigConstants.CACHE_NAME);
+            String cacheKey = getCacheKeyByOrgType(orgType);
+            CacheUtils.remove(SalesforceConfigConstants.CACHE_NAME, cacheKey);
             
             if (StringUtils.isNotEmpty(loginType)) {
                 try {
@@ -290,11 +294,9 @@ public class SalesforceLoginServiceImpl implements ISalesforceLoginService {
                 }
             }
             
-            updateSessionStatus(sessionId, "inactive");
+            updateSessionStatus(sessionId, "inactive", orgType);
             
-            CacheUtils.remove(SalesforceConfigConstants.CACHE_NAME, SalesforceConfigConstants.CURRENT_RESULT);
-            
-            logger.info("Salesforce登出成功，Session ID: {}", sessionId);
+            logger.info("Salesforce登出成功，Session ID: {}, ORG类型: {}", sessionId, orgType);
             return true;
         } catch (Exception e) {
             logger.error("Salesforce登出系统异常: {}", e.getMessage(), e);
@@ -304,10 +306,11 @@ public class SalesforceLoginServiceImpl implements ISalesforceLoginService {
         }
     }
     
-    private void updateSessionStatus(String sessionId, String status) {
+    private void updateSessionStatus(String sessionId, String status, String orgType) {
         try {
             DataiSfLoginSession query = new DataiSfLoginSession();
             query.setSessionId(sessionId);
+            query.setOrgType(orgType);
             List<DataiSfLoginSession> sessions = loginSessionService.selectDataiSfLoginSessionList(query);
             
             if (sessions != null && !sessions.isEmpty()) {
@@ -315,9 +318,9 @@ public class SalesforceLoginServiceImpl implements ISalesforceLoginService {
                 session.setStatus(status);
                 session.setLastActivityTime(LocalDateTime.now());
                 loginSessionService.updateDataiSfLoginSession(session);
-                logger.debug("更新会话状态成功，Session ID: {}, 状态: {}", sessionId, status);
+                logger.debug("更新会话状态成功，Session ID: {}, 状态: {}, ORG类型: {}", sessionId, status, orgType);
             } else {
-                logger.warn("未找到会话记录，Session ID: {}", sessionId);
+                logger.warn("未找到会话记录，Session ID: {}, ORG类型: {}", sessionId, orgType);
             }
         } catch (Exception e) {
             logger.error("更新会话状态失败: {}", e.getMessage(), e);
@@ -345,20 +348,20 @@ public class SalesforceLoginServiceImpl implements ISalesforceLoginService {
                 DataiSfLoginSession session = sessions.get(0);
                 
                 if (!"active".equals(session.getStatus())) {
-                    logger.warn("会话状态非活跃，Session ID: {}, 状态: {}", sessionId, session.getStatus());
+                    logger.warn("会话状态非活跃，Session ID: {}, 状态: {}, ORG类型: {}", sessionId, session.getStatus(), session.getOrgType());
                     return null;
                 }
                 
                 if (session.getExpireTime() != null && session.getExpireTime().isBefore(LocalDateTime.now())) {
-                    logger.warn("会话已过期，Session ID: {}, 过期时间: {}", sessionId, session.getExpireTime());
-                    updateSessionStatus(sessionId, "expired");
+                    logger.warn("会话已过期，Session ID: {}, 过期时间: {}, ORG类型: {}", sessionId, session.getExpireTime(), session.getOrgType());
+                    updateSessionStatus(sessionId, "expired", session.getOrgType());
                     return null;
                 }
                 
                 session.setLastActivityTime(LocalDateTime.now());
                 loginSessionService.updateDataiSfLoginSession(session);
                 
-                logger.info("获取登录信息成功，Session ID: {}, 用户名: {}", sessionId, session.getUsername());
+                logger.info("获取登录信息成功，Session ID: {}, 用户名: {}, ORG类型: {}", sessionId, session.getUsername(), session.getOrgType());
                 return session;
             } else {
                 logger.warn("未找到登录会话记录，Session ID: {}", sessionId);
@@ -386,6 +389,32 @@ public class SalesforceLoginServiceImpl implements ISalesforceLoginService {
                 logger.info("从缓存中获取登录结果成功，Session ID: {}, 用户ID: {}", result.getSessionId(), result.getUserId());
             } else {
                 logger.warn("缓存中未找到登录结果");
+            }
+            
+            return result;
+        } catch (Exception e) {
+            logger.error("从缓存获取登录结果失败: {}", e.getMessage(), e);
+            return null;
+        } finally {
+            MDC.remove("traceId");
+        }
+    }
+
+    @Override
+    public SalesforceLoginResult getCurrentLoginResultByOrgType(String orgType) {
+        String traceId = UUID.randomUUID().toString();
+        MDC.put("traceId", traceId);
+        
+        logger.info("从缓存中获取指定ORG类型的登录结果，ORG类型: {}", orgType);
+        
+        try {
+            String cacheKey = getCacheKeyByOrgType(orgType);
+            SalesforceLoginResult result = CacheUtils.get(SalesforceConfigConstants.CACHE_NAME, cacheKey, SalesforceLoginResult.class);
+            
+            if (result != null) {
+                logger.info("从缓存中获取登录结果成功，Session ID: {}, 用户ID: {}, ORG类型: {}", result.getSessionId(), result.getUserId(), orgType);
+            } else {
+                logger.warn("缓存中未找到登录结果，ORG类型: {}", orgType);
             }
             
             return result;
@@ -456,15 +485,16 @@ public class SalesforceLoginServiceImpl implements ISalesforceLoginService {
             request.setPrivateKeyPath(history.getPrivateKeyPath());
             request.setCode(history.getCode());
             request.setState(history.getState());
+            request.setOrgType(history.getOrgType());
             
-            logger.info("从历史记录提取登录参数，登录类型: {}, 用户名: {}", request.getLoginType(), request.getUsername());
+            logger.info("从历史记录提取登录参数，登录类型: {}, 用户名: {}, ORG类型: {}", request.getLoginType(), request.getUsername(), request.getOrgType());
             
             SalesforceLoginResult result = login(request);
             
             if (result.isSuccess()) {
-                logger.info("自动登录成功，历史记录ID: {}, 新Session ID: {}", historyId, result.getSessionId());
+                logger.info("自动登录成功，历史记录ID: {}, 新Session ID: {}, ORG类型: {}", historyId, result.getSessionId(), result.getOrgType());
             } else {
-                logger.error("自动登录失败，历史记录ID: {}, 错误: {}", historyId, result.getErrorMessage());
+                logger.error("自动登录失败，历史记录ID: {}, ORG类型: {}, 错误: {}", historyId, request.getOrgType(), result.getErrorMessage());
             }
             
             return result;
@@ -477,6 +507,14 @@ public class SalesforceLoginServiceImpl implements ISalesforceLoginService {
             return errorResult;
         } finally {
             MDC.remove("traceId");
+        }
+    }
+
+    private String getCacheKeyByOrgType(String orgType) {
+        if ("target".equalsIgnoreCase(orgType)) {
+            return SalesforceConfigConstants.CURRENT_TARGET_ORG_RESULT;
+        } else {
+            return SalesforceConfigConstants.CURRENT_SOURCE_ORG_RESULT;
         }
     }
 

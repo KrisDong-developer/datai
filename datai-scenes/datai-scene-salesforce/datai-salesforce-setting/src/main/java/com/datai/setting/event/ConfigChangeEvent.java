@@ -22,6 +22,9 @@ public class ConfigChangeEvent extends ApplicationEvent {
     /** 新值 */
     private String newValue;
     
+    /** ORG类型 */
+    private String orgType;
+    
     /**
      * 构造函数
      * 
@@ -53,6 +56,26 @@ public class ConfigChangeEvent extends ApplicationEvent {
         this.newValue = newValue;
     }
     
+    /**
+     * 构造函数，包含旧值、新值和ORG类型
+     * 
+     * @param source 事件源
+     * @param config 配置对象
+     * @param operationType 操作类型
+     * @param oldValue 旧值
+     * @param newValue 新值
+     * @param orgType ORG类型
+     */
+    public ConfigChangeEvent(Object source, DataiConfiguration config, String operationType, 
+                            String oldValue, String newValue, String orgType) {
+        super(source);
+        this.config = config;
+        this.operationType = operationType;
+        this.oldValue = oldValue;
+        this.newValue = newValue;
+        this.orgType = orgType;
+    }
+    
     public DataiConfiguration getConfig() {
         return config;
     }
@@ -69,9 +92,13 @@ public class ConfigChangeEvent extends ApplicationEvent {
         return newValue;
     }
     
+    public String getOrgType() {
+        return orgType;
+    }
+    
     @Override
     public String toString() {
-        return String.format("ConfigChangeEvent [configKey=%s, operationType=%s, oldValue=%s, newValue=%s]", 
-            config.getConfigKey(), operationType, oldValue, newValue);
+        return String.format("ConfigChangeEvent [configKey=%s, operationType=%s, oldValue=%s, newValue=%s, orgType=%s]", 
+            config.getConfigKey(), operationType, oldValue, newValue, orgType);
     }
 }

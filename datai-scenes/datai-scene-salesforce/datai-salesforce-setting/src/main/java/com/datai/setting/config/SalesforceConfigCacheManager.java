@@ -41,6 +41,11 @@ public class SalesforceConfigCacheManager {
      * 当前环境ID，初始化时从数据库中获取
      */
     private Long currentEnvironmentId;
+    
+    /**
+     * 配置加载锁，防止并发加载
+     */
+    private final Object configLoadLock = new Object();
 
     /**
      * 系统启动时初始化配置缓存
@@ -77,17 +82,16 @@ public class SalesforceConfigCacheManager {
      * 初始化当前环境信息
      */
     private void initCurrentEnvironment() {
-        logger.info("[配置加载] 开始初始化当前环境信息，环境编码: {}", currentEnvironmentCode);
+        logger.info("[配置加载] 开始初始化当前环境信息");
         
-        // 查询当前环境信息
+        // 查询第一个激活的环境作为默认环境
         DataiConfigEnvironment environment = new DataiConfigEnvironment();
-        environment.setEnvironmentCode(currentEnvironmentCode);
         environment.setIsActive(true);
         
         List<DataiConfigEnvironment> environments = environmentMapper.selectDataiConfigEnvironmentList(environment);
         
         if (environments == null || environments.isEmpty()) {
-            logger.warn("[配置加载] 未找到环境编码为 {} 的激活环境，使用默认环境ID: 1", currentEnvironmentCode);
+            logger.warn("[配置加载] 未找到任何激活环境，使用默认环境ID: 1");
             // 默认环境ID为1，确保系统能够正常启动
             currentEnvironmentId = 1L;
             currentEnvironmentCode = "dev";
@@ -104,87 +108,89 @@ public class SalesforceConfigCacheManager {
      * 将配置加载到缓存
      */
     public void loadConfigToCache() {
-        long loadStartTime = System.currentTimeMillis();
-        String cacheKey = getEnvironmentCacheKey();
-        logger.info("[配置加载] 开始加载配置到缓存，当前环境: {}(ID: {}), 缓存键: {}", 
-            currentEnvironmentCode, currentEnvironmentId, cacheKey);
+        synchronized (configLoadLock) {
+            long loadStartTime = System.currentTimeMillis();
+            String cacheKey = getEnvironmentCacheKey();
+            logger.info("[配置加载] 开始加载配置到缓存，当前环境: {}(ID: {}), 缓存键: {}", 
+                currentEnvironmentCode, currentEnvironmentId, cacheKey);
 
-        // 清空当前环境的缓存
-        CacheUtils.getCache(cacheKey).clear();
-        logger.info("[配置加载] 已清空现有缓存: {}", cacheKey);
+            // 清空当前环境的缓存
+            CacheUtils.getCache(cacheKey).clear();
+            logger.info("[配置加载] 已清空现有缓存: {}", cacheKey);
 
-        // 查询当前环境的所有激活配置
-        long dbQueryStartTime = System.currentTimeMillis();
-        DataiConfiguration query = new DataiConfiguration();
-        query.setIsActive(true); // 只加载激活状态的配置
-        query.setEnvironmentId(currentEnvironmentId); // 按当前环境过滤
-        List<DataiConfiguration> configs = configurationMapper.selectDataiConfigurationList(query);
-        long dbQueryEndTime = System.currentTimeMillis();
-        logger.info("[配置加载] 数据库查询完成，当前环境配置数量: {}, 查询耗时: {}ms", 
-            configs.size(), (dbQueryEndTime - dbQueryStartTime));
+            // 查询当前环境的所有激活配置
+            long dbQueryStartTime = System.currentTimeMillis();
+            DataiConfiguration query = new DataiConfiguration();
+            query.setIsActive(true); // 只加载激活状态的配置
+            query.setEnvironmentId(currentEnvironmentId); // 按当前环境过滤
+            List<DataiConfiguration> configs = configurationMapper.selectDataiConfigurationList(query);
+            long dbQueryEndTime = System.currentTimeMillis();
+            logger.info("[配置加载] 数据库查询完成，当前环境配置数量: {}, 查询耗时: {}ms", 
+                configs.size(), (dbQueryEndTime - dbQueryStartTime));
 
-        int successCount = 0;
-        int failCount = 0;
-        long cachePutStartTime = System.currentTimeMillis();
-        
-        // 将配置存入缓存
-        for (DataiConfiguration config : configs) {
-            try {
-                CacheUtils.getCache(cacheKey).put(config.getConfigKey(), config.getConfigValue());
-                logger.debug("[配置加载] 配置加载到缓存成功: {} = {}", config.getConfigKey(), config.getConfigValue());
-                successCount++;
-            } catch (Exception e) {
-                logger.error("[配置加载] 配置处理异常，跳过加载: {} = {}, 错误: {}", 
-                    config.getConfigKey(), config.getConfigValue(), e.getMessage(), e);
-                failCount++;
-            }
-        }
-        
-        long cachePutEndTime = System.currentTimeMillis();
-        logger.info("[配置加载] 当前环境配置处理完成，成功: {}个, 失败: {}个, 缓存写入耗时: {}ms", 
-            successCount, failCount, (cachePutEndTime - cachePutStartTime));
-        
-        // 如果当前环境没有配置，加载默认环境(environmentId为null)的配置作为 fallback
-        if (configs.isEmpty()) {
-            logger.warn("[配置加载] 当前环境 {} 没有配置，尝试加载默认环境配置作为fallback", currentEnvironmentCode);
-            long defaultDbQueryStartTime = System.currentTimeMillis();
-            DataiConfiguration defaultQuery = new DataiConfiguration();
-            defaultQuery.setIsActive(true);
-            defaultQuery.setEnvironmentId(null); // 默认环境配置
-            List<DataiConfiguration> defaultConfigs = configurationMapper.selectDataiConfigurationList(defaultQuery);
-            long defaultDbQueryEndTime = System.currentTimeMillis();
-            logger.info("[配置加载] 默认环境配置查询完成，数量: {}, 查询耗时: {}ms", 
-                defaultConfigs.size(), (defaultDbQueryEndTime - defaultDbQueryStartTime));
+            int successCount = 0;
+            int failCount = 0;
+            long cachePutStartTime = System.currentTimeMillis();
             
-            int defaultSuccessCount = 0;
-            int defaultFailCount = 0;
-            long defaultCachePutStartTime = System.currentTimeMillis();
-            
-            for (DataiConfiguration config : defaultConfigs) {
+            // 将配置存入缓存
+            for (DataiConfiguration config : configs) {
                 try {
                     CacheUtils.getCache(cacheKey).put(config.getConfigKey(), config.getConfigValue());
-                    logger.debug("[配置加载] 默认配置加载到缓存成功: {} = {}", config.getConfigKey(), config.getConfigValue());
-                    defaultSuccessCount++;
+                    logger.debug("[配置加载] 配置加载到缓存成功: {} = {}", config.getConfigKey(), config.getConfigValue());
+                    successCount++;
                 } catch (Exception e) {
-                    logger.error("[配置加载] 默认配置处理异常，跳过加载: {} = {}, 错误: {}", 
+                    logger.error("[配置加载] 配置处理异常，跳过加载: {} = {}, 错误: {}", 
                         config.getConfigKey(), config.getConfigValue(), e.getMessage(), e);
-                    defaultFailCount++;
+                    failCount++;
                 }
             }
             
-            long defaultCachePutEndTime = System.currentTimeMillis();
-            logger.info("[配置加载] 默认环境配置处理完成，成功: {}个, 失败: {}个, 缓存写入耗时: {}ms", 
-                defaultSuccessCount, defaultFailCount, (defaultCachePutEndTime - defaultCachePutStartTime));
+            long cachePutEndTime = System.currentTimeMillis();
+            logger.info("[配置加载] 当前环境配置处理完成，成功: {}个, 失败: {}个, 缓存写入耗时: {}ms", 
+                successCount, failCount, (cachePutEndTime - cachePutStartTime));
             
-            successCount += defaultSuccessCount;
-            failCount += defaultFailCount;
+            // 如果当前环境没有配置，加载默认环境(environmentId为null)的配置作为 fallback
+            if (configs.isEmpty()) {
+                logger.warn("[配置加载] 当前环境 {} 没有配置，尝试加载默认环境配置作为fallback", currentEnvironmentCode);
+                long defaultDbQueryStartTime = System.currentTimeMillis();
+                DataiConfiguration defaultQuery = new DataiConfiguration();
+                defaultQuery.setIsActive(true);
+                defaultQuery.setEnvironmentId(null); // 默认环境配置
+                List<DataiConfiguration> defaultConfigs = configurationMapper.selectDataiConfigurationList(defaultQuery);
+                long defaultDbQueryEndTime = System.currentTimeMillis();
+                logger.info("[配置加载] 默认环境配置查询完成，数量: {}, 查询耗时: {}ms", 
+                    defaultConfigs.size(), (defaultDbQueryEndTime - defaultDbQueryStartTime));
+                
+                int defaultSuccessCount = 0;
+                int defaultFailCount = 0;
+                long defaultCachePutStartTime = System.currentTimeMillis();
+                
+                for (DataiConfiguration config : defaultConfigs) {
+                    try {
+                        CacheUtils.getCache(cacheKey).put(config.getConfigKey(), config.getConfigValue());
+                        logger.debug("[配置加载] 默认配置加载到缓存成功: {} = {}", config.getConfigKey(), config.getConfigValue());
+                        defaultSuccessCount++;
+                    } catch (Exception e) {
+                        logger.error("[配置加载] 默认配置处理异常，跳过加载: {} = {}, 错误: {}", 
+                            config.getConfigKey(), config.getConfigValue(), e.getMessage(), e);
+                        defaultFailCount++;
+                    }
+                }
+                
+                long defaultCachePutEndTime = System.currentTimeMillis();
+                logger.info("[配置加载] 默认环境配置处理完成，成功: {}个, 失败: {}个, 缓存写入耗时: {}ms", 
+                    defaultSuccessCount, defaultFailCount, (defaultCachePutEndTime - defaultCachePutStartTime));
+                
+                successCount += defaultSuccessCount;
+                failCount += defaultFailCount;
+            }
+            
+            // 统计缓存最终状态
+            long cacheSize = CacheUtils.getkeys(cacheKey).size();
+            long loadEndTime = System.currentTimeMillis();
+            logger.info("[配置加载] 配置加载到缓存完成，总耗时: {}ms, 总处理配置: {}个, 成功加载: {}个, 缓存最终大小: {}个, 缓存键: {}", 
+                (loadEndTime - loadStartTime), (successCount + failCount), successCount, cacheSize, cacheKey);
         }
-        
-        // 统计缓存最终状态
-        long cacheSize = CacheUtils.getkeys(cacheKey).size();
-        long loadEndTime = System.currentTimeMillis();
-        logger.info("[配置加载] 配置加载到缓存完成，总耗时: {}ms, 总处理配置: {}个, 成功加载: {}个, 缓存最终大小: {}个, 缓存键: {}", 
-            (loadEndTime - loadStartTime), (successCount + failCount), successCount, cacheSize, cacheKey);
     }
     
     /**
@@ -193,6 +199,15 @@ public class SalesforceConfigCacheManager {
      */
     public String getEnvironmentCacheKey() {
         return SalesforceConfigConstants.SALESFORCE_CONFIG_CACHE_KEY + ":" + currentEnvironmentCode;
+    }
+
+    /**
+     * 获取带环境标识和ORG类型的缓存键
+     * @param orgType ORG类型
+     * @return 带环境标识和ORG类型的缓存键
+     */
+    public String getEnvironmentCacheKey(String orgType) {
+        return SalesforceConfigConstants.SALESFORCE_CONFIG_CACHE_KEY + ":" + currentEnvironmentCode + ":" + orgType;
     }
 
     /**
@@ -245,6 +260,15 @@ public class SalesforceConfigCacheManager {
     public String getCurrentEnvironmentCode() {
         return currentEnvironmentCode;
     }
+
+    /**
+     * 获取当前环境编码（指定ORG类型）
+     * @param orgType ORG类型
+     * @return 当前环境编码
+     */
+    public String getCurrentEnvironmentCode(String orgType) {
+        return currentEnvironmentCode;
+    }
     
     /**
      * 获取当前环境ID
@@ -258,32 +282,34 @@ public class SalesforceConfigCacheManager {
      * 动态切换环境
      * 
      * @param environmentCode 环境编码
+     * @param orgType ORG类型
      * @return 切换结果
      */
-    public boolean switchEnvironment(String environmentCode) {
+    public boolean switchEnvironment(String environmentCode, String orgType) {
         long startTime = System.currentTimeMillis();
         String oldEnvironmentCode = this.currentEnvironmentCode;
         Long oldEnvironmentId = this.currentEnvironmentId;
         
-        logger.info("[环境切换] 开始切换环境: {} -> {}, 开始时间: {}", 
-            oldEnvironmentCode, environmentCode, startTime);
+        logger.info("[环境切换] 开始切换环境: {} -> {}, ORG类型: {}, 开始时间: {}", 
+            oldEnvironmentCode, environmentCode, orgType, startTime);
         
         try {
             DataiConfigEnvironment query = new DataiConfigEnvironment();
             query.setEnvironmentCode(environmentCode);
             query.setIsActive(true);
+            query.setOrgType(orgType);
             
             List<DataiConfigEnvironment> environments = environmentMapper.selectDataiConfigEnvironmentList(query);
             
             if (environments == null || environments.isEmpty()) {
-                logger.error("[环境切换] 环境切换失败: 环境编码 {} 不存在或未激活", environmentCode);
+                logger.error("[环境切换] 环境切换失败: 环境编码 {} 不存在或未激活, ORG类型: {}", environmentCode, orgType);
                 return false;
             }
             
             DataiConfigEnvironment newEnvironment = environments.get(0);
             
             if (environmentCode.equals(this.currentEnvironmentCode)) {
-                logger.info("[环境切换] 环境未发生变化，无需切换: {}", environmentCode);
+                logger.info("[环境切换] 环境未发生变化，无需切换: {}, ORG类型: {}", environmentCode, orgType);
                 return true;
             }
             
@@ -293,21 +319,43 @@ public class SalesforceConfigCacheManager {
             
             this.currentEnvironmentCode = environmentCode;
             this.currentEnvironmentId = newEnvironment.getId();
-            logger.info("[环境切换] 已更新当前环境信息: 编码={}, ID={}", 
-                this.currentEnvironmentCode, this.currentEnvironmentId);
+            logger.info("[环境切换] 已更新当前环境信息: 编码={}, ID={}, ORG类型={}", 
+                this.currentEnvironmentCode, this.currentEnvironmentId, orgType);
             
-            loadConfigToCache();
+            try {
+                loadConfigToCache();
+            } catch (Exception loadException) {
+                logger.error("[环境切换] 加载新环境配置失败，开始回滚: {}", loadException.getMessage(), loadException);
+                
+                String newCacheKey = SalesforceConfigConstants.SALESFORCE_CONFIG_CACHE_KEY + ":" + environmentCode;
+                CacheUtils.getCache(newCacheKey).clear();
+                logger.info("[环境切换] 已清理新环境缓存: {}", newCacheKey);
+                
+                this.currentEnvironmentCode = oldEnvironmentCode;
+                this.currentEnvironmentId = oldEnvironmentId;
+                logger.info("[环境切换] 已回滚到旧环境: 编码={}, ID={}", 
+                    this.currentEnvironmentCode, this.currentEnvironmentId);
+                
+                try {
+                    loadConfigToCache();
+                    logger.info("[环境切换] 已重新加载旧环境配置到缓存");
+                } catch (Exception reloadException) {
+                    logger.error("[环境切换] 重新加载旧环境配置失败: {}", reloadException.getMessage(), reloadException);
+                }
+                
+                throw new RuntimeException("加载新环境配置失败: " + loadException.getMessage(), loadException);
+            }
             
             long endTime = System.currentTimeMillis();
-            logger.info("[环境切换] 环境切换成功: {} -> {}, 耗时: {}ms", 
-                oldEnvironmentCode, environmentCode, (endTime - startTime));
+            logger.info("[环境切换] 环境切换成功: {} -> {}, ORG类型: {}, 耗时: {}ms", 
+                oldEnvironmentCode, environmentCode, orgType, (endTime - startTime));
             
             return true;
             
         } catch (Exception e) {
             long endTime = System.currentTimeMillis();
-            logger.error("[环境切换] 环境切换失败: {} -> {}, 耗时: {}ms, 错误信息: {}", 
-                oldEnvironmentCode, environmentCode, (endTime - startTime), e.getMessage(), e);
+            logger.error("[环境切换] 环境切换失败: {} -> {}, ORG类型: {}, 耗时: {}ms, 错误信息: {}", 
+                oldEnvironmentCode, environmentCode, orgType, (endTime - startTime), e.getMessage(), e);
             
             this.currentEnvironmentCode = oldEnvironmentCode;
             this.currentEnvironmentId = oldEnvironmentId;

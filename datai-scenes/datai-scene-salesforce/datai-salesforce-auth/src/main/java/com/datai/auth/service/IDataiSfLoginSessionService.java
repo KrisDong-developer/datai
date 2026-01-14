@@ -28,6 +28,21 @@ public interface IDataiSfLoginSessionService
     public DataiSfLoginSession selectDataiSfLoginSessionBySessionId(String sessionId);
 
     /**
+     * 查询最近一条活跃的登录会话信息
+     * 
+     * @return 登录会话信息
+     */
+    public DataiSfLoginSession selectLatestActiveSession();
+
+    /**
+     * 根据ORG类型查询最近一条活跃的登录会话信息
+     * 
+     * @param orgType ORG类型
+     * @return 登录会话信息
+     */
+    public DataiSfLoginSession selectLatestActiveSessionByOrgType(String orgType);
+
+    /**
      * 查询登录会话信息列表
      * 
      * @param dataiSfLoginSession 登录会话信息

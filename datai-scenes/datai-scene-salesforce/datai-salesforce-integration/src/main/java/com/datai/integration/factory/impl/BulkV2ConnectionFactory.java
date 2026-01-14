@@ -18,16 +18,16 @@ public class BulkV2ConnectionFactory extends AbstractConnectionFactory<IBulkV2Co
     private ConnectionProxy connectionProxy;
 
     @Override
-    protected IBulkV2Connection createConnection() {
+    protected IBulkV2Connection createConnection(String orgType) {
         try {
             ConnectorConfig config = new ConnectorConfig();
-            config.setSessionId(getSessionId());
-            config.setServiceEndpoint(getInstanceUrl() + "/services/data/v" + 
+            config.setSessionId(sessionManager.getCurrentSession(orgType));
+            config.setServiceEndpoint(sessionManager.getInstanceUrl(orgType) + "/services/data/v" + 
                 SalesforceConstants.REST_API_VERSION.replace("v", "") + "/jobs/");
             BulkV2Connection connection = new BulkV2Connection(config);
             return connectionProxy.createProxy(connection, "BULK_V2");
         } catch (Exception e) {
-            log.error("创建BulkV2连接失败", e);
+            log.error("创建BulkV2连接失败，ORG类型: {}", orgType, e);
             throw new RuntimeException("创建BulkV2连接失败: " + e.getMessage(), e);
         }
     }

@@ -75,20 +75,26 @@
   - [0008-pubsub-config-optimization.md](changelog/0008-pubsub-config-optimization.md) - Pub/Sub API 配置项添加与连接工厂优化
   - [0009-realtime-service-manual-start.md](changelog/0009-realtime-service-manual-start.md) - 实时服务手动启动管理
   - [0010-realtime-sync-statistics.md](changelog/0010-realtime-sync-statistics.md) - 实时同步统计接口
-  - [0011-realtime-sync-log-statistics.md](changelog/0011-realtime-sync-log-statistics.md) - 实时同步日志统计功能
+  - [0011-target-org-login-functionality.md](changelog/0011-target-org-login-functionality.md) - 目标ORG登录功能实现
   - [0000-template.md](changelog/0000-template.md) - 变更记录模板
 
 ### 8. 接口文档
 
 - **目录**: [api-docs/](api-docs/)
 - **描述**: 包含提供给前端调用的接口文档
+- **模块索引**:
+  - [Setting 模块接口索引](api-docs/setting/index.md) - 配置管理相关接口索引
 - **接口文档**: 
+  - [DataISfLoginController](api-docs/auth/DataISfLoginController/) - Salesforce登录认证接口
   - [DataiIntegrationRealtimeSyncController](api-docs/integration/DataiIntegrationRealtimeSyncController/) - 实时同步服务管理接口
-  - [DataiIntegrationRealtimeSyncLogController](api-docs/integration/DataiIntegrationRealtimeSyncLogController/) - 实时同步日志管理接口
   - [DataiIntegrationObjectController](api-docs/integration/DataiIntegrationObjectController/) - 对象同步控制接口
   - [DataiIntegrationBatchController](api-docs/integration/DataiIntegrationBatchController/) - 批次同步控制接口
   - [DataiIntegrationMetadataChangeController](api-docs/integration/DataiIntegrationMetadataChangeController/) - 元数据变更控制接口
   - [RealtimeServiceController](api-docs/integration/RealtimeServiceController/) - 实时服务管理接口
+  - [DataiConfigAuditLogController](api-docs/setting/DataiConfigAuditLogController/) - 配置审计日志管理接口
+  - [DataiConfigEnvironmentController](api-docs/setting/DataiConfigEnvironmentController/) - 配置环境管理接口
+  - [DataiConfigSnapshotController](api-docs/setting/DataiConfigSnapshotController/) - 配置快照管理接口
+  - [DataiConfigurationController](api-docs/setting/DataiConfigurationController/) - 配置管理接口
   - [SysJobController](api-docs/monitor/SysJobController/) - 定时任务管理接口
   - [SysJobLogController](api-docs/monitor/SysJobLogController/) - 定时任务日志管理接口
 
@@ -130,5 +136,5 @@
 
 ## 最后更新
 
-- 更新时间: 2026-01-13
-- 更新内容: 新增实时同步日志统计功能，在DataiIntegrationRealtimeSyncLogController中添加/integration/realtimelog/statistics接口，支持综合统计、按对象统计、按操作类型统计、按状态统计和按时间趋势统计等多种维度；更新Mapper接口和XML文件，新增5个统计查询方法；更新Service接口和实现类，实现完整的统计业务逻辑；创建接口文档0001-realtime-sync-log-statistics.md；创建变更记录0011-realtime-sync-log-statistics.md；更新文档索引
+- 更新时间: 2026-01-14
+- 更新内容: 添加 DataiConfigurationController 接口文档，包含查询配置列表、导出配置列表、获取配置详细信息、新增配置、修改配置、删除配置、刷新配置缓存、查询配置缓存状态八个接口的详细文档

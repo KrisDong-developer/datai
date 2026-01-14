@@ -36,6 +36,11 @@ public class DataiConfigEnvironment extends BaseEntity
     @Excel(name = "环境编码")
     private String environmentCode;
 
+    /** ORG类型 */
+    @Schema(title = "ORG类型")
+    @Excel(name = "ORG类型")
+    private String orgType;
+
     /** 环境描述 */
     @Schema(title = "环境描述")
     @Excel(name = "环境描述")
@@ -88,6 +93,15 @@ public class DataiConfigEnvironment extends BaseEntity
         return environmentCode;
     }
 
+    public void setOrgType(String orgType) 
+    {
+        this.orgType = orgType;
+    }
+
+    public String getOrgType() 
+    {
+        return orgType;
+    }
 
     public void setDescription(String description) 
     {
@@ -119,6 +133,7 @@ public class DataiConfigEnvironment extends BaseEntity
             .append("deptId", getDeptId())
             .append("environmentName", getEnvironmentName())
             .append("environmentCode", getEnvironmentCode())
+            .append("orgType", getOrgType())
             .append("description", getDescription())
             .append("isActive", getIsActive())
             .append("remark", getRemark())

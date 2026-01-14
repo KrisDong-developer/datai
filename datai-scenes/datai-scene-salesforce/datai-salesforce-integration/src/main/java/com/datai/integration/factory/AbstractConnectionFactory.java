@@ -26,13 +26,13 @@ public abstract class AbstractConnectionFactory<T> implements ISalesforceConnect
     private final ReentrantLock lock = new ReentrantLock();
 
     @Override
-    public T getConnection() {
-        String configKey = getConfigKey();
+    public T getConnection(String orgType) {
+        String configKey = getConfigKey(orgType);
 
         T connection = connectionCache.get(configKey);
         
-        if (connection != null && !sessionManager.isSessionValid()) {
-            log.warn("检测到Session已过期，清除缓存的{}连接", getConnectionType());
+        if (connection != null && !sessionManager.isSessionValid(orgType)) {
+            log.warn("检测到Session已过期，ORG类型: {}，清除缓存的{}连接", orgType, getConnectionType());
             lock.lock();
             try {
                 connectionCache.remove(configKey);
@@ -48,9 +48,9 @@ public abstract class AbstractConnectionFactory<T> implements ISalesforceConnect
                 connection = connectionCache.get(configKey);
                 
                 if (connection == null) {
-                    connection = createConnection();
+                    connection = createConnection(orgType);
                     connectionCache.put(configKey, connection);
-                    log.info("创建并缓存{}连接实例", getConnectionType());
+                    log.info("创建并缓存{}连接实例，ORG类型: {}", getConnectionType(), orgType);
                 }
             } finally {
                 lock.unlock();
@@ -60,13 +60,13 @@ public abstract class AbstractConnectionFactory<T> implements ISalesforceConnect
     }
 
     @Override
-    public void clearConnection() {
-        String configKey = getConfigKey();
+    public void clearConnection(String orgType) {
+        String configKey = getConfigKey(orgType);
         T connection = connectionCache.remove(configKey);
         if (connection != null) {
-            log.info("{}连接已清除", getConnectionType());
+            log.info("{}连接已清除，ORG类型: {}", getConnectionType(), orgType);
         } else {
-            log.info("没有找到{}连接", getConnectionType());
+            log.info("没有找到{}连接，ORG类型: {}", getConnectionType(), orgType);
         }
     }
 
@@ -75,17 +75,9 @@ public abstract class AbstractConnectionFactory<T> implements ISalesforceConnect
         return this.getClass().getSimpleName().replace("Factory", "");
     }
 
-    protected String getConfigKey() {
-        return SalesforceConstants.SESSION_CONFIG_SOURCE;
+    protected String getConfigKey(String orgType) {
+        return "source".equals(orgType) ? SalesforceConstants.SESSION_CONFIG_SOURCE : SalesforceConstants.SESSION_CONFIG_TARGET;
     }
 
-    protected String getSessionId() {
-        return sessionManager.getCurrentSession();
-    }
-
-    protected String getInstanceUrl() {
-        return sessionManager.getInstanceUrl();
-    }
-
-    protected abstract T createConnection();
+    protected abstract T createConnection(String orgType);
 }

@@ -360,7 +360,7 @@ public class DataiIntegrationBatchServiceImpl implements IDataiIntegrationBatchS
                 return false;
             }
             
-            IPartnerV1Connection connection = retryOperation(() -> soapConnectionFactory.getConnection(), 3, 1000);
+            IPartnerV1Connection connection = retryOperation(() -> soapConnectionFactory.getConnection("source"), 3, 1000);
 
             List<String> fieldList = getSalesforceObjectFields(connection, objectApi);
             log.info("获取到对象 {} 的字段列表: {}", objectApi, fieldList);

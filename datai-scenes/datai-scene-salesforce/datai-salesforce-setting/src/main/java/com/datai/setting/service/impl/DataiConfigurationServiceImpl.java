@@ -112,8 +112,10 @@ public class DataiConfigurationServiceImpl implements IDataiConfigurationService
         dataiConfiguration.setCreateBy(username);
         dataiConfiguration.setUpdateBy(username);
 
-        // 设置当前环境ID
-        dataiConfiguration.setEnvironmentId(SalesforceConfigCacheManager.getCurrentEnvironmentId());
+        // 设置当前环境ID（如果 environmentId 为空才设置）
+        if (dataiConfiguration.getEnvironmentId() == null) {
+            dataiConfiguration.setEnvironmentId(SalesforceConfigCacheManager.getCurrentEnvironmentId());
+        }
         
         // 设置初始版本号为1
         dataiConfiguration.setVersion(1);
@@ -122,7 +124,7 @@ public class DataiConfigurationServiceImpl implements IDataiConfigurationService
         int result = dataiConfigurationMapper.insertDataiConfiguration(dataiConfiguration);
         if (result > 0) {
             // 2. 再更新缓存 - 缓存优先策略：数据库变更后立即更新缓存
-            String cacheKey = SalesforceConfigCacheManager.getCurrentEnvironmentCode() + ":" + SalesforceConfigConstants.SALESFORCE_CONFIG_CACHE_KEY;
+            String cacheKey = SalesforceConfigConstants.SALESFORCE_CONFIG_CACHE_KEY + ":" + SalesforceConfigCacheManager.getCurrentEnvironmentCode();
             CacheUtils.getCache(cacheKey)
                     .put(dataiConfiguration.getConfigKey(), dataiConfiguration.getConfigValue());
 
@@ -168,7 +170,7 @@ public class DataiConfigurationServiceImpl implements IDataiConfigurationService
         // 1. 先更新数据库
         int result = dataiConfigurationMapper.updateDataiConfiguration(dataiConfiguration);
         if (result > 0) {
-            String cacheKey = SalesforceConfigCacheManager.getCurrentEnvironmentCode() + ":" + SalesforceConfigConstants.SALESFORCE_CONFIG_CACHE_KEY;
+            String cacheKey = SalesforceConfigConstants.SALESFORCE_CONFIG_CACHE_KEY + ":" + SalesforceConfigCacheManager.getCurrentEnvironmentCode();
             
             // 2. 缓存更新策略：先删除旧键，再添加新键
             if (oldConfig != null && !oldConfigKey.equals(dataiConfiguration.getConfigKey())) {
@@ -203,7 +205,7 @@ public class DataiConfigurationServiceImpl implements IDataiConfigurationService
     public int deleteDataiConfigurationByIds(Long[] configIds)
     {
         int result = 0;
-        String cacheKey = SalesforceConfigCacheManager.getCurrentEnvironmentCode() + ":" + SalesforceConfigConstants.SALESFORCE_CONFIG_CACHE_KEY;
+        String cacheKey = SalesforceConfigConstants.SALESFORCE_CONFIG_CACHE_KEY + ":" + SalesforceConfigCacheManager.getCurrentEnvironmentCode();
         
         for (Long configId : configIds) {
             DataiConfiguration config = selectDataiConfigurationById(configId);
@@ -242,7 +244,7 @@ public class DataiConfigurationServiceImpl implements IDataiConfigurationService
 
         String oldValue = config.getConfigValue();
         String configKeyToDelete = config.getConfigKey();
-        String cacheKey = SalesforceConfigCacheManager.getCurrentEnvironmentCode() + ":" + SalesforceConfigConstants.SALESFORCE_CONFIG_CACHE_KEY;
+        String cacheKey = SalesforceConfigConstants.SALESFORCE_CONFIG_CACHE_KEY + ":" + SalesforceConfigCacheManager.getCurrentEnvironmentCode();
         
         // 1. 先删除数据库记录
         int result = dataiConfigurationMapper.deleteDataiConfigurationById(configId);

@@ -65,4 +65,12 @@ public interface IDataiSfLoginHistoryService
      * @return 登录历史信息
      */
     public DataiSfLoginHistory selectLatestSuccessLoginHistory();
+
+    /**
+     * 根据ORG类型查询最近一条登录成功的历史记录
+     * 
+     * @param orgType ORG类型
+     * @return 登录历史信息
+     */
+    public DataiSfLoginHistory selectLatestSuccessLoginHistoryByOrgType(String orgType);
 }
