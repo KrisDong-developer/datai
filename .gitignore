@@ -55,3 +55,5 @@ effective-pom.xml
 /datai-scenes/datai-scene-salesforce/docs/sql/
 # 忽略所有 .sql 文件
 *.sql
+/.vscode/
+/.trae/
